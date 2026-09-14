@@ -108,14 +108,24 @@ internal fun HandleCenterMapEvent(
 @Composable
 internal fun HandleGoToPointEvent(
     mapView: MapView,
+    mapSource: MapSourceOption,
     goToPointEvent: Flow<GeoPoint>,
     onClickedLocationChange: (GeoPoint?) -> Unit
 ) {
     val lifecycleOwner = LocalLifecycleOwner.current
-    LaunchedEffect(lifecycleOwner, goToPointEvent) {
+    LaunchedEffect(lifecycleOwner, goToPointEvent, mapSource) {
         lifecycleOwner.lifecycle.repeatOnLifecycle(Lifecycle.State.STARTED) {
             goToPointEvent.collect { geoPoint ->
-                mapView.controller.animateTo(geoPoint)
+                val displayPoint = if (mapSource.isGcj02) {
+                    val (gcjLat, gcjLon) = CoordinateTransform.wgs84ToGcj02(
+                        geoPoint.latitude,
+                        geoPoint.longitude
+                    )
+                    GeoPoint(gcjLat, gcjLon)
+                } else {
+                    geoPoint
+                }
+                mapView.controller.animateTo(displayPoint)
                 onClickedLocationChange(geoPoint)
             }
         }
@@ -129,26 +139,38 @@ internal fun HandleGoToPointEvent(
  *   already present), moved to the new position, and the camera is animated to it.
  * - When [lastClickedLocation] is `null` the marker is removed and the map is invalidated.
  *
- * The effect is keyed on [lastClickedLocation] so it reruns only when the marker moves.
+ * The effect is keyed on [lastClickedLocation] and [mapSource] so it reruns when the marker moves
+ * or the active tile projection changes.
  *
  * @param mapView The map whose overlays are updated.
  * @param userMarker The persistent spoof-target marker instance.
- * @param lastClickedLocation The current spoof target, or `null` if none.
+ * @param lastClickedLocation The current spoof target in WGS-84, or `null` if none.
+ * @param mapSource Current tile source option.
  */
 @Composable
 internal fun HandleMarkerUpdates(
     mapView: MapView,
     userMarker: Marker,
     lastClickedLocation: GeoPoint?,
+    mapSource: MapSourceOption,
 ) {
-    LaunchedEffect(lastClickedLocation) {
+    LaunchedEffect(lastClickedLocation, mapSource) {
         if (lastClickedLocation != null) {
             // Add the marker to the map if not already added
             if (!mapView.overlays.contains(userMarker)) {
                 mapView.overlays.add(userMarker)
             }
-            userMarker.position = lastClickedLocation
-            mapView.controller.animateTo(lastClickedLocation)
+            val displayPoint = if (mapSource.isGcj02) {
+                val (gcjLat, gcjLon) = CoordinateTransform.wgs84ToGcj02(
+                    lastClickedLocation.latitude,
+                    lastClickedLocation.longitude
+                )
+                GeoPoint(gcjLat, gcjLon)
+            } else {
+                lastClickedLocation
+            }
+            userMarker.position = displayPoint
+            mapView.controller.animateTo(displayPoint)
             mapView.invalidate()
         } else {
             // Remove the marker from the map if it exists
@@ -173,22 +195,31 @@ internal fun HandleMarkerUpdates(
  *
  * @param mapView The map to install the click listener on.
  * @param isPlaying Whether spoofing is currently active.
- * @param onClickedLocationChange Callback fired with the tapped [GeoPoint].
+ * @param mapSource Current tile source option used to un-obfuscate tap coordinates.
+ * @param onClickedLocationChange Callback fired with the tapped [GeoPoint] in WGS-84.
  */
 @Composable
 internal fun SetupMapClickListener(
     mapView: MapView,
     isPlaying: Boolean,
+    mapSource: MapSourceOption,
     onClickedLocationChange: (GeoPoint?) -> Unit
 ) {
     // Keep the latest values without re-creating the overlay each time spoofing toggles.
     val currentIsPlaying by rememberUpdatedState(isPlaying)
+    val currentMapSource by rememberUpdatedState(mapSource)
     val currentOnClickedLocationChange by rememberUpdatedState(onClickedLocationChange)
     DisposableEffect(mapView) {
         val mapEventsReceiver = object : MapEventsReceiver {
             override fun singleTapConfirmedHelper(p: GeoPoint): Boolean {
                 if (!currentIsPlaying) {
-                    currentOnClickedLocationChange(p)
+                    val wgsPoint = if (currentMapSource.isGcj02) {
+                        val (wgsLat, wgsLon) = CoordinateTransform.gcj02ToWgs84(p.latitude, p.longitude)
+                        GeoPoint(wgsLat, wgsLon)
+                    } else {
+                        p
+                    }
+                    currentOnClickedLocationChange(wgsPoint)
                 }
                 return true
             }
@@ -228,6 +259,7 @@ internal fun CenterMapOnUserLocation(
     lastClickedLocation: GeoPoint?,
     userLocation: GeoPoint?,
     mapZoom: Double?,
+    mapSource: MapSourceOption,
     hasResolvedInitialLocation: Boolean,
     onUserLocationChange: (GeoPoint) -> Unit,
     onMapZoomChange: (Double) -> Unit,
@@ -243,20 +275,26 @@ internal fun CenterMapOnUserLocation(
             // Re-entry: restore the last camera without re-detecting or showing a spinner.
             mapView.controller.setZoom(mapZoom ?: DEFAULT_MAP_ZOOM)
             if (lastClickedLocation == null && userLocation != null) {
-                mapView.controller.setCenter(userLocation)
+                val displayUserLoc = if (mapSource.isGcj02) {
+                    val (lat, lon) = CoordinateTransform.wgs84ToGcj02(userLocation.latitude, userLocation.longitude)
+                    GeoPoint(lat, lon)
+                } else {
+                    userLocation
+                }
+                mapView.controller.setCenter(displayUserLoc)
             }
             centeredOnce.value = true
             return@LaunchedEffect
         }
 
         if (lastClickedLocation != null) {
-            centerOnMarkerLocation(mapView, lastClickedLocation, mapZoom, onMapZoomChange, onLoadingFinished)
+            centerOnMarkerLocation(mapView, lastClickedLocation, mapZoom, mapSource, onMapZoomChange, onLoadingFinished)
         } else {
             val lastKnown = getLastKnownDeviceLocation(context)
             if (lastKnown != null) {
-                centerOnGeoPoint(mapView, lastKnown, mapZoom, onUserLocationChange, onMapZoomChange, onLoadingFinished)
+                centerOnGeoPoint(mapView, lastKnown, mapZoom, mapSource, onUserLocationChange, onMapZoomChange, onLoadingFinished)
             } else {
-                val found = tryToFindAndCenterUserLocation(mapView, locationOverlay, mapZoom, onUserLocationChange, onMapZoomChange, onLoadingFinished)
+                val found = tryToFindAndCenterUserLocation(mapView, locationOverlay, mapZoom, mapSource, onUserLocationChange, onMapZoomChange, onLoadingFinished)
                 if (!found) {
                     centerOnDefaultLocation(mapView, onMapZoomChange, onLoadingFinished)
                 }
@@ -274,8 +312,9 @@ internal fun CenterMapOnUserLocation(
  * falling back to [DEFAULT_MAP_ZOOM] for first-ever launches.
  *
  * @param mapView The map to position.
- * @param markerLocation The spoof-target coordinate to centre on.
+ * @param markerLocation The spoof-target coordinate in WGS-84 to centre on.
  * @param mapZoom Persisted zoom level, or `null` if not yet set.
+ * @param mapSource Current tile source option.
  * @param onMapZoomChange Callback to persist the applied zoom.
  * @param onLoadingFinished Callback to clear [MapUiState.isLoading].
  */
@@ -283,12 +322,19 @@ private suspend fun centerOnMarkerLocation(
     mapView: MapView,
     markerLocation: GeoPoint,
     mapZoom: Double?,
+    mapSource: MapSourceOption,
     onMapZoomChange: (Double) -> Unit,
     onLoadingFinished: () -> Unit
 ) {
     val zoom = mapZoom ?: DEFAULT_MAP_ZOOM
     mapView.controller.setZoom(zoom)
-    mapView.controller.animateTo(markerLocation)
+    val displayPoint = if (mapSource.isGcj02) {
+        val (gcjLat, gcjLon) = CoordinateTransform.wgs84ToGcj02(markerLocation.latitude, markerLocation.longitude)
+        GeoPoint(gcjLat, gcjLon)
+    } else {
+        markerLocation
+    }
+    mapView.controller.animateTo(displayPoint)
     onMapZoomChange(zoom)
     onLoadingFinished()
 }
@@ -301,8 +347,9 @@ private suspend fun centerOnMarkerLocation(
  * falling back to [DEFAULT_MAP_ZOOM] for first-ever launches.
  *
  * @param mapView The map to centre.
- * @param point The device location to centre on.
+ * @param point The device location in WGS-84 to centre on.
  * @param mapZoom Persisted zoom level, or `null` if not yet set.
+ * @param mapSource Current tile source option.
  * @param onUserLocationChange Callback to cache the location in [MapViewModel].
  * @param onMapZoomChange Callback to persist the applied zoom.
  * @param onLoadingFinished Callback to clear [MapUiState.isLoading].
@@ -311,13 +358,20 @@ private fun centerOnGeoPoint(
     mapView: MapView,
     point: GeoPoint,
     mapZoom: Double?,
+    mapSource: MapSourceOption,
     onUserLocationChange: (GeoPoint) -> Unit,
     onMapZoomChange: (Double) -> Unit,
     onLoadingFinished: () -> Unit
 ) {
     val zoom = mapZoom ?: DEFAULT_MAP_ZOOM
     mapView.controller.setZoom(zoom)
-    mapView.controller.setCenter(point)
+    val displayPoint = if (mapSource.isGcj02) {
+        val (gcjLat, gcjLon) = CoordinateTransform.wgs84ToGcj02(point.latitude, point.longitude)
+        GeoPoint(gcjLat, gcjLon)
+    } else {
+        point
+    }
+    mapView.controller.setCenter(displayPoint)
     onUserLocationChange(point)
     onMapZoomChange(zoom)
     onLoadingFinished()
@@ -384,6 +438,7 @@ private suspend fun tryToFindAndCenterUserLocation(
     mapView: MapView,
     locationOverlay: MyLocationNewOverlay,
     mapZoom: Double?,
+    mapSource: MapSourceOption,
     onUserLocationChange: (GeoPoint) -> Unit,
     onMapZoomChange: (Double) -> Unit,
     onLoadingFinished: () -> Unit
@@ -392,7 +447,13 @@ private suspend fun tryToFindAndCenterUserLocation(
     repeat(LOCATION_DETECTION_MAX_ATTEMPTS) {
         val userLocation = locationOverlay.myLocation
         if (userLocation != null) {
-            onUserLocationChange(userLocation)
+            val wgsLocation = if (mapSource.isGcj02) {
+                val (wgsLat, wgsLon) = CoordinateTransform.gcj02ToWgs84(userLocation.latitude, userLocation.longitude)
+                GeoPoint(wgsLat, wgsLon)
+            } else {
+                userLocation
+            }
+            onUserLocationChange(wgsLocation)
             mapView.controller.setZoom(zoom)
             mapView.controller.animateTo(userLocation)
             onMapZoomChange(zoom)

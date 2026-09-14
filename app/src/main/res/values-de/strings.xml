@@ -60,6 +60,7 @@
     <string name="category_notifications">Benachrichtigungen</string>
     <string name="category_external_control">Externe Steuerung</string>
     <string name="category_system_hooks">System-Hooks</string>
+    <string name="category_map">Karte</string>
     <string name="category_location">Standort</string>
     <string name="category_altitude">Höhe</string>
     <string name="category_movement">Bewegung</string>
@@ -129,6 +130,7 @@
     <string name="override_off">Aus</string>
 
     <string name="map_go_to_point">Gehe zu Punkt</string>
+    <string name="map_switch_source">Kartenquelle wechseln</string>
     <string name="map_add_to_favorites">Zu Favoriten hinzufügen</string>
     <string name="map_add_to_templates">Zu Vorlagen hinzufügen</string>
     <string name="map_update_template_location">Vorlagenstandort aktualisieren</string>
@@ -137,6 +139,15 @@
     <string name="toast_unset_fake_location">Gefälschten Standort aufheben</string>
     <string name="toast_user_location_not_available">Benutzerstandort nicht verfügbar</string>
     <string name="map_updating">Karte wird aktualisiert…</string>
+    <string name="setting_map_source_title">Kartenquelle</string>
+    <string name="setting_map_source_description">Wähle den Kachelanbieter und Kartendienst für die Manager-App aus.</string>
+    <string name="map_source_amap_vector">AutoNavi (Vektor)</string>
+    <string name="map_source_amap_satellite">AutoNavi (Satellit)</string>
+    <string name="map_source_tianditu_vector">TianDiTu (Vektor)</string>
+    <string name="map_source_osm">OpenStreetMap</string>
+    <string name="setting_tianditu_token_title">TianDiTu Token</string>
+    <string name="setting_tianditu_token_description">API-Schlüssel für den TianDiTu-Kartendienst (kostenlos auf tianditu.gov.cn erhältlich).</string>
+    <string name="setting_tianditu_token_label">Token</string>
 
     <string name="field_name">Name</string>
     <string name="field_description">Beschreibung (optional)</string>

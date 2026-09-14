@@ -10,6 +10,7 @@ import androidx.compose.material3.CircularProgressIndicator
 import androidx.compose.material3.MaterialTheme
 import androidx.compose.material3.Text
 import androidx.compose.runtime.Composable
+import androidx.compose.runtime.LaunchedEffect
 import androidx.compose.runtime.remember
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
@@ -21,11 +22,9 @@ import androidx.compose.ui.viewinterop.AndroidView
 import com.noobexon.xposedfakelocation.R
 import com.noobexon.xposedfakelocation.data.DEFAULT_MAP_ZOOM
 import kotlinx.coroutines.flow.Flow
-import org.osmdroid.tileprovider.tilesource.TileSourceFactory
 import org.osmdroid.util.GeoPoint
 import org.osmdroid.views.MapView
 import org.osmdroid.views.overlay.Marker
-import org.osmdroid.views.overlay.mylocation.GpsMyLocationProvider
 import org.osmdroid.views.overlay.mylocation.MyLocationNewOverlay
 
 /**
@@ -50,6 +49,8 @@ import org.osmdroid.views.overlay.mylocation.MyLocationNewOverlay
  * @param isPlaying Whether spoofing is active. When `true`, map taps are ignored so the marker
  *   cannot be accidentally moved.
  * @param mapZoom Last persisted zoom level; used to restore the camera on re-entry.
+ * @param mapSource Active map tile provider option.
+ * @param tiandituToken Optional developer token for TianDiTu WMTS service.
  * @param hasResolvedInitialLocation `true` after the one-time initial camera positioning has
  *   completed. On re-entry the camera is restored instantly instead of re-detecting location.
  * @param goToPointEvent One-shot [Flow] from [MapViewModel]; animates the camera to the given
@@ -71,6 +72,8 @@ fun MapViewContainer(
     userLocation: GeoPoint?,
     isPlaying: Boolean,
     mapZoom: Double?,
+    mapSource: MapSourceOption,
+    tiandituToken: String,
     hasResolvedInitialLocation: Boolean,
     goToPointEvent: Flow<GeoPoint>,
     centerMapEvent: Flow<Unit>,
@@ -83,24 +86,31 @@ fun MapViewContainer(
     val context = LocalContext.current
 
     // Remember MapView and overlays
-    val mapView = rememberMapView(context)
+    val mapView = rememberMapView(context, mapSource, tiandituToken)
     val userMarker = rememberUserMarker(mapView)
-    val locationOverlay = rememberLocationOverlay(context, mapView)
+    val locationOverlay = rememberLocationOverlay(context, mapView) { mapSource.isGcj02 }
+
+    // Update tile source whenever mapSource or token changes
+    LaunchedEffect(mapSource, tiandituToken) {
+        mapView.setTileSource(CustomTileSources.getTileSource(mapSource, tiandituToken))
+        mapView.invalidate()
+    }
 
     // Add the location overlay to the map
     AddLocationOverlayToMap(mapView, locationOverlay)
 
     // Handle map events and updates
     HandleCenterMapEvent(mapView, locationOverlay, centerMapEvent)
-    HandleGoToPointEvent(mapView, goToPointEvent, onClickedLocationChange)
-    HandleMarkerUpdates(mapView, userMarker, lastClickedLocation)
-    SetupMapClickListener(mapView, isPlaying, onClickedLocationChange)
+    HandleGoToPointEvent(mapView, mapSource, goToPointEvent, onClickedLocationChange)
+    HandleMarkerUpdates(mapView, userMarker, lastClickedLocation, mapSource)
+    SetupMapClickListener(mapView, isPlaying, mapSource, onClickedLocationChange)
     CenterMapOnUserLocation(
         mapView = mapView,
         locationOverlay = locationOverlay,
         lastClickedLocation = lastClickedLocation,
         userLocation = userLocation,
         mapZoom = mapZoom,
+        mapSource = mapSource,
         hasResolvedInitialLocation = hasResolvedInitialLocation,
         onUserLocationChange = onUserLocationChange,
         onMapZoomChange = onMapZoomChange,
@@ -118,14 +128,18 @@ fun MapViewContainer(
 }
 
 /**
- * Creates and remembers a [MapView] configured with MAPNIK tiles, multi-touch zoom controls,
- * and the default zoom level. The instance is stable for the lifetime of the composition.
+ * Creates and remembers a [MapView] configured with the selected tile source, multi-touch zoom
+ * controls, and the default zoom level.
  */
 @Composable
-private fun rememberMapView(context: Context): MapView {
+private fun rememberMapView(
+    context: Context,
+    mapSource: MapSourceOption,
+    tiandituToken: String
+): MapView {
     return remember {
         MapView(context).apply {
-            setTileSource(TileSourceFactory.MAPNIK)
+            setTileSource(CustomTileSources.getTileSource(mapSource, tiandituToken))
             setBuiltInZoomControls(false)
             setMultiTouchControls(true)
             controller.setZoom(DEFAULT_MAP_ZOOM)
@@ -147,14 +161,18 @@ private fun rememberUserMarker(mapView: MapView): Marker {
 }
 
 /**
- * Creates and remembers a [MyLocationNewOverlay] backed by a [GpsMyLocationProvider]. Location
+ * Creates and remembers a [MyLocationNewOverlay] backed by a [Gcj02LocationProvider]. Location
  * updates are enabled immediately; they are disabled again in
  * [MapViewEffects.ManageMapViewLifecycle] on dispose.
  */
 @Composable
-private fun rememberLocationOverlay(context: Context, mapView: MapView): MyLocationNewOverlay {
+private fun rememberLocationOverlay(
+    context: Context,
+    mapView: MapView,
+    isGcj02: () -> Boolean
+): MyLocationNewOverlay {
     return remember {
-        MyLocationNewOverlay(GpsMyLocationProvider(context), mapView).apply {
+        MyLocationNewOverlay(Gcj02LocationProvider(context, isGcj02), mapView).apply {
             enableMyLocation()
         }
     }

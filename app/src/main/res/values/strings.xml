@@ -61,6 +61,7 @@
     <string name="category_external_control">External Control</string>
     <string name="category_system_hooks">System Hooks</string>
     <string name="category_wifi_identity">Wi-Fi Identity</string>
+    <string name="category_map">Map</string>
     <string name="category_location">Location</string>
     <string name="category_altitude">Altitude</string>
     <string name="category_movement">Movement</string>
@@ -141,6 +142,7 @@
     <string name="override_off">Off</string>
 
     <string name="map_go_to_point">Go to Point</string>
+    <string name="map_switch_source">Switch Map Source</string>
     <string name="map_add_to_favorites">Add to Favorites</string>
     <string name="map_add_to_templates">Add to Templates</string>
     <string name="map_update_template_location">Update Template Location</string>
@@ -149,6 +151,15 @@
     <string name="toast_unset_fake_location">Unset Fake Location</string>
     <string name="toast_user_location_not_available">User location not available</string>
     <string name="map_updating">Updating Map…</string>
+    <string name="setting_map_source_title">Map source</string>
+    <string name="setting_map_source_description">Select the tile source and map layer provider used by the manager app.</string>
+    <string name="map_source_amap_vector">AutoNavi (Vector)</string>
+    <string name="map_source_amap_satellite">AutoNavi (Satellite)</string>
+    <string name="map_source_tianditu_vector">TianDiTu (Vector)</string>
+    <string name="map_source_osm">OpenStreetMap</string>
+    <string name="setting_tianditu_token_title">TianDiTu Token</string>
+    <string name="setting_tianditu_token_description">API key (token) for TianDiTu national public map service (obtain for free at tianditu.gov.cn).</string>
+    <string name="setting_tianditu_token_label">Token</string>
 
     <string name="field_name">Name</string>
     <string name="field_description">Description (optional)</string>

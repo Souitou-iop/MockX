@@ -72,6 +72,7 @@ import androidx.compose.ui.focus.onFocusChanged
 import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.platform.LocalContext
 import androidx.compose.ui.platform.LocalFocusManager
+import androidx.compose.ui.platform.LocalView
 import androidx.compose.ui.res.stringResource
 import androidx.compose.ui.semantics.Role
 import androidx.compose.ui.semantics.contentDescription
@@ -87,8 +88,11 @@ import androidx.lifecycle.repeatOnLifecycle
 import androidx.lifecycle.viewmodel.compose.viewModel
 import androidx.navigation.NavController
 import com.noobexon.xposedfakelocation.R
+import com.noobexon.xposedfakelocation.manager.RefreshRateHelper
 import com.noobexon.xposedfakelocation.manager.localization.LanguageOption
 import com.noobexon.xposedfakelocation.manager.localization.LocaleController
+import com.noobexon.xposedfakelocation.manager.ui.map.MapSourceOption
+import com.noobexon.xposedfakelocation.manager.ui.map.MapSourceSelectionDialog
 import com.noobexon.xposedfakelocation.manager.ui.theme.ThemeOption
 import kotlinx.coroutines.launch
 import java.util.Locale
@@ -123,6 +127,12 @@ fun SettingsScreen(
     settingsViewModel: SettingsViewModel = viewModel()
 ) {
     val context = LocalContext.current
+    val view = LocalView.current
+    LaunchedEffect(Unit) {
+        RefreshRateHelper.applyHighRefreshRate(context)
+        RefreshRateHelper.applyFrameRateToView(view)
+    }
+
     val scope = rememberCoroutineScope()
     val snackbarHostState = remember { SnackbarHostState() }
 
@@ -157,6 +167,21 @@ fun SettingsScreen(
             SettingEntry.Numeric(NumericSetting.HORIZONTAL_ACCURACY, uiState.useAccuracy, settingsViewModel::setUseAccuracy, uiState.accuracy) { settingsViewModel.setAccuracy(it.toDouble()) },
             SettingEntry.Numeric(NumericSetting.VERTICAL_ACCURACY, uiState.useVerticalAccuracy, settingsViewModel::setUseVerticalAccuracy, uiState.verticalAccuracy, settingsViewModel::setVerticalAccuracy)
         ),
+        SettingsCategory.MAP to buildList {
+            add(SettingEntry.MapSource(uiState.mapSource, settingsViewModel::setMapSource))
+            if (uiState.mapSource == MapSourceOption.TIANDITU_VECTOR) {
+                add(
+                    SettingEntry.Text(
+                        SettingKeys.TIANDITU_TOKEN,
+                        R.string.setting_tianditu_token_title,
+                        R.string.setting_tianditu_token_description,
+                        R.string.setting_tianditu_token_label,
+                        uiState.tiandituToken,
+                        onValueChange = settingsViewModel::setTianDiTuToken
+                    )
+                )
+            }
+        },
         SettingsCategory.ALTITUDE to listOf(
             SettingEntry.Numeric(NumericSetting.ALTITUDE, uiState.useAltitude, settingsViewModel::setUseAltitude, uiState.altitude) { settingsViewModel.setAltitude(it.toDouble()) },
             SettingEntry.Numeric(NumericSetting.MEAN_SEA_LEVEL, uiState.useMeanSeaLevel, settingsViewModel::setUseMeanSeaLevel, uiState.meanSeaLevel) { settingsViewModel.setMeanSeaLevel(it.toDouble()) },
@@ -489,16 +514,25 @@ private tailrec fun Context.findActivity(): Activity? = when (this) {
  */
 private fun searchTextOf(entry: SettingEntry, context: Context): String {
     val base = context.getString(entry.titleRes) + " " + context.getString(entry.descriptionRes)
-    return if (entry is SettingEntry.Language) {
-        val option = entry.selected
-        val display = if (option == LanguageOption.SYSTEM) {
-            context.getString(option.labelRes)
-        } else {
-            option.autonym ?: context.getString(option.labelRes)
+    return when (entry) {
+        is SettingEntry.Language -> {
+            val option = entry.selected
+            val display = if (option == LanguageOption.SYSTEM) {
+                context.getString(option.labelRes)
+            } else {
+                option.autonym ?: context.getString(option.labelRes)
+            }
+            "$base $display"
         }
-        "$base $display"
-    } else {
-        base
+        is SettingEntry.MapSource -> {
+            val display = context.getString(entry.selected.labelRes)
+            "$base $display"
+        }
+        is SettingEntry.Theme -> {
+            val display = context.getString(entry.selected.labelRes)
+            "$base $display"
+        }
+        else -> base
     }
 }
 
@@ -553,6 +587,10 @@ private fun SettingEntryRow(entry: SettingEntry) {
         is SettingEntry.Theme -> ThemeSettingItem(
             selectedTheme = entry.selected,
             onThemeSelected = entry.onSelected
+        )
+        is SettingEntry.MapSource -> MapSourceSettingItem(
+            selectedSource = entry.selected,
+            onSourceSelected = entry.onSelected
         )
     }
 }
@@ -853,6 +891,55 @@ private fun ThemeSettingItem(
             selectedTheme = selectedTheme,
             onThemeSelected = {
                 onThemeSelected(it)
+                showDialog = false
+            },
+            onDismiss = { showDialog = false }
+        )
+    }
+}
+
+/**
+ * Map source picker row. Displays the setting title with an info tooltip button and the currently
+ * active map source name on the right. Tapping anywhere on the row opens [MapSourceSelectionDialog].
+ *
+ * @param selectedSource Currently active [MapSourceOption], shown in the collapsed row.
+ * @param onSourceSelected Invoked with the chosen [MapSourceOption] after user taps an item in dialog.
+ */
+@Composable
+private fun MapSourceSettingItem(
+    selectedSource: MapSourceOption,
+    onSourceSelected: (MapSourceOption) -> Unit
+) {
+    var showDialog by remember { mutableStateOf(false) }
+    var showTooltip by remember { mutableStateOf(false) }
+
+    Column(
+        modifier = Modifier
+            .fillMaxWidth()
+            .padding(Dimensions.SPACING_SMALL)
+    ) {
+        SettingHeader(
+            title = stringResource(R.string.setting_map_source_title),
+            description = stringResource(R.string.setting_map_source_description),
+            showTooltip = showTooltip,
+            onToggleTooltip = { showTooltip = !showTooltip },
+            onClick = { showDialog = true },
+            trailing = {
+                Text(
+                    text = stringResource(selectedSource.labelRes),
+                    style = MaterialTheme.typography.bodyMedium,
+                    color = MaterialTheme.colorScheme.onSurfaceVariant,
+                    modifier = Modifier.padding(start = Dimensions.SPACING_SMALL)
+                )
+            }
+        )
+    }
+
+    if (showDialog) {
+        MapSourceSelectionDialog(
+            selectedSource = selectedSource,
+            onSourceSelected = {
+                onSourceSelected(it)
                 showDialog = false
             },
             onDismiss = { showDialog = false }

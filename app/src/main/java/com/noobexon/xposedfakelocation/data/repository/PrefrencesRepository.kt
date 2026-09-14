@@ -15,6 +15,7 @@ import com.noobexon.xposedfakelocation.data.DEFAULT_ENABLE_SYSTEM_HOOKS
 import com.noobexon.xposedfakelocation.data.DEFAULT_ENABLE_WIFI_IDENTITY
 import com.noobexon.xposedfakelocation.data.DEFAULT_HIDE_FAKE_LOCATION_TOAST
 import com.noobexon.xposedfakelocation.data.DEFAULT_LANGUAGE_TAG
+import com.noobexon.xposedfakelocation.data.DEFAULT_MAP_SOURCE
 import com.noobexon.xposedfakelocation.data.DEFAULT_MAP_ZOOM
 import com.noobexon.xposedfakelocation.data.DEFAULT_MEAN_SEA_LEVEL
 import com.noobexon.xposedfakelocation.data.DEFAULT_MEAN_SEA_LEVEL_ACCURACY
@@ -22,6 +23,7 @@ import com.noobexon.xposedfakelocation.data.DEFAULT_RANDOMIZE_RADIUS
 import com.noobexon.xposedfakelocation.data.DEFAULT_SPEED
 import com.noobexon.xposedfakelocation.data.DEFAULT_SPEED_ACCURACY
 import com.noobexon.xposedfakelocation.data.DEFAULT_THEME_OPTION
+import com.noobexon.xposedfakelocation.data.DEFAULT_TIANDITU_TOKEN
 import com.noobexon.xposedfakelocation.data.DEFAULT_USE_ACCURACY
 import com.noobexon.xposedfakelocation.data.DEFAULT_USE_ALTITUDE
 import com.noobexon.xposedfakelocation.data.DEFAULT_USE_MEAN_SEA_LEVEL
@@ -44,6 +46,7 @@ import com.noobexon.xposedfakelocation.data.KEY_HIDE_FAKE_LOCATION_TOAST
 import com.noobexon.xposedfakelocation.data.KEY_IS_PLAYING
 import com.noobexon.xposedfakelocation.data.KEY_LANGUAGE_TAG
 import com.noobexon.xposedfakelocation.data.KEY_LAST_CLICKED_LOCATION
+import com.noobexon.xposedfakelocation.data.KEY_MAP_SOURCE
 import com.noobexon.xposedfakelocation.data.KEY_MAP_ZOOM
 import com.noobexon.xposedfakelocation.data.KEY_MEAN_SEA_LEVEL
 import com.noobexon.xposedfakelocation.data.KEY_MEAN_SEA_LEVEL_ACCURACY
@@ -52,6 +55,7 @@ import com.noobexon.xposedfakelocation.data.KEY_SPEED
 import com.noobexon.xposedfakelocation.data.KEY_SPEED_ACCURACY
 import com.noobexon.xposedfakelocation.data.KEY_TARGET_APPS
 import com.noobexon.xposedfakelocation.data.KEY_THEME_OPTION
+import com.noobexon.xposedfakelocation.data.KEY_TIANDITU_TOKEN
 import com.noobexon.xposedfakelocation.data.KEY_USE_ACCURACY
 import com.noobexon.xposedfakelocation.data.KEY_USE_ALTITUDE
 import com.noobexon.xposedfakelocation.data.KEY_USE_MEAN_SEA_LEVEL
@@ -427,6 +431,18 @@ class PreferencesRepository(context: Context) {
     // region Theme (local)
     fun getThemeOptionFlow(): Flow<String> = localFlow(KEY_THEME_OPTION) { it.getString(KEY_THEME_OPTION, DEFAULT_THEME_OPTION) ?: DEFAULT_THEME_OPTION }
     suspend fun saveThemeOption(themeTag: String) = editLocal { putString(KEY_THEME_OPTION, themeTag) }
+    // endregion
+
+    // region Map Source (local)
+    fun getMapSourceOptionFlow(): Flow<String> = localFlow(KEY_MAP_SOURCE) { it.getString(KEY_MAP_SOURCE, DEFAULT_MAP_SOURCE) ?: DEFAULT_MAP_SOURCE }
+    suspend fun saveMapSourceOption(sourceTag: String) = editLocal { putString(KEY_MAP_SOURCE, sourceTag) }
+    fun getMapSourceOption(): String = localPrefs.getString(KEY_MAP_SOURCE, DEFAULT_MAP_SOURCE) ?: DEFAULT_MAP_SOURCE
+    // endregion
+
+    // region TianDiTu Token (local)
+    fun getTianDiTuTokenFlow(): Flow<String> = localFlow(KEY_TIANDITU_TOKEN) { it.getString(KEY_TIANDITU_TOKEN, DEFAULT_TIANDITU_TOKEN) ?: DEFAULT_TIANDITU_TOKEN }
+    suspend fun saveTianDiTuToken(token: String) = editLocal { putString(KEY_TIANDITU_TOKEN, token.trim()) }
+    fun getTianDiTuToken(): String = localPrefs.getString(KEY_TIANDITU_TOKEN, DEFAULT_TIANDITU_TOKEN) ?: DEFAULT_TIANDITU_TOKEN
     // endregion
 
 }

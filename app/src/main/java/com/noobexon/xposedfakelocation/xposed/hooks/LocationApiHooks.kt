@@ -47,6 +47,10 @@ class LocationApiHooks(private val module: XposedInterface, private val classLoa
                 } else {
                     module.log(Log.INFO, tag, "getMslAltitudeMeters() and getMslAltitudeAccuracyMeters() not available on this API level")
                 }
+                hookMethod("isFromMockProvider", enabled = { true }) { false }
+                if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.S) {
+                    hookMethod("isMock", enabled = { true }) { false }
+                }
             }
         }.onFailure { module.log(Log.ERROR, tag, "Error hooking Location class - ${it.message}") }
     }

@@ -92,17 +92,13 @@ object LocationUtil {
      */
     @Synchronized
     fun createFakeLocation(originalLocation: Location? = null, provider: String = LocationManager.GPS_PROVIDER): Location {
-        val fakeLocation = if (originalLocation == null) {
-            Location(provider).apply {
-                time = System.currentTimeMillis() - 300
-            }
-        } else {
-            Location(originalLocation.provider).apply {
-                time = originalLocation.time
-                accuracy = originalLocation.accuracy
+        val targetProvider = originalLocation?.provider?.takeIf { it.isNotEmpty() } ?: provider
+        val fakeLocation = Location(targetProvider).apply {
+            time = System.currentTimeMillis()
+            elapsedRealtimeNanos = android.os.SystemClock.elapsedRealtimeNanos()
+            if (originalLocation != null) {
                 bearing = originalLocation.bearing
                 bearingAccuracyDegrees = originalLocation.bearingAccuracyDegrees
-                elapsedRealtimeNanos = originalLocation.elapsedRealtimeNanos
                 verticalAccuracyMeters = originalLocation.verticalAccuracyMeters
             }
         }
@@ -112,6 +108,11 @@ object LocationUtil {
 
         if (accuracy != 0F) {
             fakeLocation.accuracy = accuracy
+        } else if (originalLocation != null && originalLocation.accuracy > 0F) {
+            fakeLocation.accuracy = originalLocation.accuracy
+        } else {
+            // Provide a realistic GPS accuracy (3.0m) if unset, preventing map SDKs from discarding it as invalid.
+            fakeLocation.accuracy = 3.0f
         }
 
         if (altitude != 0.0) {

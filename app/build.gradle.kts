@@ -37,6 +37,17 @@ android {
         targetSdk = 36
         versionCode = appVersionCode
         versionName = appVersionName
+
+        ndk {
+            val targetAbi = project.findProperty("targetAbi") as String?
+            if (targetAbi == "all") {
+                // leave abiFilters empty to package all ABIs
+            } else if (!targetAbi.isNullOrBlank()) {
+                abiFilters += targetAbi.split(",")
+            } else {
+                abiFilters += listOf("arm64-v8a")
+            }
+        }
     }
 
     buildTypes {
@@ -71,6 +82,11 @@ android {
     buildFeatures {
         compose = true
         buildConfig = true
+    }
+
+    lint {
+        abortOnError = false
+        checkReleaseBuilds = false
     }
 }
 

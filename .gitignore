@@ -43,3 +43,4 @@ app/google-services.json
 build-install.bat
 
 /.vscode
+/.zcode/

@@ -26,6 +26,8 @@ class MainActivity : ComponentActivity() {
 
         Configuration.getInstance().load(this, getPreferences(MODE_PRIVATE))
 
+        RefreshRateHelper.applyHighRefreshRate(this)
+
         enableEdgeToEdge()
 
         setContent {
@@ -42,5 +44,10 @@ class MainActivity : ComponentActivity() {
                 AppNavGraph(navController = navController)
             }
         }
+    }
+
+    override fun onResume() {
+        super.onResume()
+        RefreshRateHelper.applyHighRefreshRate(this)
     }
 }

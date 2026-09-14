@@ -1,6 +1,8 @@
 package com.noobexon.xposedfakelocation.manager
 
+import android.app.Activity
 import android.app.Application
+import android.os.Bundle
 import io.github.libxposed.service.XposedService
 import io.github.libxposed.service.XposedServiceHelper
 import kotlinx.coroutines.flow.MutableStateFlow
@@ -17,6 +19,22 @@ class App : Application(), XposedServiceHelper.OnServiceListener {
     override fun onCreate() {
         super.onCreate()
         XposedServiceHelper.registerListener(this)   // exactly once
+
+        registerActivityLifecycleCallbacks(object : ActivityLifecycleCallbacks {
+            override fun onActivityCreated(activity: Activity, savedInstanceState: Bundle?) {
+                RefreshRateHelper.applyHighRefreshRate(activity)
+            }
+
+            override fun onActivityResumed(activity: Activity) {
+                RefreshRateHelper.applyHighRefreshRate(activity)
+            }
+
+            override fun onActivityStarted(activity: Activity) {}
+            override fun onActivityPaused(activity: Activity) {}
+            override fun onActivityStopped(activity: Activity) {}
+            override fun onActivitySaveInstanceState(activity: Activity, outState: Bundle) {}
+            override fun onActivityDestroyed(activity: Activity) {}
+        })
     }
 
     override fun onServiceBind(service: XposedService) {

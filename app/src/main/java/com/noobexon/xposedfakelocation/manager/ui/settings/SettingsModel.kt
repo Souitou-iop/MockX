@@ -9,12 +9,14 @@ import com.noobexon.xposedfakelocation.data.DEFAULT_ENABLE_SYSTEM_HOOKS
 import com.noobexon.xposedfakelocation.data.DEFAULT_ENABLE_WIFI_IDENTITY
 import com.noobexon.xposedfakelocation.data.DEFAULT_HIDE_FAKE_LOCATION_TOAST
 import com.noobexon.xposedfakelocation.data.DEFAULT_LANGUAGE_TAG
+import com.noobexon.xposedfakelocation.data.DEFAULT_MAP_SOURCE
 import com.noobexon.xposedfakelocation.data.DEFAULT_MEAN_SEA_LEVEL
 import com.noobexon.xposedfakelocation.data.DEFAULT_MEAN_SEA_LEVEL_ACCURACY
 import com.noobexon.xposedfakelocation.data.DEFAULT_RANDOMIZE_RADIUS
 import com.noobexon.xposedfakelocation.data.DEFAULT_SPEED
 import com.noobexon.xposedfakelocation.data.DEFAULT_SPEED_ACCURACY
 import com.noobexon.xposedfakelocation.data.DEFAULT_THEME_OPTION
+import com.noobexon.xposedfakelocation.data.DEFAULT_TIANDITU_TOKEN
 import com.noobexon.xposedfakelocation.data.DEFAULT_USE_ACCURACY
 import com.noobexon.xposedfakelocation.data.DEFAULT_USE_ALTITUDE
 import com.noobexon.xposedfakelocation.data.DEFAULT_USE_MEAN_SEA_LEVEL
@@ -28,6 +30,7 @@ import com.noobexon.xposedfakelocation.data.DEFAULT_WIFI_BSSID
 import com.noobexon.xposedfakelocation.data.DEFAULT_WIFI_RSSI
 import com.noobexon.xposedfakelocation.data.DEFAULT_WIFI_SSID
 import com.noobexon.xposedfakelocation.manager.localization.LanguageOption
+import com.noobexon.xposedfakelocation.manager.ui.map.MapSourceOption
 import com.noobexon.xposedfakelocation.manager.ui.theme.ThemeOption
 import kotlin.math.round
 
@@ -39,6 +42,7 @@ import kotlin.math.round
  */
 enum class SettingsCategory(@StringRes val titleRes: Int) {
     LOCATION(R.string.category_location),
+    MAP(R.string.category_map),
     ALTITUDE(R.string.category_altitude),
     MOVEMENT(R.string.category_movement),
     NOTIFICATIONS(R.string.category_notifications),
@@ -166,6 +170,8 @@ object SettingKeys {
     const val BROADCAST = "broadcast"
     const val THEME = "theme"
     const val LANGUAGE = "language"
+    const val MAP_SOURCE = "map_source"
+    const val TIANDITU_TOKEN = "tianditu_token"
 }
 
 enum class TextInputKind {
@@ -274,6 +280,23 @@ sealed interface SettingEntry {
         override val titleRes: Int get() = R.string.setting_theme_title
         override val descriptionRes: Int get() = R.string.setting_theme_description
     }
+
+    /**
+     * The map tile source picker row. Tapping anywhere on the row opens a map source selection
+     * dialog; selecting an option there applies it immediately to the MapView.
+     *
+     * @property selected The currently active [MapSourceOption], shown collapsed in the row.
+     * @property onSelected Callback invoked with the chosen [MapSourceOption] when the user selects
+     *   an item in the dialog.
+     */
+    data class MapSource(
+        val selected: MapSourceOption,
+        val onSelected: (MapSourceOption) -> Unit
+    ) : SettingEntry {
+        override val key: String get() = SettingKeys.MAP_SOURCE
+        override val titleRes: Int get() = R.string.setting_map_source_title
+        override val descriptionRes: Int get() = R.string.setting_map_source_description
+    }
 }
 
 /**
@@ -294,6 +317,9 @@ data class SettingsUiState(
     val accuracy: Float = DEFAULT_ACCURACY.toFloat(),
     val useVerticalAccuracy: Boolean = DEFAULT_USE_VERTICAL_ACCURACY,
     val verticalAccuracy: Float = DEFAULT_VERTICAL_ACCURACY,
+    // Map
+    val mapSource: MapSourceOption = MapSourceOption.fromTag(DEFAULT_MAP_SOURCE),
+    val tiandituToken: String = DEFAULT_TIANDITU_TOKEN,
     // Altitude
     val useAltitude: Boolean = DEFAULT_USE_ALTITUDE,
     val altitude: Float = DEFAULT_ALTITUDE.toFloat(),

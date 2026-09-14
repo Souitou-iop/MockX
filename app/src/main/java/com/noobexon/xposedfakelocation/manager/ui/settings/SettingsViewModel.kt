@@ -13,12 +13,14 @@ import com.noobexon.xposedfakelocation.data.DEFAULT_ENABLE_SYSTEM_HOOKS
 import com.noobexon.xposedfakelocation.data.DEFAULT_ENABLE_WIFI_IDENTITY
 import com.noobexon.xposedfakelocation.data.DEFAULT_HIDE_FAKE_LOCATION_TOAST
 import com.noobexon.xposedfakelocation.data.DEFAULT_LANGUAGE_TAG
+import com.noobexon.xposedfakelocation.data.DEFAULT_MAP_SOURCE
 import com.noobexon.xposedfakelocation.data.DEFAULT_MEAN_SEA_LEVEL
 import com.noobexon.xposedfakelocation.data.DEFAULT_MEAN_SEA_LEVEL_ACCURACY
 import com.noobexon.xposedfakelocation.data.DEFAULT_RANDOMIZE_RADIUS
 import com.noobexon.xposedfakelocation.data.DEFAULT_SPEED
 import com.noobexon.xposedfakelocation.data.DEFAULT_SPEED_ACCURACY
 import com.noobexon.xposedfakelocation.data.DEFAULT_THEME_OPTION
+import com.noobexon.xposedfakelocation.data.DEFAULT_TIANDITU_TOKEN
 import com.noobexon.xposedfakelocation.data.DEFAULT_USE_ACCURACY
 import com.noobexon.xposedfakelocation.data.DEFAULT_USE_ALTITUDE
 import com.noobexon.xposedfakelocation.data.DEFAULT_USE_MEAN_SEA_LEVEL
@@ -38,6 +40,7 @@ import com.noobexon.xposedfakelocation.data.repository.PreferencesRepository
 import com.noobexon.xposedfakelocation.manager.App
 import com.noobexon.xposedfakelocation.manager.control.ControlReceiver
 import com.noobexon.xposedfakelocation.manager.localization.LocaleController
+import com.noobexon.xposedfakelocation.manager.ui.map.MapSourceOption
 import com.noobexon.xposedfakelocation.manager.ui.theme.ThemeOption
 import io.github.libxposed.service.XposedService
 import kotlinx.coroutines.CancellationException
@@ -308,6 +311,18 @@ class SettingsViewModel(application: Application) : AndroidViewModel(application
         preferencesRepository::saveThemeOption
     )
 
+    private val _mapSource = Preference(
+        DEFAULT_MAP_SOURCE,
+        preferencesRepository.getMapSourceOptionFlow(),
+        preferencesRepository::saveMapSourceOption
+    )
+
+    private val _tiandituToken = Preference(
+        DEFAULT_TIANDITU_TOKEN,
+        preferencesRepository.getTianDiTuTokenFlow(),
+        preferencesRepository::saveTianDiTuToken
+    )
+
     // ---- UI state ----------------------------------------------------------------------------
 
     /**
@@ -353,6 +368,8 @@ class SettingsViewModel(application: Application) : AndroidViewModel(application
         .combine(_wifiRssi.state)                { s, v -> s.copy(wifiRssi = v) }
         .combine(_languageTag.state)             { s, v -> s.copy(languageTag = v) }
         .combine(_themeOption.state)             { s, v -> s.copy(themeOption = ThemeOption.fromTag(v)) }
+        .combine(_mapSource.state)               { s, v -> s.copy(mapSource = MapSourceOption.fromTag(v)) }
+        .combine(_tiandituToken.state)           { s, v -> s.copy(tiandituToken = v) }
         .stateIn(viewModelScope, SharingStarted.Eagerly, SettingsUiState())
 
     // ---- Setters -----------------------------------------------------------------------------
@@ -482,6 +499,10 @@ class SettingsViewModel(application: Application) : AndroidViewModel(application
      * @param option The [ThemeOption] to activate.
      */
     fun setTheme(option: ThemeOption) = _themeOption.set(option.tag)
+
+    fun setMapSource(option: MapSourceOption) = _mapSource.set(option.tag)
+
+    fun setTianDiTuToken(token: String) = _tiandituToken.set(token.trim())
 
     /**
      * Selects the UI language identified by [tag]. Persists the choice through both the normal

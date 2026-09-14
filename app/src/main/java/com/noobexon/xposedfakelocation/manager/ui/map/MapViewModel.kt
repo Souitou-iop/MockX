@@ -87,6 +87,33 @@ class MapViewModel(application: Application) : AndroidViewModel(application) {
                 _uiState.update { it.copy(lastClickedLocation = geoPoint) }
             }
         }
+
+        viewModelScope.launch {
+            preferencesRepository.getMapSourceOptionFlow().collect { tag ->
+                _uiState.update { it.copy(mapSource = MapSourceOption.fromTag(tag)) }
+            }
+        }
+
+        viewModelScope.launch {
+            preferencesRepository.getTianDiTuTokenFlow().collect { token ->
+                _uiState.update { it.copy(tiandituToken = token) }
+            }
+        }
+    }
+
+    fun setMapSource(option: MapSourceOption) {
+        _uiState.update { it.copy(mapSource = option) }
+        viewModelScope.launch {
+            preferencesRepository.saveMapSourceOption(option.tag)
+        }
+    }
+
+    fun showMapSourceDialog() {
+        _uiState.update { it.copy(isMapSourceDialogVisible = true) }
+    }
+
+    fun hideMapSourceDialog() {
+        _uiState.update { it.copy(isMapSourceDialogVisible = false) }
     }
 
     /**

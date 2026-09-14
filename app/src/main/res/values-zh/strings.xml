@@ -59,6 +59,7 @@
     <string name="category_external_control">外部控制</string>
     <string name="category_system_hooks">系统级 Hook</string>
     <string name="category_wifi_identity">Wi-Fi 身份</string>
+    <string name="category_map">地图设置</string>
     <string name="category_location">位置</string>
     <string name="category_altitude">海拔</string>
     <string name="category_movement">移动</string>
@@ -139,6 +140,7 @@
     <string name="override_off">关闭</string>
 
     <string name="map_go_to_point">前往坐标点</string>
+    <string name="map_switch_source">切换地图图源</string>
     <string name="map_add_to_favorites">添加到收藏</string>
     <string name="map_add_to_templates">添加到模板</string>
     <string name="map_update_template_location">更新模板位置</string>
@@ -147,6 +149,15 @@
     <string name="toast_unset_fake_location">已取消虚拟位置</string>
     <string name="toast_user_location_not_available">用户位置不可用</string>
     <string name="map_updating">正在更新地图…</string>
+    <string name="setting_map_source_title">地图图源</string>
+    <string name="setting_map_source_description">选择管理器应用使用的地图底图图源与图层服务商。</string>
+    <string name="map_source_amap_vector">高德地图 (矢量街道)</string>
+    <string name="map_source_amap_satellite">高德地图 (卫星影像)</string>
+    <string name="map_source_tianditu_vector">天地图 (矢量地图)</string>
+    <string name="map_source_osm">OpenStreetMap (国际官方)</string>
+    <string name="setting_tianditu_token_title">天地图 Token</string>
+    <string name="setting_tianditu_token_description">天地图国家地理信息公共服务平台密钥（可前往 tianditu.gov.cn 免费申请）。</string>
+    <string name="setting_tianditu_token_label">Token</string>
 
     <string name="field_name">名称</string>
     <string name="field_description">描述（可选）</string>

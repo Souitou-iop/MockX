@@ -10,6 +10,7 @@ import androidx.compose.material.icons.Icons
 import androidx.compose.material.icons.filled.Clear
 import androidx.compose.material.icons.filled.FavoriteBorder
 import androidx.compose.material.icons.filled.LocationSearching
+import androidx.compose.material.icons.filled.Map
 import androidx.compose.material.icons.filled.Menu
 import androidx.compose.material.icons.filled.MoreVert
 import androidx.compose.material.icons.filled.MyLocation
@@ -78,6 +79,7 @@ fun MapScreen(
     val isFabClickable = uiState.isFabClickable
     val showGoToPointDialog = uiState.isGoToPointDialogVisible
     val showAddToFavoritesDialog = uiState.isAddToFavoritesDialogVisible
+    val showMapSourceDialog = uiState.isMapSourceDialogVisible
     val drawerState = rememberDrawerState(initialValue = DrawerValue.Closed)
     val scope = rememberCoroutineScope()
     var showOptionsMenu by remember { mutableStateOf(false) }
@@ -155,6 +157,19 @@ fun MapScreen(
                                 onClick = {
                                     showOptionsMenu = false
                                     mapViewModel.showGoToPointDialog()
+                                }
+                            )
+                            DropdownMenuItem(
+                                leadingIcon = {
+                                    Icon(
+                                        imageVector = Icons.Default.Map,
+                                        contentDescription = stringResource(R.string.map_switch_source)
+                                    )
+                                },
+                                text = { Text(stringResource(R.string.map_switch_source)) },
+                                onClick = {
+                                    showOptionsMenu = false
+                                    mapViewModel.showMapSourceDialog()
                                 }
                             )
                             DropdownMenuItem(
@@ -241,6 +256,8 @@ fun MapScreen(
                     userLocation = uiState.userLocation,
                     isPlaying = uiState.isPlaying,
                     mapZoom = uiState.mapZoom,
+                    mapSource = uiState.mapSource,
+                    tiandituToken = uiState.tiandituToken,
                     hasResolvedInitialLocation = uiState.hasResolvedInitialLocation,
                     goToPointEvent = mapViewModel.goToPointEvent,
                     centerMapEvent = mapViewModel.centerMapEvent,
@@ -283,6 +300,17 @@ fun MapScreen(
                 onLongitudeChange = mapViewModel::onFavoriteLongitudeChange,
                 onConfirm = mapViewModel::confirmAddFavorite,
                 onDismissRequest = mapViewModel::hideAddToFavoritesDialog,
+            )
+        }
+
+        if (showMapSourceDialog) {
+            MapSourceSelectionDialog(
+                selectedSource = uiState.mapSource,
+                onSourceSelected = { option ->
+                    mapViewModel.setMapSource(option)
+                    mapViewModel.hideMapSourceDialog()
+                },
+                onDismiss = mapViewModel::hideMapSourceDialog
             )
         }
     }
