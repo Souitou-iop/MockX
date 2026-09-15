@@ -53,7 +53,7 @@
     <string name="coming_soon">Coming soon!</string>
 
     <string name="dialog_module_not_active_title">Module Not Active</string>
-    <string name="dialog_module_not_active_message">XposedFakeLocation module is not active in your Xposed manager app. Please enable it and restart the app to continue.</string>
+    <string name="dialog_module_not_active_message">MockX module is not active in your Xposed manager app. Please enable it and restart the app to continue.</string>
 
     <string name="category_language">Language</string>
     <string name="category_appearance">Appearance</string>
@@ -94,7 +94,7 @@
     <string name="dialog_restart_required_title">Restart Required</string>
     <string name="dialog_restart_required_enable_message">System-level hooks were added to the module scope. Please restart your device for them to take effect.</string>
     <string name="dialog_restart_required_disable_message">System-level hooks were removed from the module scope. Please restart your device to fully undo them.</string>
-    <string name="system_hooks_module_inactive">Module is not active. Enable XposedFakeLocation in your Xposed manager first.</string>
+    <string name="system_hooks_module_inactive">Module is not active. Enable MockX in your Xposed manager first.</string>
     <string name="system_hooks_scope_failed">Couldn\'t update scope: %1$s</string>
     <string name="setting_more_info">More information about %1$s</string>
     <string name="setting_disable">Disable %1$s</string>

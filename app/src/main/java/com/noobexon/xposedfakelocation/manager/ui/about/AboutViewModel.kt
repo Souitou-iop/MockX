@@ -165,7 +165,7 @@ class AboutViewModel : ViewModel() {
             connectTimeout = TIMEOUT_MILLIS
             readTimeout = TIMEOUT_MILLIS
             // GitHub rejects requests without a User-Agent header.
-            setRequestProperty("User-Agent", "XposedFakeLocation-App")
+            setRequestProperty("User-Agent", "MockX-App")
             setRequestProperty("Accept", "application/vnd.github+json")
         }
 
@@ -211,8 +211,8 @@ class AboutViewModel : ViewModel() {
 
     private companion object {
         const val CONTRIBUTORS_URL =
-            "https://api.github.com/repos/noobexon1/XposedFakeLocation/contributors?per_page=100"
-        const val DEVELOPER = "noobexon1"
+            "https://api.github.com/repos/Souitou-iop/MockX/contributors?per_page=100"
+        const val DEVELOPER = "Souitou-iop"
         const val TIMEOUT_MILLIS = 10_000
         const val CACHE_TTL_MILLIS = 5 * 60 * 1000L
 

@@ -53,7 +53,7 @@
     <string name="coming_soon">Demnächst verfügbar!</string>
 
     <string name="dialog_module_not_active_title">Modul nicht aktiv</string>
-    <string name="dialog_module_not_active_message">Das XposedFakeLocation-Modul ist in deiner Xposed-Manager-App nicht aktiv. Bitte aktiviere es und starte die App neu, um fortzufahren.</string>
+    <string name="dialog_module_not_active_message">Das MockX-Modul ist in deiner Xposed-Manager-App nicht aktiv. Bitte aktiviere es und starte die App neu, um fortzufahren.</string>
 
     <string name="category_language">Sprache</string>
     <string name="category_appearance">Erscheinungsbild</string>
@@ -82,7 +82,7 @@
     <string name="dialog_restart_required_title">Neustart erforderlich</string>
     <string name="dialog_restart_required_enable_message">Systemweite Hooks wurden zum Modulbereich hinzugefügt. Bitte starte dein Gerät neu, damit sie wirksam werden.</string>
     <string name="dialog_restart_required_disable_message">Systemweite Hooks wurden aus dem Modulbereich entfernt. Bitte starte dein Gerät neu, um sie vollständig rückgängig zu machen.</string>
-    <string name="system_hooks_module_inactive">Modul ist nicht aktiv. Aktiviere zuerst XposedFakeLocation in deinem Xposed-Manager.</string>
+    <string name="system_hooks_module_inactive">Modul ist nicht aktiv. Aktiviere zuerst MockX in deinem Xposed-Manager.</string>
     <string name="system_hooks_scope_failed">Bereich konnte nicht aktualisiert werden: %1$s</string>
     <string name="setting_more_info">Weitere Informationen über %1$s</string>
     <string name="setting_disable">%1$s deaktivieren</string>
@@ -186,12 +186,12 @@
     <string name="target_apps_filter_no_results">Keine Apps entsprechen dem aktiven Filter</string>
     <string name="cd_filter_apps">Apps filtern</string>
     <string name="target_apps_selected_count">%1$d ausgewählt</string>
-    <string name="target_apps_module_inactive">Modul ist nicht aktiv. Aktiviere XposedFakeLocation in deinem Xposed-Manager, um Ziel-Apps auszuwählen.</string>
+    <string name="target_apps_module_inactive">Modul ist nicht aktiv. Aktiviere MockX in deinem Xposed-Manager, um Ziel-Apps auszuwählen.</string>
     <string name="target_apps_scope_request_failed">Bereich konnte nicht aktualisiert werden: %1$s</string>
     <string name="target_apps_relaunch_cd">%1$s neu starten</string>
     <string name="target_apps_relaunching">%1$s wird neu gestartet…</string>
     <string name="target_apps_relaunch_failed">%1$s konnte nicht neu gestartet werden. Sind Root-Rechte gewährt?</string>
-    <string name="target_apps_root_required">Das erneute Starten einer Ziel-App erfordert Root-Zugriff für XposedFakeLocation. Bitte gewähre diesen in deinem Root-Manager.</string>
+    <string name="target_apps_root_required">Das erneute Starten einer Ziel-App erfordert Root-Zugriff für MockX. Bitte gewähre diesen in deinem Root-Manager.</string>
 
     <string name="permissions_activity_error">Fehler: Zugriff auf Aktivität nicht möglich.</string>
     <string name="permissions_required">Berechtigungen sind erforderlich, um diese App zu nutzen</string>
@@ -199,7 +199,7 @@
     <string name="permissions_permanently_denied">Du hast die Standortberechtigungen dauerhaft verweigert. Bitte aktiviere sie in den Einstellungen und starte die App neu.</string>
     <string name="permissions_open_settings">Einstellungen öffnen</string>
 
-    <string name="about_description">XposedFakeLocation ist eine App, die es Nutzern ermöglicht, ihren Standort zu Test- oder Unterhaltungszwecken zu fälschen.\n\nNutze sie verantwortungsvoll und stelle sicher, dass du bei der Nutzung von Standortdiensten alle geltenden lokalen Vorschriften einhältst.\n\nDu bist für die Nutzung dieser App vollständig selbst verantwortlich.</string>
+    <string name="about_description">MockX ist eine App, die es Nutzern ermöglicht, ihren Standort zu Test- oder Unterhaltungszwecken zu fälschen.\n\nNutze sie verantwortungsvoll und stelle sicher, dass du bei der Nutzung von Standortdiensten alle geltenden lokalen Vorschriften einhältst.\n\nDu bist für die Nutzung dieser App vollständig selbst verantwortlich.</string>
     <string name="about_version_label">Version:</string>
     <string name="about_developer_label">Erstellt von:</string>
     <string name="about_contributors_label">Mitwirkende:</string>

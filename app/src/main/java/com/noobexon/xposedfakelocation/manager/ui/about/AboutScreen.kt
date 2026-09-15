@@ -192,7 +192,7 @@ fun AboutScreen(
                         modifier = Modifier
                             .fillMaxWidth()
                             .clickable {
-                                val intent = Intent(Intent.ACTION_VIEW, Uri.parse("https://github.com/Souitou-iop/XposedFakeLocation"))
+                                val intent = Intent(Intent.ACTION_VIEW, Uri.parse("https://github.com/Souitou-iop/MockX"))
                                 context.startActivity(intent)
                             },
                         verticalAlignment = Alignment.CenterVertically
@@ -205,7 +205,7 @@ fun AboutScreen(
                             )
                             Spacer(modifier = Modifier.height(2.dp))
                             Text(
-                                text = "Souitou-iop / XposedFakeLocation",
+                                text = "Souitou-iop / MockX",
                                 style = MaterialTheme.typography.bodySmall,
                                 color = MaterialTheme.colorScheme.primary
                             )
@@ -347,7 +347,7 @@ private fun ContributorRow(contributor: Contributor) {
                 color = MaterialTheme.colorScheme.onSurface
             )
             Text(
-                text = "原作者 / 核心维护者",
+                text = "核心维护者",
                 style = MaterialTheme.typography.bodySmall.copy(fontSize = 12.sp),
                 color = MaterialTheme.colorScheme.onSurfaceVariant
             )

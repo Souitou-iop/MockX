@@ -1,6 +1,6 @@
-# Contributing to XposedFakeLocation
+# Contributing to MockX
 
-Thanks for your interest in contributing to `XposedFakeLocation`! This document covers the project structure, development setup, and the process for submitting changes.
+Thanks for your interest in contributing to `MockX`! This document covers the project structure, development setup, and the process for submitting changes.
 
 ---
 
@@ -24,9 +24,9 @@ Be respectful and constructive. Issues and pull requests that are abusive, off-t
 ## Ways to Contribute
 
 1. **Fix bugs** 
-   - Visit the [issue tracker](https://github.com/noobexon1/XposedFakeLocation/issues) for known issues or open a new one.
+   - Visit the [issue tracker](https://github.com/Souitou-iop/MockX/issues) for known issues or open a new one.
 2. **Implement new features** 
-   - It is recommended to open an `enhancement` issue at the [issue tracker](https://github.com/noobexon1/XposedFakeLocation/issues) page first to discuss the idea before spending time on an implementation and getting it rejected.
+   - It is recommended to open an `enhancement` issue at the [issue tracker](https://github.com/Souitou-iop/MockX/issues) page first to discuss the idea before spending time on an implementation and getting it rejected.
 3. **Translate the app** 
    - Help translate the app to your language by adding new translations to the `app/src/main/res/values-<language>/strings.xml` file.
 4. **Improve the documentation** 
@@ -39,7 +39,7 @@ Be respectful and constructive. Issues and pull requests that are abusive, off-t
 1. **Clone the repository**
 
    ```shell
-   git clone https://github.com/noobexon1/XposedFakeLocation.git
+   git clone https://github.com/Souitou-iop/MockX.git
    ```
 
 2. **Open in Android Studio and sync the project** 
@@ -84,16 +84,17 @@ Be respectful and constructive. Issues and pull requests that are abusive, off-t
      - Any known limitations or follow-up work.
 
 6. **Wait for review**
+
    - Wait for review and iterate on the changes if needed.
 
 ---
 
 ## Reporting Bugs & Requesting Features
 
-Please use the [GitHub issue tracker](https://github.com/noobexon1/XposedFakeLocation/issues). When reporting a bug, include:
+Please use the [GitHub issue tracker](https://github.com/Souitou-iop/MockX/issues). When reporting a bug, include:
 
 - Device model and Android version
-- `XposedFakeLocation` version
+- `MockX` version
 - Steps to reproduce
 - Expected vs. actual behavior
 - Relevant log output (from the module's log tab)

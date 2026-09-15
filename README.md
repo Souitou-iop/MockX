@@ -8,7 +8,7 @@
 
 **English** | [简体中文](README.zh-CN.md)
 
-[![GitHub License](https://img.shields.io/github/license/Souitou-iop/XposedFakeLocation?style=for-the-badge&color=red&logo=googledocs&logoColor=red)](https://github.com/Souitou-iop/XposedFakeLocation/blob/master/LICENSE)
+[![GitHub License](https://img.shields.io/github/license/Souitou-iop/MockX?style=for-the-badge&color=red&logo=googledocs&logoColor=red)](https://github.com/Souitou-iop/MockX/blob/master/LICENSE)
 ![Platform](https://img.shields.io/badge/platform-Android%2010%2B-green.svg?style=for-the-badge&logo=android)
 ![Xposed API](https://img.shields.io/badge/Xposed%20API-101%2B-8A2BE2.svg?style=for-the-badge&logo=x)
 ![Kotlin](https://img.shields.io/badge/Kotlin-2.2.10-7F52FF.svg?style=for-the-badge&logo=kotlin)
@@ -64,11 +64,11 @@
 
 ## Installation
 
-Build from source (or grab an APK from the [releases](https://github.com/Souitou-iop/XposedFakeLocation/releases) page if available):
+Build from source (or grab an APK from the [releases](https://github.com/Souitou-iop/MockX/releases) page if available):
 
 ```shell
-git clone https://github.com/Souitou-iop/XposedFakeLocation.git
-cd XposedFakeLocation
+git clone https://github.com/Souitou-iop/MockX.git
+cd MockX
 ./gradlew assembleRelease          # arm64-v8a only, ~4.5 MB
 # or: ./gradlew assembleDebug
 adb install app/build/outputs/apk/release/app-release.apk

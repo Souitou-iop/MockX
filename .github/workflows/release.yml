@@ -2,7 +2,7 @@ name: Build & attach release APK
 
 # Triggered when you publish a GitHub Release (with your own notes).
 # CI builds the debug APK, versions it from the release tag, signs it with
-# your debug keystore, and attaches XposedFakeLocation.apk to the release.
+# your debug keystore, and attaches MockX.apk to the release.
 on:
   release:
     types: [published]
@@ -42,9 +42,9 @@ jobs:
         run: ./gradlew --no-daemon assembleDebug -PappVersionName="${{ github.event.release.tag_name }}"
 
       - name: Rename APK
-        run: cp app/build/outputs/apk/debug/app-debug.apk XposedFakeLocation.apk
+        run: cp app/build/outputs/apk/debug/app-debug.apk MockX.apk
 
       - name: Upload APK to release
         env:
           GH_TOKEN: ${{ github.token }}
-        run: gh release upload "${{ github.event.release.tag_name }}" XposedFakeLocation.apk --clobber
+        run: gh release upload "${{ github.event.release.tag_name }}" MockX.apk --clobber

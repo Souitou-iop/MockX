@@ -29,7 +29,7 @@
 | `applicationId` | `io.github.souitou.mockx` |
 | 命名空间（源码包） | `com.noobexon.xposedfakelocation` |
 | 上游仓库 | [noobexon1/XposedFakeLocation](https://github.com/noobexon1/XposedFakeLocation) |
-| Fork 仓库 | [Souitou-iop/XposedFakeLocation](https://github.com/Souitou-iop/XposedFakeLocation) |
+| Fork 仓库 | [Souitou-iop/MockX](https://github.com/Souitou-iop/MockX) |
 | 语言 / UI | Kotlin 2.2.10 / Jetpack Compose（Material 3 + Miuix 0.9.3） |
 | Xposed API | libxposed `api` / `service` 101.0.0（`minApiVersion=101`） |
 | SDK | compileSdk 36 / targetSdk 36 / **minSdk 29（Android 10）** |

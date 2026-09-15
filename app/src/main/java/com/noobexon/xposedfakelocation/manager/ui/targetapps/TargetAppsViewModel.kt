@@ -68,7 +68,7 @@ data class TargetAppItem(
  * @property isLoading `true` during the initial app-list fetch; shows a full-screen spinner.
  * @property isRefreshing `true` during a user-triggered pull-to-refresh; drives the
  *   pull-to-refresh indicator in the UI.
- * @property isModuleActive `true` when the XposedFakeLocation Xposed service is connected.
+ * @property isModuleActive `true` when the MockX Xposed service is connected.
  */
 @Immutable
 data class TargetAppsUiState(

@@ -19,5 +19,5 @@ dependencyResolutionManagement {
     }
 }
 
-rootProject.name = "XposedFakeLocation"
+rootProject.name = "MockX"
 include(":app")
