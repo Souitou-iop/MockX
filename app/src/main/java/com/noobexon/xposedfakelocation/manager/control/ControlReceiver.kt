@@ -14,9 +14,9 @@ class ControlReceiver : BroadcastReceiver() {
     companion object {
         private const val TAG = "ControlReceiver"
 
-        const val ACTION_START = "com.noobexon.xposedfakelocation.action.START"
-        const val ACTION_STOP = "com.noobexon.xposedfakelocation.action.STOP"
-        const val ACTION_SET_LOCATION = "com.noobexon.xposedfakelocation.action.SET_LOCATION"
+        const val ACTION_START = "io.github.souitou.mockx.action.START"
+        const val ACTION_STOP = "io.github.souitou.mockx.action.STOP"
+        const val ACTION_SET_LOCATION = "io.github.souitou.mockx.action.SET_LOCATION"
 
         const val EXTRA_LATITUDE = "latitude"
         const val EXTRA_LONGITUDE = "longitude"

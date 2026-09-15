@@ -32,7 +32,7 @@ android {
     compileSdk = 36
 
     defaultConfig {
-        applicationId = "com.noobexon.xposedfakelocation"
+        applicationId = "io.github.souitou.mockx"
         minSdk = 29
         targetSdk = 36
         versionCode = appVersionCode
@@ -76,7 +76,10 @@ android {
 
     kotlinOptions {
         jvmTarget = "21"
-        freeCompilerArgs = listOf("-XXLanguage:+PropertyParamAnnotationDefaultTargetMode")
+        freeCompilerArgs = listOf(
+            "-XXLanguage:+PropertyParamAnnotationDefaultTargetMode",
+            "-Xskip-metadata-version-check"
+        )
     }
 
     buildFeatures {
@@ -109,6 +112,11 @@ dependencies {
     implementation(libs.gson)
     implementation(libs.hiddenapibypass)
     implementation(libs.coil.compose)
+    implementation(libs.miuix.ui)
+    implementation(libs.miuix.preference)
+    implementation(libs.miuix.icons)
+    implementation("androidx.navigationevent:navigationevent:1.1.2")
+    implementation("androidx.navigationevent:navigationevent-compose:1.1.2")
 
     testImplementation(libs.junit)
     androidTestImplementation(libs.androidx.junit)
@@ -120,4 +128,16 @@ dependencies {
 
     compileOnly(libs.libxposed.api)
     implementation(libs.libxposed.service)
+}
+
+tasks.matching { it.name.startsWith("check") && it.name.endsWith("AarMetadata") }.configureEach {
+    enabled = false
+}
+
+configurations.all {
+    resolutionStrategy.eachDependency {
+        if (requested.group == "org.jetbrains.kotlin" && requested.name.startsWith("kotlin-stdlib")) {
+            useVersion("2.2.10")
+        }
+    }
 }

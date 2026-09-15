@@ -1,5 +1,5 @@
 <resources>
-    <string name="app_name">XposedFakeLocation</string>
+    <string name="app_name">MockX</string>
 
     <string name="description">spoof your device location globally or for specific apps</string>
 
@@ -51,7 +51,7 @@
     <string name="coming_soon">即将推出！</string>
 
     <string name="dialog_module_not_active_title">模块未激活</string>
-    <string name="dialog_module_not_active_message">XposedFakeLocation 模块未在你的 Xposed 管理器中激活。请启用模块并重启应用后继续。</string>
+    <string name="dialog_module_not_active_message">MockX 模块未在你的 Xposed 管理器中激活。请启用模块并重启应用后继续。</string>
 
     <string name="category_language">语言</string>
     <string name="category_appearance">外观</string>
@@ -92,7 +92,7 @@
     <string name="dialog_restart_required_title">需要重启</string>
     <string name="dialog_restart_required_enable_message">系统级 Hook 已添加到模块作用域。请重启设备以使其生效。</string>
     <string name="dialog_restart_required_disable_message">系统级 Hook 已从模块作用域中移除。请重启设备以彻底撤销。</string>
-    <string name="system_hooks_module_inactive">模块未激活。请先在 Xposed 管理器中启用 XposedFakeLocation。</string>
+    <string name="system_hooks_module_inactive">模块未激活。请先在 Xposed 管理器中启用 MockX。</string>
     <string name="system_hooks_scope_failed">无法更新作用域：%1$s</string>
     <string name="setting_more_info">关于 %1$s 的更多信息</string>
     <string name="setting_disable">关闭 %1$s</string>
@@ -196,12 +196,12 @@
     <string name="target_apps_filter_no_results">没有与当前筛选条件匹配的应用</string>
     <string name="cd_filter_apps">筛选应用</string>
     <string name="target_apps_selected_count">已选择 %1$d 个</string>
-    <string name="target_apps_module_inactive">模块未激活。请在 Xposed 管理器中启用 XposedFakeLocation 以选择目标应用。</string>
+    <string name="target_apps_module_inactive">模块未激活。请在 Xposed 管理器中启用 MockX 以选择目标应用。</string>
     <string name="target_apps_scope_request_failed">无法更新作用域：%1$s</string>
     <string name="target_apps_relaunch_cd">重新启动 %1$s</string>
     <string name="target_apps_relaunching">正在重新启动 %1$s…</string>
     <string name="target_apps_relaunch_failed">无法重新启动 %1$s。是否已授予 Root 权限？</string>
-    <string name="target_apps_root_required">重新启动目标应用需要 XposedFakeLocation 拥有 Root 权限。请在您的 Root 管理器中授予该权限。</string>
+    <string name="target_apps_root_required">重新启动目标应用需要 MockX 拥有 Root 权限。请在您的 Root 管理器中授予该权限。</string>
 
     <string name="permissions_activity_error">错误：无法访问 Activity。</string>
     <string name="permissions_required">使用此应用需要授予权限</string>
@@ -209,7 +209,7 @@
     <string name="permissions_permanently_denied">你已永久拒绝位置权限。请前往设置启用权限并重启应用。</string>
     <string name="permissions_open_settings">打开设置</string>
 
-    <string name="about_description">XposedFakeLocation 是一款用于测试或娱乐目的的位置模拟应用。\n\n请负责任地使用它，并确保在使用位置服务时遵守所有适用的当地法规。\n\n你需要对本应用的使用行为完全负责。</string>
+    <string name="about_description">MockX 是一款用于开发调试、安全测试与极客探索的现代化底层位置模拟与防泄漏拦截工具。\n\n具备高精度双向火星坐标纠偏、基站与 Wi-Fi 探针清洗及全系统无缝伪装能力。\n\n请负责任地使用本工具，并确保遵守当地法律法规。</string>
     <string name="about_version_label">版本：</string>
     <string name="about_developer_label">创建者：</string>
     <string name="about_contributors_label">贡献者：</string>

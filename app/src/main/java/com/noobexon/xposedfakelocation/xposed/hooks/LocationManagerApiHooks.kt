@@ -41,6 +41,7 @@ class LocationManagerApiHooks(
 
     private val activeTickers = ConcurrentHashMap<Any, ScheduledFuture<*>>()
     private val hookedListenerClasses = Collections.synchronizedSet(HashSet<Class<*>>())
+    private val registeredListeners = Collections.newSetFromMap(java.util.WeakHashMap<LocationListener, Boolean>())
     private val scheduler = Executors.newSingleThreadScheduledExecutor { r ->
         Thread(r, "FakeLoc-Heartbeat").apply { isDaemon = true }
     }
@@ -57,6 +58,8 @@ class LocationManagerApiHooks(
             hookRemoveUpdates(locationManagerClass)
             hookNmeaListeners(locationManagerClass)
             hookGnssStatusCallbacks(locationManagerClass)
+            hookGnssMeasurements(locationManagerClass)
+            startContinuousHeartbeatLoop()
             module.log(Log.INFO, tag, "Instantiated all LocationManager hooks successfully")
         }.onFailure {
             module.log(Log.ERROR, tag, "Error initializing LocationManagerApiHooks: ${it.message}")
@@ -143,16 +146,15 @@ class LocationManagerApiHooks(
     /**
      * Intercepts all overloads of [LocationManager.requestLocationUpdates].
      * 1. Extracts the [LocationListener] argument and ensures its class methods are hooked.
-     * 2. Starts an active 1-second heartbeat dispatcher to continuously feed fake locations,
-     *    preventing domestic map SDKs from timing out and falling back to network positioning.
+     * 2. Registers the listener into the active tracking pool for continuous heartbeats.
      */
     private fun hookRequestLocationUpdates(clazz: Class<*>) {
         hookAll(clazz, "requestLocationUpdates") { chain ->
             val listener = chain.args.firstOrNull { it is LocationListener } as? LocationListener
             if (listener != null) {
                 hookListenerClassIfNeeded(listener.javaClass)
-                if (PreferencesUtil.getIsPlaying() == true) {
-                    startHeartbeat(listener)
+                synchronized(registeredListeners) {
+                    registeredListeners.add(listener)
                 }
             }
             chain.proceed()
@@ -180,12 +182,15 @@ class LocationManagerApiHooks(
     }
 
     /**
-     * Stops the active heartbeat dispatcher when the target app calls [LocationManager.removeUpdates].
+     * Stops tracking the listener when the target app calls [LocationManager.removeUpdates].
      */
     private fun hookRemoveUpdates(clazz: Class<*>) {
         hookAll(clazz, "removeUpdates") { chain ->
             val listener = chain.args.firstOrNull { it is LocationListener }
             if (listener != null) {
+                synchronized(registeredListeners) {
+                    registeredListeners.remove(listener)
+                }
                 stopHeartbeat(listener)
             }
             chain.proceed()
@@ -234,53 +239,105 @@ class LocationManagerApiHooks(
     }
 
     /**
-     * Hooks the concrete [LocationListener] implementation class used by the target app.
-     * Replaces any real [Location] or `List<Location>` passed into `onLocationChanged` with spoofed data.
+     * Hooks raw GNSS satellite measurement callbacks so apps cannot calculate their own
+     * hardware fix from pseudoranges and carrier phase.
+     */
+    private fun hookGnssMeasurements(clazz: Class<*>) {
+        val measurementMethods = listOf(
+            "registerGnssMeasurementsCallback",
+            "registerGnssNavigationMessageCallback",
+            "registerAntennaInfoListener"
+        )
+        measurementMethods.forEach { methodName ->
+            hookAll(clazz, methodName) { chain ->
+                if (PreferencesUtil.getIsPlaying() == true) {
+                    module.log(Log.INFO, tag, "Suppressed raw GNSS measurement registration ($methodName).")
+                    defaultReturnValue(chain.executable as? Method) ?: false
+                } else {
+                    chain.proceed()
+                }
+            }
+        }
+    }
+
+    /**
+     * Hooks the concrete [LocationListener] implementation class used by the target app,
+     * traversing its class hierarchy to ensure methods defined in abstract or base listener classes
+     * are also intercepted. Replaces any real [Location] or `List<Location>` passed into `onLocationChanged`.
      */
     private fun hookListenerClassIfNeeded(listenerClass: Class<*>) {
-        if (!hookedListenerClasses.add(listenerClass)) return
+        var current: Class<*>? = listenerClass
+        while (current != null && current != Any::class.java) {
+            val targetClass = current
+            if (hookedListenerClasses.add(targetClass)) {
+                runCatching {
+                    val methods = targetClass.declaredMethods.filter { it.name == "onLocationChanged" }
+                    methods.forEach { method ->
+                        module.hook(method).intercept { chain ->
+                            if (PreferencesUtil.getIsPlaying() != true) {
+                                return@intercept chain.proceed()
+                            }
 
-        runCatching {
-            val methods = listenerClass.declaredMethods.filter { it.name == "onLocationChanged" }
-            methods.forEach { method ->
-                module.hook(method).intercept { chain ->
-                    if (PreferencesUtil.getIsPlaying() != true) {
-                        return@intercept chain.proceed()
-                    }
+                            LocationUtil.updateLocation()
+                            val args = chain.args.toTypedArray()
+                            var modified = false
 
-                    LocationUtil.updateLocation()
-                    val args = chain.args.toTypedArray()
-                    var modified = false
-
-                    args.indices.forEach { i ->
-                        val arg = args[i]
-                        if (arg is Location) {
-                            args[i] = LocationUtil.createFakeLocation(originalLocation = arg, provider = arg.provider ?: LocationManager.GPS_PROVIDER)
-                            modified = true
-                        } else if (arg is List<*>) {
-                            val fakeList = arg.map { item ->
-                                if (item is Location) {
-                                    LocationUtil.createFakeLocation(originalLocation = item, provider = item.provider ?: LocationManager.GPS_PROVIDER)
-                                } else {
-                                    item
+                            args.indices.forEach { i ->
+                                val arg = args[i]
+                                if (arg is Location) {
+                                    args[i] = LocationUtil.createFakeLocation(originalLocation = arg, provider = arg.provider ?: LocationManager.GPS_PROVIDER)
+                                    modified = true
+                                } else if (arg is List<*>) {
+                                    val fakeList = arg.map { item ->
+                                        if (item is Location) {
+                                            LocationUtil.createFakeLocation(originalLocation = item, provider = item.provider ?: LocationManager.GPS_PROVIDER)
+                                        } else {
+                                            item
+                                        }
+                                    }
+                                    args[i] = fakeList
+                                    modified = true
                                 }
                             }
-                            args[i] = fakeList
-                            modified = true
+
+                            if (modified) {
+                                chain.proceed(args)
+                            } else {
+                                chain.proceed()
+                            }
                         }
                     }
+                    if (methods.isNotEmpty()) {
+                        module.log(Log.INFO, tag, "Hooked onLocationChanged on class: ${targetClass.name}")
+                    }
+                }.onFailure {
+                    module.log(Log.ERROR, tag, "Failed hooking listener class ${targetClass.name}: ${it.message}")
+                }
+            }
+            current = current.superclass
+        }
+    }
 
-                    if (modified) {
-                        chain.proceed(args)
-                    } else {
-                        chain.proceed()
+    /**
+     * Global continuous heartbeat that pushes fresh fake locations to all currently registered
+     * listeners every second, preventing domestic map SDKs from timing out or falling back to
+     * network positioning.
+     */
+    private fun startContinuousHeartbeatLoop() {
+        scheduler.scheduleAtFixedRate({
+            if (PreferencesUtil.getIsPlaying() == true) {
+                LocationUtil.updateLocation()
+                val fake = LocationUtil.createFakeLocation()
+                val listeners = synchronized(registeredListeners) { registeredListeners.toList() }
+                if (listeners.isNotEmpty()) {
+                    mainHandler.post {
+                        listeners.forEach { listener ->
+                            runCatching { listener.onLocationChanged(fake) }
+                        }
                     }
                 }
             }
-            module.log(Log.INFO, tag, "Hooked onLocationChanged on listener class: ${listenerClass.name}")
-        }.onFailure {
-            module.log(Log.ERROR, tag, "Failed hooking listener class ${listenerClass.name}: ${it.message}")
-        }
+        }, 500, 1000, TimeUnit.MILLISECONDS)
     }
 
     /**

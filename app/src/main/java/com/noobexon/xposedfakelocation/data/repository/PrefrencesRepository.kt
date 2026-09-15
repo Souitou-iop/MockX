@@ -150,7 +150,7 @@ class PreferencesRepository(context: Context) {
             Log.w(tag, "Remote preferences unavailable (service not bound); write skipped")
             return
         }
-        prefs.edit(action = action)
+        prefs.edit(commit = true, action = action)
     }
 
     private inline fun editLocal(action: SharedPreferences.Editor.() -> Unit) {

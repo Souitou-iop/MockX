@@ -5,40 +5,22 @@ import androidx.compose.foundation.layout.Column
 import androidx.compose.foundation.layout.Spacer
 import androidx.compose.foundation.layout.fillMaxWidth
 import androidx.compose.foundation.layout.height
-import androidx.compose.foundation.layout.padding
+import androidx.compose.foundation.shape.RoundedCornerShape
 import androidx.compose.foundation.text.KeyboardOptions
-import androidx.compose.material3.AlertDialog
 import androidx.compose.material3.MaterialTheme
 import androidx.compose.material3.OutlinedTextField
 import androidx.compose.material3.Text
-import androidx.compose.material3.TextButton
 import androidx.compose.runtime.Composable
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.res.stringResource
 import androidx.compose.ui.text.input.KeyboardType
 import androidx.compose.ui.unit.dp
 import com.noobexon.xposedfakelocation.R
+import com.noobexon.xposedfakelocation.manager.ui.theme.MiuixDialog
+import com.noobexon.xposedfakelocation.manager.ui.theme.MiuixDialogButton
 
 /**
- * Stateless dialog that lets the user jump the camera (and spoof marker) to an arbitrary
- * coordinate by entering latitude and longitude manually.
- *
- * The dialog is fully controlled: it holds no state of its own. All input values and error
- * annotations come from [MapUiState.goToPointState] (via [MapScreen]), and all mutations are
- * forwarded through callbacks to [MapViewModel].
- *
- * Validation runs only when the user confirms (via [onConfirm]); inline error messages are shown
- * beneath each field when the corresponding `*ErrorRes` parameter is non-null.
- *
- * @param latitude Current text value of the latitude field.
- * @param longitude Current text value of the longitude field.
- * @param latitudeErrorRes String resource for the latitude validation error, or `null` if valid.
- * @param longitudeErrorRes String resource for the longitude validation error, or `null` if valid.
- * @param onLatitudeChange Called on every keystroke in the latitude field.
- * @param onLongitudeChange Called on every keystroke in the longitude field.
- * @param onConfirm Called when the user taps "Go"; triggers validation in [MapViewModel].
- * @param onDismissRequest Called when the dialog is dismissed (back gesture, scrim tap, or
- *   "Cancel" button).
+ * HyperOS / Miuix Styled Dialog that lets the user jump to an arbitrary coordinate.
  */
 @Composable
 fun GoToPointDialog(
@@ -51,64 +33,43 @@ fun GoToPointDialog(
     onConfirm: () -> Unit,
     onDismissRequest: () -> Unit,
 ) {
-    AlertDialog(
+    MiuixDialog(
         onDismissRequest = onDismissRequest,
-        title = { Text(stringResource(R.string.map_go_to_point)) },
-        text = {
-            Column {
-                CoordinateInputField(
-                    value = latitude,
-                    onValueChange = onLatitudeChange,
-                    label = stringResource(R.string.field_latitude),
-                    errorRes = latitudeErrorRes,
-                )
-                Spacer(modifier = Modifier.height(8.dp))
-                CoordinateInputField(
-                    value = longitude,
-                    onValueChange = onLongitudeChange,
-                    label = stringResource(R.string.field_longitude),
-                    errorRes = longitudeErrorRes,
-                )
-            }
-        },
+        title = stringResource(R.string.map_go_to_point),
         confirmButton = {
-            TextButton(onClick = onConfirm) {
-                Text(stringResource(R.string.action_go))
-            }
+            MiuixDialogButton(
+                text = stringResource(R.string.action_go),
+                isPrimary = true,
+                onClick = onConfirm
+            )
         },
         dismissButton = {
-            TextButton(onClick = onDismissRequest) {
-                Text(stringResource(R.string.action_cancel))
-            }
+            MiuixDialogButton(
+                text = stringResource(R.string.action_cancel),
+                onClick = onDismissRequest
+            )
         }
-    )
+    ) {
+        Column {
+            CoordinateInputField(
+                value = latitude,
+                onValueChange = onLatitudeChange,
+                label = stringResource(R.string.field_latitude),
+                errorRes = latitudeErrorRes,
+            )
+            Spacer(modifier = Modifier.height(10.dp))
+            CoordinateInputField(
+                value = longitude,
+                onValueChange = onLongitudeChange,
+                label = stringResource(R.string.field_longitude),
+                errorRes = longitudeErrorRes,
+            )
+        }
+    }
 }
 
 /**
- * Stateless dialog that lets the user save the current spoof-target location as a named favourite.
- *
- * Like [GoToPointDialog], it is fully controlled: latitude and longitude are pre-filled from the
- * currently placed marker (done by [MapViewModel.showAddToFavoritesDialog]) so the user only
- * needs to enter a name. All values and errors flow down from [MapUiState.addToFavoritesState];
- * all mutations are forwarded via callbacks.
- *
- * The name field performs live validation (error appears as soon as the field is cleared). The
- * description field is optional and has no validation. Coordinate fields are validated only on
- * confirmation.
- *
- * @param name Current text value of the name field.
- * @param description Current text value of the optional description field.
- * @param latitude Current text value of the latitude field.
- * @param longitude Current text value of the longitude field.
- * @param nameErrorRes String resource for the name validation error, or `null` if valid.
- * @param latitudeErrorRes String resource for the latitude validation error, or `null` if valid.
- * @param longitudeErrorRes String resource for the longitude validation error, or `null` if valid.
- * @param onNameChange Called on every keystroke in the name field (with live validation).
- * @param onDescriptionChange Called on every keystroke in the description field.
- * @param onLatitudeChange Called on every keystroke in the latitude field.
- * @param onLongitudeChange Called on every keystroke in the longitude field.
- * @param onConfirm Called when the user taps "Add"; triggers full validation in [MapViewModel].
- * @param onDismissRequest Called when the dialog is dismissed.
+ * HyperOS / Miuix Styled Dialog that lets the user save the current spoof location as a named favourite.
  */
 @Composable
 fun AddToFavoritesDialog(
@@ -126,66 +87,59 @@ fun AddToFavoritesDialog(
     onConfirm: () -> Unit,
     onDismissRequest: () -> Unit,
 ) {
-    AlertDialog(
+    MiuixDialog(
         onDismissRequest = onDismissRequest,
-        title = { Text(stringResource(R.string.map_add_to_favorites)) },
-        text = {
-            Column {
-                CoordinateInputField(
-                    value = name,
-                    onValueChange = onNameChange,
-                    label = stringResource(R.string.field_name),
-                    errorRes = nameErrorRes,
-                )
-                Spacer(modifier = Modifier.height(8.dp))
-                CoordinateInputField(
-                    value = description,
-                    onValueChange = onDescriptionChange,
-                    label = stringResource(R.string.field_description),
-                    errorRes = null,
-                )
-                Spacer(modifier = Modifier.height(8.dp))
-                CoordinateInputField(
-                    value = latitude,
-                    onValueChange = onLatitudeChange,
-                    label = stringResource(R.string.field_latitude),
-                    errorRes = latitudeErrorRes,
-                    keyboardType = KeyboardType.Number,
-                )
-                Spacer(modifier = Modifier.height(8.dp))
-                CoordinateInputField(
-                    value = longitude,
-                    onValueChange = onLongitudeChange,
-                    label = stringResource(R.string.field_longitude),
-                    errorRes = longitudeErrorRes,
-                    keyboardType = KeyboardType.Number,
-                )
-            }
-        },
+        title = stringResource(R.string.map_add_to_favorites),
         confirmButton = {
-            TextButton(onClick = onConfirm) {
-                Text(stringResource(R.string.action_add))
-            }
+            MiuixDialogButton(
+                text = stringResource(R.string.action_add),
+                isPrimary = true,
+                onClick = onConfirm
+            )
         },
         dismissButton = {
-            TextButton(onClick = onDismissRequest) {
-                Text(stringResource(R.string.action_cancel))
-            }
+            MiuixDialogButton(
+                text = stringResource(R.string.action_cancel),
+                onClick = onDismissRequest
+            )
         }
-    )
+    ) {
+        Column {
+            CoordinateInputField(
+                value = name,
+                onValueChange = onNameChange,
+                label = stringResource(R.string.field_name),
+                errorRes = nameErrorRes,
+            )
+            Spacer(modifier = Modifier.height(10.dp))
+            CoordinateInputField(
+                value = description,
+                onValueChange = onDescriptionChange,
+                label = stringResource(R.string.field_description),
+                errorRes = null,
+            )
+            Spacer(modifier = Modifier.height(10.dp))
+            CoordinateInputField(
+                value = latitude,
+                onValueChange = onLatitudeChange,
+                label = stringResource(R.string.field_latitude),
+                errorRes = latitudeErrorRes,
+                keyboardType = KeyboardType.Number,
+            )
+            Spacer(modifier = Modifier.height(10.dp))
+            CoordinateInputField(
+                value = longitude,
+                onValueChange = onLongitudeChange,
+                label = stringResource(R.string.field_longitude),
+                errorRes = longitudeErrorRes,
+                keyboardType = KeyboardType.Number,
+            )
+        }
+    }
 }
 
 /**
- * A single labelled [OutlinedTextField] with an inline validation error message shown beneath it
- * when [errorRes] is non-null. Shared by both map dialogs to avoid duplication.
- *
- * @param value Current field text.
- * @param onValueChange Called on every keystroke.
- * @param label Floating label string displayed inside the field.
- * @param errorRes String resource for the validation error, or `null` when the field is valid.
- * @param modifier Optional modifier applied to the [OutlinedTextField].
- * @param keyboardType Keyboard type hint; defaults to [KeyboardType.Unspecified] (text keyboard)
- *   and is overridden to [KeyboardType.Number] for coordinate fields.
+ * A single labelled [OutlinedTextField] with squircle corners and inline error annotations.
  */
 @Composable
 private fun CoordinateInputField(
@@ -201,6 +155,7 @@ private fun CoordinateInputField(
         onValueChange = onValueChange,
         label = { Text(label) },
         isError = errorRes != null,
+        shape = RoundedCornerShape(14.dp),
         keyboardOptions = KeyboardOptions(keyboardType = keyboardType),
         modifier = modifier.fillMaxWidth()
     )
@@ -209,7 +164,7 @@ private fun CoordinateInputField(
             text = stringResource(errorRes),
             color = MaterialTheme.colorScheme.error,
             style = MaterialTheme.typography.bodySmall,
-            modifier = Modifier.padding(start = 16.dp)
+            modifier = Modifier.fillMaxWidth()
         )
     }
 }

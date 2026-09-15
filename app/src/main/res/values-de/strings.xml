@@ -1,5 +1,5 @@
 <resources>
-    <string name="app_name">XposedFakeLocation</string>
+    <string name="app_name">MockX</string>
 
     <string name="description">Täusche deinen Gerätestandort global oder für bestimmte Apps vor</string>
 

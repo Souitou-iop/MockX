@@ -1,5 +1,7 @@
 package com.noobexon.xposedfakelocation.manager.ui.favorites
 
+import androidx.compose.foundation.background
+import androidx.compose.foundation.clickable
 import androidx.compose.foundation.layout.Arrangement
 import androidx.compose.foundation.layout.Box
 import androidx.compose.foundation.layout.Column
@@ -9,12 +11,15 @@ import androidx.compose.foundation.layout.Spacer
 import androidx.compose.foundation.layout.fillMaxSize
 import androidx.compose.foundation.layout.fillMaxWidth
 import androidx.compose.foundation.layout.height
+import androidx.compose.foundation.layout.navigationBarsPadding
 import androidx.compose.foundation.layout.padding
 import androidx.compose.foundation.layout.size
+import androidx.compose.foundation.layout.statusBarsPadding
 import androidx.compose.foundation.layout.width
 import androidx.compose.foundation.lazy.LazyColumn
 import androidx.compose.foundation.lazy.items
 import androidx.compose.foundation.shape.CircleShape
+import androidx.compose.foundation.shape.RoundedCornerShape
 import androidx.compose.foundation.text.KeyboardOptions
 import androidx.compose.material.icons.Icons
 import androidx.compose.material.icons.automirrored.filled.ArrowBack
@@ -22,9 +27,6 @@ import androidx.compose.material.icons.outlined.Delete
 import androidx.compose.material.icons.outlined.Edit
 import androidx.compose.material.icons.outlined.FavoriteBorder
 import androidx.compose.material.icons.outlined.Place
-import androidx.compose.material3.AlertDialog
-import androidx.compose.material3.ElevatedCard
-import androidx.compose.material3.ExperimentalMaterial3Api
 import androidx.compose.material3.Icon
 import androidx.compose.material3.IconButton
 import androidx.compose.material3.MaterialTheme
@@ -32,9 +34,6 @@ import androidx.compose.material3.OutlinedTextField
 import androidx.compose.material3.Scaffold
 import androidx.compose.material3.Surface
 import androidx.compose.material3.Text
-import androidx.compose.material3.TextButton
-import androidx.compose.material3.TopAppBar
-import androidx.compose.material3.TopAppBarDefaults
 import androidx.compose.runtime.Composable
 import androidx.compose.runtime.getValue
 import androidx.compose.runtime.mutableStateOf
@@ -42,32 +41,25 @@ import androidx.compose.runtime.remember
 import androidx.compose.runtime.setValue
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
+import androidx.compose.ui.draw.clip
 import androidx.compose.ui.res.stringResource
 import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.text.input.KeyboardType
 import androidx.compose.ui.text.style.TextAlign
 import androidx.compose.ui.text.style.TextOverflow
 import androidx.compose.ui.unit.dp
+import androidx.compose.ui.unit.sp
 import androidx.lifecycle.compose.collectAsStateWithLifecycle
 import androidx.lifecycle.viewmodel.compose.viewModel
 import androidx.navigation.NavController
 import com.noobexon.xposedfakelocation.R
 import com.noobexon.xposedfakelocation.data.model.FavoriteLocation
+import com.noobexon.xposedfakelocation.manager.ui.theme.MiuixCard
+import com.noobexon.xposedfakelocation.manager.ui.theme.MiuixDialog
+import com.noobexon.xposedfakelocation.manager.ui.theme.MiuixDialogButton
+import com.noobexon.xposedfakelocation.manager.ui.theme.MiuixLargeTitleHeader
+import java.util.Locale
 
-
-/**
- * Stateful Favorites screen composable.
- *
- * Collects [FavoritesViewModel.favorites] and wires the delete/edit/select callbacks before
- * delegating all layout to the stateless [FavoritesContent]. Navigation is handled here:
- * selecting a favorite calls [onFavoriteSelected] (which updates the map marker in [NavGraph])
- * and then pops the back stack.
- *
- * @param navController Used to navigate back after a selection or the back-arrow tap.
- * @param onFavoriteSelected Called with the chosen [FavoriteLocation] when the user taps a card;
- *   the caller is expected to apply it as the active spoof target.
- * @param favoritesViewModel Injected by [viewModel]; can be overridden in tests.
- */
 @Composable
 fun FavoritesScreen(
     navController: NavController,
@@ -88,24 +80,6 @@ fun FavoritesScreen(
     )
 }
 
-/**
- * Stateless layout for the Favorites screen.
- *
- * Manages two pieces of ephemeral dialog state: [deletePending] (the entry awaiting confirmation
- * before deletion) and [editPending] (the entry currently open in the edit dialog). Both are
- * local [remember] state because they are transient UI interactions that don't need to survive
- * configuration changes or process death.
- *
- * Renders either [FavoritesEmptyState] or a [LazyColumn] of [FavoriteItem] cards depending on
- * whether [favorites] is empty.
- *
- * @param favorites The current list of saved favorites, observed from [FavoritesViewModel].
- * @param onFavoriteClick Called when the user taps a card to select it as the spoof target.
- * @param onDelete Called with the entry to remove after the user confirms the delete dialog.
- * @param onEdit Called with the original and updated entry after the user saves the edit dialog.
- * @param onNavigateUp Called when the back-arrow in the [TopAppBar] is tapped.
- */
-@OptIn(ExperimentalMaterial3Api::class)
 @Composable
 private fun FavoritesContent(
     favorites: List<FavoriteLocation>,
@@ -140,73 +114,59 @@ private fun FavoritesContent(
     }
 
     Scaffold(
-        topBar = { FavoritesTopAppBar(onNavigateUp) }
+        containerColor = MaterialTheme.colorScheme.background,
+        modifier = Modifier.fillMaxSize()
     ) { innerPadding ->
-        if (favorites.isEmpty()) {
-            FavoritesEmptyState(
-                modifier = Modifier
-                    .fillMaxSize()
-                    .padding(innerPadding)
-                    .padding(horizontal = 32.dp)
+        Column(
+            modifier = Modifier
+                .fillMaxSize()
+                .padding(innerPadding)
+        ) {
+            MiuixLargeTitleHeader(
+                title = stringResource(R.string.screen_favorites),
+                subtitle = "已保存的常用经纬度与位置预设",
+                navigationIcon = {
+                    IconButton(onClick = onNavigateUp) {
+                        Icon(
+                            Icons.AutoMirrored.Filled.ArrowBack,
+                            contentDescription = stringResource(R.string.cd_back),
+                            tint = MaterialTheme.colorScheme.onBackground
+                        )
+                    }
+                }
             )
-        } else {
-            LazyColumn(
-                modifier = Modifier
-                    .fillMaxSize()
-                    .padding(innerPadding),
-                contentPadding = PaddingValues(horizontal = 16.dp, vertical = 12.dp),
-                verticalArrangement = Arrangement.spacedBy(8.dp)
-            ) {
-                items(
-                    items = favorites,
-                    key = { "${it.name}_${it.latitude}_${it.longitude}" }
-                ) { favorite ->
-                    FavoriteItem(
-                        favorite = favorite,
-                        onClick = { onFavoriteClick(favorite) },
-                        onEditClick = { editPending = favorite },
-                        onDeleteClick = { deletePending = favorite },
-                    )
+
+            if (favorites.isEmpty()) {
+                FavoritesEmptyState(
+                    modifier = Modifier
+                        .fillMaxSize()
+                        .padding(horizontal = 32.dp)
+                )
+            } else {
+                LazyColumn(
+                    modifier = Modifier
+                        .fillMaxSize()
+                        .padding(horizontal = 16.dp),
+                    contentPadding = PaddingValues(top = 8.dp, bottom = 24.dp),
+                    verticalArrangement = Arrangement.spacedBy(10.dp)
+                ) {
+                    items(
+                        items = favorites,
+                        key = { "${it.name}_${it.latitude}_${it.longitude}" }
+                    ) { favorite ->
+                        FavoriteItem(
+                            favorite = favorite,
+                            onClick = { onFavoriteClick(favorite) },
+                            onEditClick = { editPending = favorite },
+                            onDeleteClick = { deletePending = favorite },
+                        )
+                    }
                 }
             }
         }
     }
 }
 
-/**
- * Top app bar for the Favorites screen with the screen title and a back-navigation icon.
- *
- * @param onNavigateUp Called when the back-arrow button is tapped.
- */
-@OptIn(ExperimentalMaterial3Api::class)
-@Composable
-private fun FavoritesTopAppBar(onNavigateUp: () -> Unit) {
-    TopAppBar(
-        title = { Text(stringResource(R.string.screen_favorites)) },
-        colors = TopAppBarDefaults.topAppBarColors(
-            containerColor = MaterialTheme.colorScheme.primary,
-            titleContentColor = MaterialTheme.colorScheme.onPrimary,
-            navigationIconContentColor = MaterialTheme.colorScheme.onPrimary,
-            actionIconContentColor = MaterialTheme.colorScheme.onPrimary
-        ),
-        navigationIcon = {
-            IconButton(onClick = onNavigateUp) {
-                Icon(
-                    Icons.AutoMirrored.Filled.ArrowBack,
-                    contentDescription = stringResource(R.string.cd_back)
-                )
-            }
-        }
-    )
-}
-
-/**
- * Full-screen empty state shown when the favorites list is empty. Displays a centred icon,
- * a title, and a short hint directing the user to save a location from the map.
- *
- * @param modifier Applied to the root [Column]; caller is expected to pass
- *   `fillMaxSize + padding` so the content is centred within the available area.
- */
 @Composable
 private fun FavoritesEmptyState(modifier: Modifier = Modifier) {
     Column(
@@ -214,20 +174,28 @@ private fun FavoritesEmptyState(modifier: Modifier = Modifier) {
         horizontalAlignment = Alignment.CenterHorizontally,
         verticalArrangement = Arrangement.Center
     ) {
-        Icon(
-            imageVector = Icons.Outlined.FavoriteBorder,
-            contentDescription = null,
-            modifier = Modifier.size(64.dp),
-            tint = MaterialTheme.colorScheme.onSurfaceVariant.copy(alpha = 0.5f)
-        )
-        Spacer(Modifier.height(16.dp))
+        Box(
+            modifier = Modifier
+                .size(72.dp)
+                .clip(CircleShape)
+                .background(MaterialTheme.colorScheme.primary.copy(alpha = 0.1f)),
+            contentAlignment = Alignment.Center
+        ) {
+            Icon(
+                imageVector = Icons.Outlined.FavoriteBorder,
+                contentDescription = null,
+                modifier = Modifier.size(36.dp),
+                tint = MaterialTheme.colorScheme.primary
+            )
+        }
+        Spacer(Modifier.height(18.dp))
         Text(
             text = stringResource(R.string.favorites_empty),
-            style = MaterialTheme.typography.titleMedium,
+            style = MaterialTheme.typography.titleMedium.copy(fontWeight = FontWeight.Bold, fontSize = 18.sp),
             color = MaterialTheme.colorScheme.onSurface,
             textAlign = TextAlign.Center
         )
-        Spacer(Modifier.height(8.dp))
+        Spacer(Modifier.height(6.dp))
         Text(
             text = stringResource(R.string.favorites_empty_description),
             style = MaterialTheme.typography.bodyMedium,
@@ -237,19 +205,6 @@ private fun FavoritesEmptyState(modifier: Modifier = Modifier) {
     }
 }
 
-/**
- * A single [ElevatedCard] row representing one saved favorite location.
- *
- * Displays a map-pin leading icon, the entry's name, an optional description (omitted when
- * blank), and formatted coordinates. Trailing action buttons open the edit dialog and the delete
- * confirmation dialog respectively.
- *
- * @param favorite The favorite entry to display.
- * @param onClick Called when the card body is tapped (selects the location as the spoof target).
- * @param onEditClick Called when the edit icon button is tapped.
- * @param onDeleteClick Called when the delete icon button is tapped.
- */
-@OptIn(ExperimentalMaterial3Api::class)
 @Composable
 private fun FavoriteItem(
     favorite: FavoriteLocation,
@@ -257,39 +212,46 @@ private fun FavoriteItem(
     onEditClick: () -> Unit,
     onDeleteClick: () -> Unit,
 ) {
-    ElevatedCard(
-        onClick = onClick,
-        modifier = Modifier.fillMaxWidth()
+    MiuixCard(
+        modifier = Modifier
+            .fillMaxWidth()
+            .clickable(onClick = onClick),
+        contentPadding = PaddingValues(horizontal = 16.dp, vertical = 14.dp)
     ) {
         Row(
-            modifier = Modifier
-                .fillMaxWidth()
-                .padding(start = 16.dp, end = 4.dp, top = 12.dp, bottom = 12.dp),
+            modifier = Modifier.fillMaxWidth(),
             verticalAlignment = Alignment.CenterVertically
         ) {
             Surface(
                 shape = CircleShape,
-                color = MaterialTheme.colorScheme.primaryContainer,
-                modifier = Modifier.size(40.dp)
+                color = MaterialTheme.colorScheme.primary.copy(alpha = 0.12f),
+                modifier = Modifier.size(42.dp)
             ) {
                 Box(contentAlignment = Alignment.Center) {
                     Icon(
                         imageVector = Icons.Outlined.Place,
                         contentDescription = null,
-                        tint = MaterialTheme.colorScheme.onPrimaryContainer,
-                        modifier = Modifier.size(20.dp)
+                        tint = MaterialTheme.colorScheme.primary,
+                        modifier = Modifier.size(22.dp)
                     )
                 }
             }
-            Spacer(Modifier.width(16.dp))
+
+            Spacer(Modifier.width(14.dp))
+
             Column(modifier = Modifier.weight(1f)) {
                 Text(
                     text = favorite.name,
-                    style = MaterialTheme.typography.bodyLarge.copy(fontWeight = FontWeight.SemiBold),
+                    style = MaterialTheme.typography.bodyLarge.copy(
+                        fontWeight = FontWeight.Bold,
+                        fontSize = 16.sp
+                    ),
+                    color = MaterialTheme.colorScheme.onSurface,
                     maxLines = 1,
                     overflow = TextOverflow.Ellipsis
                 )
                 if (favorite.description.isNotBlank()) {
+                    Spacer(modifier = Modifier.height(2.dp))
                     Text(
                         text = favorite.description,
                         style = MaterialTheme.typography.bodySmall,
@@ -298,203 +260,163 @@ private fun FavoriteItem(
                         overflow = TextOverflow.Ellipsis
                     )
                 }
+                Spacer(modifier = Modifier.height(3.dp))
                 Text(
-                    text = stringResource(
-                        R.string.coordinates_lat_lon,
-                        "%.5f".format(favorite.latitude),
-                        "%.5f".format(favorite.longitude)
-                    ),
-                    style = MaterialTheme.typography.bodySmall,
-                    color = MaterialTheme.colorScheme.onSurfaceVariant,
+                    text = String.format(Locale.US, "%.5f, %.5f", favorite.latitude, favorite.longitude),
+                    style = MaterialTheme.typography.labelSmall.copy(fontWeight = FontWeight.Medium),
+                    color = MaterialTheme.colorScheme.primary,
                     maxLines = 1,
                     overflow = TextOverflow.Ellipsis
                 )
             }
+
             IconButton(onClick = onEditClick) {
                 Icon(
                     imageVector = Icons.Outlined.Edit,
                     contentDescription = stringResource(R.string.cd_edit_named_item, favorite.name),
-                    tint = MaterialTheme.colorScheme.primary
+                    tint = MaterialTheme.colorScheme.onSurfaceVariant.copy(alpha = 0.8f),
+                    modifier = Modifier.size(20.dp)
                 )
             }
+
             IconButton(onClick = onDeleteClick) {
                 Icon(
                     imageVector = Icons.Outlined.Delete,
                     contentDescription = stringResource(R.string.cd_delete_named_item, favorite.name),
-                    tint = MaterialTheme.colorScheme.error
+                    tint = MaterialTheme.colorScheme.error.copy(alpha = 0.8f),
+                    modifier = Modifier.size(20.dp)
                 )
             }
         }
     }
 }
 
-/**
- * Stateful dialog for editing an existing favorite location.
- *
- * Unlike the map-screen dialogs which delegate state to [FavoritesViewModel], this dialog owns
- * its own draft state via [remember]. This is intentional: the edit draft is transient UI state
- * that does not need to survive configuration changes or process death, and adding ViewModel
- * state for it would be unnecessary complexity.
- *
- * All four fields perform live validation:
- * - **Name**: required; error shown immediately when the field is cleared.
- * - **Description**: optional; no validation.
- * - **Latitude**: must parse as `Double` in `−90..90`; error shown on every keystroke.
- * - **Longitude**: must parse as `Double` in `−180..180`; error shown on every keystroke.
- *
- * A final validation pass runs on "Save" to catch the initial state (e.g. completely invalid
- * pre-filled coordinates) before calling [onSave].
- *
- * @param favorite The entry to edit; used to seed the initial field values.
- * @param onSave Called with the updated [FavoriteLocation] when all fields are valid and the
- *   user taps "Save". The caller is responsible for persisting the change.
- * @param onDismiss Called when the dialog is dismissed without saving.
- */
-@Composable
-private fun EditFavoriteDialog(
-    favorite: FavoriteLocation,
-    onSave: (FavoriteLocation) -> Unit,
-    onDismiss: () -> Unit,
-) {
-    val latRange = -90.0..90.0
-    val lonRange = -180.0..180.0
-
-    var name by remember { mutableStateOf(favorite.name) }
-    var description by remember { mutableStateOf(favorite.description) }
-    var latitude by remember { mutableStateOf(favorite.latitude.toString()) }
-    var longitude by remember { mutableStateOf(favorite.longitude.toString()) }
-
-    var nameError by remember { mutableStateOf(false) }
-    var latitudeError by remember { mutableStateOf(false) }
-    var longitudeError by remember { mutableStateOf(false) }
-
-    AlertDialog(
-        onDismissRequest = onDismiss,
-        title = { Text(stringResource(R.string.favorites_edit_title)) },
-        text = {
-            Column(verticalArrangement = Arrangement.spacedBy(8.dp)) {
-                OutlinedTextField(
-                    value = name,
-                    onValueChange = {
-                        name = it
-                        nameError = it.isBlank()
-                    },
-                    label = { Text(stringResource(R.string.field_name)) },
-                    isError = nameError,
-                    supportingText = if (nameError) {
-                        { Text(stringResource(R.string.validation_name_required)) }
-                    } else null,
-                    singleLine = true,
-                    modifier = Modifier.fillMaxWidth(),
-                )
-                OutlinedTextField(
-                    value = description,
-                    onValueChange = { description = it },
-                    label = { Text(stringResource(R.string.field_description)) },
-                    modifier = Modifier.fillMaxWidth(),
-                )
-                OutlinedTextField(
-                    value = latitude,
-                    onValueChange = {
-                        latitude = it
-                        latitudeError = it.toDoubleOrNull()?.let { v -> v !in latRange } != false
-                    },
-                    label = { Text(stringResource(R.string.field_latitude)) },
-                    isError = latitudeError,
-                    supportingText = if (latitudeError) {
-                        { Text(stringResource(R.string.validation_latitude_range)) }
-                    } else null,
-                    singleLine = true,
-                    keyboardOptions = KeyboardOptions(keyboardType = KeyboardType.Number),
-                    modifier = Modifier.fillMaxWidth(),
-                )
-                OutlinedTextField(
-                    value = longitude,
-                    onValueChange = {
-                        longitude = it
-                        longitudeError = it.toDoubleOrNull()?.let { v -> v !in lonRange } != false
-                    },
-                    label = { Text(stringResource(R.string.field_longitude)) },
-                    isError = longitudeError,
-                    supportingText = if (longitudeError) {
-                        { Text(stringResource(R.string.validation_longitude_range)) }
-                    } else null,
-                    singleLine = true,
-                    keyboardOptions = KeyboardOptions(keyboardType = KeyboardType.Number),
-                    modifier = Modifier.fillMaxWidth(),
-                )
-            }
-        },
-        confirmButton = {
-            TextButton(
-                onClick = {
-                    val latVal = latitude.toDoubleOrNull()
-                    val lonVal = longitude.toDoubleOrNull()
-                    nameError = name.isBlank()
-                    latitudeError = latVal == null || latVal !in latRange
-                    longitudeError = lonVal == null || lonVal !in lonRange
-                    if (!nameError && !latitudeError && !longitudeError) {
-                        onSave(
-                            favorite.copy(
-                                name = name.trim(),
-                                description = description.trim(),
-                                latitude = latVal!!,
-                                longitude = lonVal!!,
-                            )
-                        )
-                    }
-                }
-            ) {
-                Text(stringResource(R.string.action_save))
-            }
-        },
-        dismissButton = {
-            TextButton(onClick = onDismiss) {
-                Text(stringResource(R.string.action_cancel))
-            }
-        }
-    )
-}
-
-/**
- * Confirmation dialog shown before permanently deleting a favorite entry.
- *
- * Displays the entry's [favoriteName] in the message body so the user can verify they are
- * deleting the correct item. The confirm button is tinted error-red to signal a destructive action.
- *
- * @param favoriteName The name of the entry being deleted, shown in the dialog message.
- * @param onConfirm Called when the user confirms deletion.
- * @param onDismiss Called when the user cancels or dismisses the dialog.
- */
 @Composable
 private fun DeleteConfirmationDialog(
     favoriteName: String,
     onConfirm: () -> Unit,
     onDismiss: () -> Unit,
 ) {
-    AlertDialog(
+    MiuixDialog(
         onDismissRequest = onDismiss,
-        icon = {
-            Icon(
-                imageVector = Icons.Outlined.Delete,
-                contentDescription = null,
-                tint = MaterialTheme.colorScheme.error
+        title = stringResource(R.string.favorites_delete_title),
+        confirmButton = {
+            MiuixDialogButton(
+                text = stringResource(R.string.favorites_delete_confirm),
+                isDestructive = true,
+                onClick = onConfirm
             )
         },
-        title = { Text(stringResource(R.string.favorites_delete_title)) },
-        text = { Text(stringResource(R.string.favorites_delete_message, favoriteName)) },
+        dismissButton = {
+            MiuixDialogButton(
+                text = stringResource(R.string.action_cancel),
+                onClick = onDismiss
+            )
+        }
+    ) {
+        Text(
+            text = stringResource(R.string.favorites_delete_message, favoriteName),
+            style = MaterialTheme.typography.bodyMedium,
+            color = MaterialTheme.colorScheme.onSurfaceVariant
+        )
+    }
+}
+
+@Composable
+private fun EditFavoriteDialog(
+    favorite: FavoriteLocation,
+    onSave: (FavoriteLocation) -> Unit,
+    onDismiss: () -> Unit,
+) {
+    var name by remember { mutableStateOf(favorite.name) }
+    var description by remember { mutableStateOf(favorite.description) }
+    var latitudeText by remember { mutableStateOf(favorite.latitude.toString()) }
+    var longitudeText by remember { mutableStateOf(favorite.longitude.toString()) }
+    var nameError by remember { mutableStateOf(false) }
+    var latError by remember { mutableStateOf(false) }
+    var lonError by remember { mutableStateOf(false) }
+
+    MiuixDialog(
+        onDismissRequest = onDismiss,
+        title = stringResource(R.string.favorites_edit_title),
         confirmButton = {
-            TextButton(onClick = onConfirm) {
-                Text(
-                    text = stringResource(R.string.favorites_delete_confirm),
-                    color = MaterialTheme.colorScheme.error
-                )
-            }
+            MiuixDialogButton(
+                text = stringResource(R.string.action_save),
+                isPrimary = true,
+                onClick = {
+                    val lat = latitudeText.toDoubleOrNull()
+                    val lon = longitudeText.toDoubleOrNull()
+                    val validName = name.isNotBlank()
+                    nameError = !validName
+                    latError = lat == null
+                    lonError = lon == null
+                    if (validName && lat != null && lon != null) {
+                        onSave(
+                            favorite.copy(
+                                name = name.trim(),
+                                description = description.trim(),
+                                latitude = lat,
+                                longitude = lon,
+                            )
+                        )
+                    }
+                }
+            )
         },
         dismissButton = {
-            TextButton(onClick = onDismiss) {
-                Text(stringResource(android.R.string.cancel))
-            }
+            MiuixDialogButton(
+                text = stringResource(R.string.action_cancel),
+                onClick = onDismiss
+            )
         }
-    )
+    ) {
+        Column(verticalArrangement = Arrangement.spacedBy(10.dp)) {
+            OutlinedTextField(
+                value = name,
+                onValueChange = {
+                    name = it
+                    nameError = it.isBlank()
+                },
+                label = { Text(stringResource(R.string.field_name)) },
+                isError = nameError,
+                singleLine = true,
+                shape = RoundedCornerShape(14.dp),
+                modifier = Modifier.fillMaxWidth()
+            )
+            OutlinedTextField(
+                value = description,
+                onValueChange = { description = it },
+                label = { Text(stringResource(R.string.field_description)) },
+                singleLine = true,
+                shape = RoundedCornerShape(14.dp),
+                modifier = Modifier.fillMaxWidth()
+            )
+            OutlinedTextField(
+                value = latitudeText,
+                onValueChange = {
+                    latitudeText = it
+                    latError = it.toDoubleOrNull() == null
+                },
+                label = { Text(stringResource(R.string.field_latitude)) },
+                isError = latError,
+                keyboardOptions = KeyboardOptions(keyboardType = KeyboardType.Decimal),
+                singleLine = true,
+                shape = RoundedCornerShape(14.dp),
+                modifier = Modifier.fillMaxWidth()
+            )
+            OutlinedTextField(
+                value = longitudeText,
+                onValueChange = {
+                    longitudeText = it
+                    lonError = it.toDoubleOrNull() == null
+                },
+                label = { Text(stringResource(R.string.field_longitude)) },
+                isError = lonError,
+                keyboardOptions = KeyboardOptions(keyboardType = KeyboardType.Decimal),
+                singleLine = true,
+                shape = RoundedCornerShape(14.dp),
+                modifier = Modifier.fillMaxWidth()
+            )
+        }
+    }
 }

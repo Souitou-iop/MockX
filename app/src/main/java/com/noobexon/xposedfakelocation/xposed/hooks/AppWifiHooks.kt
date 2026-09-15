@@ -30,14 +30,70 @@ class AppWifiHooks(
     private val tag = "[AppWifiHooks]"
 
     fun init() {
-        if (Build.VERSION.SDK_INT < Build.VERSION_CODES.R) {
-            module.log(Log.WARN, tag, "App-side Wi-Fi hooks require Android 11 or newer.")
-            return
-        }
+        hookWifiInfo()
         hookConnectionInfo()
         hookScanResults()
         hookStartScan()
         module.log(Log.INFO, tag, "Instantiated app-side Wi-Fi hooks successfully")
+    }
+
+    /**
+     * Directly hooks [WifiInfo] getter methods (`getBSSID`, `getSSID`, `getMacAddress`) so that
+     * even if the map app acquires [WifiInfo] via modern routes (such as
+     * `ConnectivityManager.getNetworkCapabilities().getTransportInfo()`), the real router BSSID
+     * and SSID cannot leak to location servers.
+     */
+    private fun hookWifiInfo() {
+        runCatching {
+            val wifiInfoClass = Class.forName("android.net.wifi.WifiInfo", false, classLoader)
+
+            runCatching {
+                val bssidMethod = wifiInfoClass.getDeclaredMethod("getBSSID")
+                module.hook(bssidMethod).intercept { chain ->
+                    if (PreferencesUtil.getIsPlaying() == true) {
+                        val identity = WifiIdentityHookPolicy.readActiveIdentity(module)
+                        if (identity != null && identity.targets(packageName)) {
+                            identity.bssid
+                        } else {
+                            "02:00:00:00:00:00"
+                        }
+                    } else {
+                        chain.proceed()
+                    }
+                }
+            }
+
+            runCatching {
+                val ssidMethod = wifiInfoClass.getDeclaredMethod("getSSID")
+                module.hook(ssidMethod).intercept { chain ->
+                    if (PreferencesUtil.getIsPlaying() == true) {
+                        val identity = WifiIdentityHookPolicy.readActiveIdentity(module)
+                        if (identity != null && identity.targets(packageName)) {
+                            "\"${identity.ssid}\""
+                        } else {
+                            "\"AndroidWifi\""
+                        }
+                    } else {
+                        chain.proceed()
+                    }
+                }
+            }
+
+            runCatching {
+                val macMethod = wifiInfoClass.getDeclaredMethod("getMacAddress")
+                module.hook(macMethod).intercept { chain ->
+                    if (PreferencesUtil.getIsPlaying() == true) {
+                        "02:00:00:00:00:00"
+                    } else {
+                        chain.proceed()
+                    }
+                }
+            }
+
+            module.log(Log.INFO, tag, "Hooked WifiInfo getters directly.")
+        }.onFailure {
+            module.log(Log.ERROR, tag, "Failed hooking WifiInfo: ${it.message}")
+        }
     }
 
     /**

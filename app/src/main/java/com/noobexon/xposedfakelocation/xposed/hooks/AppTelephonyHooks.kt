@@ -31,6 +31,8 @@ class AppTelephonyHooks(
             hookCellLocation(telephonyManagerClass)
             hookNeighboringCellInfo(telephonyManagerClass)
             hookAsyncCellInfoUpdate(telephonyManagerClass)
+            hookPhoneStateListener(telephonyManagerClass)
+            hookTelephonyCallback(telephonyManagerClass)
             module.log(Log.INFO, tag, "Instantiated app-side TelephonyManager hooks successfully")
         }.onFailure {
             module.log(Log.ERROR, tag, "Failed to initialize AppTelephonyHooks: ${it.message}")
@@ -79,6 +81,50 @@ class AppTelephonyHooks(
             } else {
                 chain.proceed()
             }
+        }
+    }
+
+    /**
+     * Intercepts [TelephonyManager.listen] to strip cell location and cell info event flags
+     * when fake location is active, preventing the system from pushing real cell tower IDs.
+     */
+    private fun hookPhoneStateListener(clazz: Class<*>) {
+        hookAll(clazz, "listen") { chain ->
+            val args = chain.args
+            val events = args.getOrNull(1) as? Int
+            if (events != null && PreferencesUtil.getIsPlaying() == true) {
+                // LISTEN_CELL_LOCATION = 0x10, LISTEN_CELL_INFO = 0x400
+                val mask = (0x10 or 0x400).inv()
+                val filtered = events and mask
+                val newArgs = args.toTypedArray()
+                newArgs[1] = filtered
+                module.log(Log.INFO, tag, "Masked cell events in TelephonyManager#listen (was $events, now $filtered)")
+                chain.proceed(newArgs)
+            } else {
+                chain.proceed()
+            }
+        }
+    }
+
+    /**
+     * Intercepts [TelephonyManager.registerTelephonyCallback] (API 31+) to ensure
+     * cell info and cell location callbacks are silenced while spoofing.
+     */
+    private fun hookTelephonyCallback(clazz: Class<*>) {
+        if (Build.VERSION.SDK_INT < Build.VERSION_CODES.S) return
+        hookAll(clazz, "registerTelephonyCallback") { chain ->
+            if (PreferencesUtil.getIsPlaying() == true) {
+                val callback = chain.args.getOrNull(1)
+                if (callback != null) {
+                    val className = callback.javaClass.name
+                    if (className.contains("Cell", ignoreCase = true) ||
+                        callback.javaClass.interfaces.any { it.name.contains("Cell", ignoreCase = true) }) {
+                        module.log(Log.INFO, tag, "Suppressed cell TelephonyCallback registration ($className).")
+                        return@hookAll null
+                    }
+                }
+            }
+            chain.proceed()
         }
     }
 

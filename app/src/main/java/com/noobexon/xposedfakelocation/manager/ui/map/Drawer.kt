@@ -2,8 +2,10 @@ package com.noobexon.xposedfakelocation.manager.ui.map
 
 import android.content.Intent
 import android.net.Uri
+import androidx.compose.foundation.background
 import androidx.compose.foundation.clickable
 import androidx.compose.foundation.layout.Arrangement
+import androidx.compose.foundation.layout.Box
 import androidx.compose.foundation.layout.Column
 import androidx.compose.foundation.layout.Row
 import androidx.compose.foundation.layout.Spacer
@@ -12,6 +14,9 @@ import androidx.compose.foundation.layout.fillMaxWidth
 import androidx.compose.foundation.layout.height
 import androidx.compose.foundation.layout.padding
 import androidx.compose.foundation.layout.size
+import androidx.compose.foundation.layout.statusBarsPadding
+import androidx.compose.foundation.layout.width
+import androidx.compose.foundation.shape.CircleShape
 import androidx.compose.foundation.shape.RoundedCornerShape
 import androidx.compose.material.icons.Icons
 import androidx.compose.material.icons.filled.Settings
@@ -30,8 +35,8 @@ import androidx.compose.ui.graphics.vector.ImageVector
 import androidx.compose.ui.platform.LocalContext
 import androidx.compose.ui.res.stringResource
 import androidx.compose.ui.text.font.FontWeight
-import androidx.compose.ui.text.style.TextOverflow
 import androidx.compose.ui.unit.dp
+import androidx.compose.ui.unit.sp
 import androidx.navigation.NavController
 import androidx.navigation.compose.currentBackStackEntryAsState
 import com.noobexon.xposedfakelocation.BuildConfig
@@ -46,43 +51,17 @@ import compose.icons.lineawesomeicons.MapSolid
 import compose.icons.lineawesomeicons.MobileAltSolid
 import compose.icons.lineawesomeicons.Telegram
 
-/** Centralised spacing and size constants for the navigation drawer layout. */
 private object DrawerDimensions {
-    val SECTION_SPACING = 24.dp
-    val ITEM_SPACING = 4.dp
-    val ICON_SIZE = 24.dp
+    val SECTION_SPACING = 20.dp
+    val ITEM_SPACING = 3.dp
+    val ICON_SIZE = 22.dp
     val SECTION_PADDING = 8.dp
     val HEADER_PADDING = 16.dp
     val DRAWER_PADDING = 16.dp
     val ITEM_PADDING = 12.dp
-    val ITEM_CORNER_RADIUS = 12.dp
+    val ITEM_CORNER_RADIUS = 16.dp
 }
 
-// TODO: Think on how to ask users for stars on github if they like the module.
-
-/**
- * Content of the [ModalNavigationDrawer] used throughout the app.
- *
- * Renders three sections — Navigation, Community, and App Info — plus a sticky version footer at
- * the bottom. Navigation items highlight the currently active destination reactively via
- * [currentBackStackEntryAsState].
- *
- * **Navigation behaviour**: tapping a navigation item calls the internal `navigateTo` helper which:
- * - Skips [NavController.navigate] if the destination is already active (avoids duplicate back-
- *   stack entries) but still closes the drawer.
- * - Calls [onNavigate] before navigating to a *different* destination so [MapScreen] can record
- *   the drawer-reopen intent (see [MapViewModel.requestReopenDrawer]).
- * - Uses `launchSingleTop = true` to prevent multiple copies of the same screen on the back stack.
- *
- * Community items (Telegram, Discord, GitHub) open an [Intent.ACTION_VIEW] external link and then
- * close the drawer; they do not trigger [onNavigate].
- *
- * @param navController Used to read the current destination and perform in-app navigation.
- * @param onCloseDrawer Callback that closes the [ModalNavigationDrawer]; called after every item
- *   tap (navigation or external link).
- * @param onNavigate Callback invoked before navigating to a *different* screen. Used by
- *   [MapScreen] to set the drawer-reopen flag so the drawer is restored when the user goes back.
- */
 @Composable
 fun DrawerContent(
     navController: NavController,
@@ -102,15 +81,19 @@ fun DrawerContent(
 
     ModalDrawerSheet(
         drawerContainerColor = MaterialTheme.colorScheme.surface,
-        drawerContentColor = MaterialTheme.colorScheme.onSurface
+        drawerContentColor = MaterialTheme.colorScheme.onSurface,
+        drawerShape = RoundedCornerShape(topEnd = 24.dp, bottomEnd = 24.dp)
     ) {
         Column(
             modifier = Modifier
                 .fillMaxHeight()
+                .width(300.dp)
+                .statusBarsPadding()
                 .padding(DrawerDimensions.DRAWER_PADDING)
         ) {
             DrawerHeader()
             Spacer(modifier = Modifier.height(DrawerDimensions.SECTION_SPACING))
+
             DrawerSectionHeader(stringResource(R.string.drawer_navigation))
 
             DrawerItem(
@@ -142,39 +125,6 @@ fun DrawerContent(
             )
 
             Spacer(modifier = Modifier.height(DrawerDimensions.SECTION_SPACING))
-            DrawerSectionHeader(stringResource(R.string.drawer_community))
-
-            DrawerItem(
-                icon = LineAwesomeIcons.Telegram,
-                label = "Telegram",
-                onClick = {
-                    val intent = Intent(Intent.ACTION_VIEW, Uri.parse("https://t.me/XposedFakeLocationChat"))
-                    context.startActivity(intent)
-                    onCloseDrawer()
-                }
-            )
-
-            DrawerItem(
-                icon = LineAwesomeIcons.Discord,
-                label = "Discord",
-                onClick = {
-                    val intent = Intent(Intent.ACTION_VIEW, Uri.parse("https://discord.gg/8eCRU3KzVS"))
-                    context.startActivity(intent)
-                    onCloseDrawer()
-                }
-            )
-
-            DrawerItem(
-                icon = LineAwesomeIcons.Github,
-                label = "GitHub",
-                onClick = {
-                    val intent = Intent(Intent.ACTION_VIEW, Uri.parse("https://github.com/noobexon1/XposedFakeLocation"))
-                    context.startActivity(intent)
-                    onCloseDrawer()
-                }
-            )
-
-            Spacer(modifier = Modifier.height(DrawerDimensions.SECTION_SPACING))
             DrawerSectionHeader(stringResource(R.string.drawer_app_info))
 
             DrawerItem(
@@ -186,91 +136,97 @@ fun DrawerContent(
 
             Spacer(modifier = Modifier.weight(1f))
 
+            Surface(
+                shape = CircleShape,
+                color = MaterialTheme.colorScheme.surfaceVariant.copy(alpha = 0.6f),
+                modifier = Modifier.align(Alignment.CenterHorizontally)
+            ) {
+                Text(
+                    text = "v${BuildConfig.VERSION_NAME}",
+                    style = MaterialTheme.typography.bodySmall.copy(fontSize = 11.sp, fontWeight = FontWeight.SemiBold),
+                    color = MaterialTheme.colorScheme.onSurfaceVariant,
+                    modifier = Modifier.padding(horizontal = 12.dp, vertical = 4.dp)
+                )
+            }
+        }
+    }
+}
+
+@Composable
+private fun DrawerHeader() {
+    Row(
+        modifier = Modifier
+            .fillMaxWidth()
+            .padding(horizontal = 8.dp, vertical = 12.dp),
+        verticalAlignment = Alignment.CenterVertically
+    ) {
+        Box(
+            modifier = Modifier
+                .size(44.dp)
+                .clip(RoundedCornerShape(12.dp))
+                .background(MaterialTheme.colorScheme.primary.copy(alpha = 0.12f)),
+            contentAlignment = Alignment.Center
+        ) {
+            Icon(
+                imageVector = LineAwesomeIcons.MapSolid,
+                contentDescription = null,
+                tint = MaterialTheme.colorScheme.primary,
+                modifier = Modifier.size(24.dp)
+            )
+        }
+
+        Spacer(modifier = Modifier.width(14.dp))
+
+        Column {
             Text(
-                text = stringResource(R.string.drawer_version, BuildConfig.VERSION_NAME),
-                style = MaterialTheme.typography.bodySmall,
-                color = MaterialTheme.colorScheme.onSurfaceVariant.copy(alpha = 0.7f),
-                modifier = Modifier
-                    .padding(DrawerDimensions.SECTION_PADDING)
-                    .align(Alignment.CenterHorizontally)
+                text = stringResource(R.string.app_name),
+                style = MaterialTheme.typography.titleLarge.copy(
+                    fontWeight = FontWeight.Bold,
+                    fontSize = 18.sp
+                ),
+                color = MaterialTheme.colorScheme.onSurface
+            )
+            Text(
+                text = "现代化底层定位与模拟工具",
+                style = MaterialTheme.typography.bodySmall.copy(fontSize = 12.sp),
+                color = MaterialTheme.colorScheme.onSurfaceVariant
             )
         }
     }
 }
 
-/**
- * Sticky header at the top of the drawer sheet showing the app name and a short subtitle.
- */
-@Composable
-private fun DrawerHeader() {
-    Column(
-        modifier = Modifier
-            .fillMaxWidth()
-            .padding(DrawerDimensions.HEADER_PADDING)
-    ) {
-        Text(
-            text = stringResource(R.string.app_name),
-            style = MaterialTheme.typography.headlineMedium,
-            fontWeight = FontWeight.Bold,
-            color = MaterialTheme.colorScheme.primary
-        )
-
-        Text(
-            text = stringResource(R.string.drawer_subtitle),
-            style = MaterialTheme.typography.bodyMedium,
-            color = MaterialTheme.colorScheme.onSurfaceVariant
-        )
-    }
-}
-
-/**
- * Small, coloured section heading rendered above a group of [DrawerItem]s.
- *
- * @param title The section label (e.g. "Navigation", "Community").
- */
 @Composable
 private fun DrawerSectionHeader(title: String) {
     Text(
         text = title,
-        style = MaterialTheme.typography.titleSmall,
-        fontWeight = FontWeight.Medium,
+        style = MaterialTheme.typography.labelSmall.copy(
+            fontWeight = FontWeight.Bold,
+            fontSize = 12.sp
+        ),
         color = MaterialTheme.colorScheme.primary,
         modifier = Modifier.padding(
             start = DrawerDimensions.SECTION_PADDING,
-            bottom = DrawerDimensions.SECTION_PADDING
+            bottom = 6.dp,
+            top = 4.dp
         )
     )
 }
 
-/**
- * A single tappable row in the navigation drawer.
- *
- * When [isSelected] is `true`, the row is rendered with a filled `primaryContainer` background and
- * `onPrimaryContainer` tint to provide active-destination feedback. Otherwise it renders on a
- * transparent background with the default `onSurface` tint.
- *
- * @param icon Leading icon for the item.
- * @param label Display label text.
- * @param onClick Action invoked when the row is tapped.
- * @param isSelected Whether this item represents the currently active destination.
- * @param trailingIcon Optional composable placed at the end of the row (e.g. a badge or arrow).
- */
 @Composable
 private fun DrawerItem(
     icon: ImageVector,
     label: String,
     onClick: () -> Unit,
     isSelected: Boolean = false,
-    trailingIcon: @Composable (() -> Unit)? = null
 ) {
     val backgroundColor = if (isSelected) {
-        MaterialTheme.colorScheme.primaryContainer
+        MaterialTheme.colorScheme.primary.copy(alpha = 0.12f)
     } else {
         Color.Transparent
     }
 
     val contentColor = if (isSelected) {
-        MaterialTheme.colorScheme.onPrimaryContainer
+        MaterialTheme.colorScheme.primary
     } else {
         MaterialTheme.colorScheme.onSurface
     }
@@ -286,9 +242,9 @@ private fun DrawerItem(
         Row(
             modifier = Modifier
                 .fillMaxWidth()
-                .padding(DrawerDimensions.ITEM_PADDING),
+                .padding(horizontal = 14.dp, vertical = 11.dp),
             verticalAlignment = Alignment.CenterVertically,
-            horizontalArrangement = Arrangement.spacedBy(16.dp)
+            horizontalArrangement = Arrangement.spacedBy(14.dp)
         ) {
             Icon(
                 imageVector = icon,
@@ -299,13 +255,13 @@ private fun DrawerItem(
 
             Text(
                 text = label,
-                style = MaterialTheme.typography.bodyLarge,
+                style = MaterialTheme.typography.bodyMedium.copy(
+                    fontWeight = if (isSelected) FontWeight.Bold else FontWeight.Medium,
+                    fontSize = 14.sp
+                ),
                 color = contentColor,
-                overflow = TextOverflow.Ellipsis,
                 modifier = Modifier.weight(1f)
             )
-
-            trailingIcon?.invoke()
         }
     }
 }

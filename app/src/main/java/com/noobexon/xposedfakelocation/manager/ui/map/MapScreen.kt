@@ -2,10 +2,29 @@ package com.noobexon.xposedfakelocation.manager.ui.map
 
 import android.widget.Toast
 import androidx.activity.compose.BackHandler
+import androidx.compose.animation.AnimatedVisibility
+import androidx.compose.animation.fadeIn
+import androidx.compose.animation.fadeOut
+import androidx.compose.animation.slideInVertically
+import androidx.compose.animation.slideOutVertically
+import androidx.compose.foundation.background
+import androidx.compose.foundation.clickable
+import androidx.compose.foundation.layout.Arrangement
 import androidx.compose.foundation.layout.Box
+import androidx.compose.foundation.layout.Column
+import androidx.compose.foundation.layout.Row
+import androidx.compose.foundation.layout.RowScope
+import androidx.compose.foundation.layout.Spacer
 import androidx.compose.foundation.layout.fillMaxSize
+import androidx.compose.foundation.layout.fillMaxWidth
+import androidx.compose.foundation.layout.height
 import androidx.compose.foundation.layout.navigationBarsPadding
 import androidx.compose.foundation.layout.padding
+import androidx.compose.foundation.layout.size
+import androidx.compose.foundation.layout.statusBarsPadding
+import androidx.compose.foundation.layout.width
+import androidx.compose.foundation.shape.CircleShape
+import androidx.compose.foundation.shape.RoundedCornerShape
 import androidx.compose.material.icons.Icons
 import androidx.compose.material.icons.filled.Clear
 import androidx.compose.material.icons.filled.FavoriteBorder
@@ -17,19 +36,12 @@ import androidx.compose.material.icons.filled.MyLocation
 import androidx.compose.material.icons.filled.PlayArrow
 import androidx.compose.material.icons.filled.Stop
 import androidx.compose.material3.DrawerValue
-import androidx.compose.material3.DropdownMenu
-import androidx.compose.material3.DropdownMenuItem
-import androidx.compose.material3.FloatingActionButton
-import androidx.compose.material3.FloatingActionButtonDefaults
 import androidx.compose.material3.Icon
 import androidx.compose.material3.IconButton
 import androidx.compose.material3.MaterialTheme
 import androidx.compose.material3.ModalNavigationDrawer
-import androidx.compose.material3.Scaffold
+import androidx.compose.material3.Surface
 import androidx.compose.material3.Text
-import androidx.compose.material3.TopAppBar
-import androidx.compose.material3.TopAppBarDefaults
-import androidx.compose.material3.contentColorFor
 import androidx.compose.material3.rememberDrawerState
 import androidx.compose.runtime.Composable
 import androidx.compose.runtime.LaunchedEffect
@@ -38,36 +50,43 @@ import androidx.compose.runtime.mutableStateOf
 import androidx.compose.runtime.remember
 import androidx.compose.runtime.rememberCoroutineScope
 import androidx.compose.runtime.setValue
+import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
+import androidx.compose.ui.draw.clip
+import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.platform.LocalContext
 import androidx.compose.ui.res.stringResource
+import androidx.compose.ui.text.font.FontWeight
+import androidx.compose.ui.text.style.TextOverflow
 import androidx.compose.ui.unit.dp
+import androidx.compose.ui.unit.sp
 import androidx.lifecycle.compose.collectAsStateWithLifecycle
 import androidx.navigation.NavController
 import com.noobexon.xposedfakelocation.R
 import com.noobexon.xposedfakelocation.manager.ui.navigation.Screen
+import com.noobexon.xposedfakelocation.manager.ui.theme.MiuixBottomPanel
+import com.noobexon.xposedfakelocation.manager.ui.theme.MiuixChip
+import com.noobexon.xposedfakelocation.manager.ui.theme.MiuixFloatingIsland
+import com.noobexon.xposedfakelocation.manager.ui.theme.MiuixPillButton
+import top.yukonga.miuix.kmp.basic.DropdownEntry
+import top.yukonga.miuix.kmp.basic.DropdownItem
+import top.yukonga.miuix.kmp.icon.MiuixIcons
+import top.yukonga.miuix.kmp.icon.extended.Delete
+import top.yukonga.miuix.kmp.icon.extended.Favorites
+import top.yukonga.miuix.kmp.icon.extended.Location
+import top.yukonga.miuix.kmp.icon.extended.More
+import top.yukonga.miuix.kmp.menu.WindowIconDropdownMenu
 import kotlinx.coroutines.launch
+import java.util.Locale
 
 /**
- * Top-level Map screen composable.
+ * HyperOS / Miuix Full-Screen Immersive Map Screen.
  *
- * Acts as the wiring layer between [MapViewModel] and the rest of the Map UI. Responsibilities:
- * - Collects [MapViewModel.uiState] and distributes individual slices to child composables so that
- *   only the composables that actually care about a piece of state recompose when it changes.
- * - Hosts the [ModalNavigationDrawer] and manages its [drawerState], including intercepting the
- *   system back gesture when the drawer is open, closing on scrim tap (via `gesturesEnabled =
- *   drawerState.isOpen`), and re-opening it on re-entry via [MapViewModel.consumeReopenDrawerRequest].
- * - Renders the [Scaffold] with [TopAppBar] (menu, center, overflow actions) and FAB
- *   (play/stop spoofing toggle). The FAB is visually disabled when no marker has been placed.
- * - Conditionally overlays [GoToPointDialog] and [AddToFavoritesDialog] based on the corresponding
- *   `isVisible` flags in [MapUiState]; each dialog receives only the state slice it needs plus
- *   typed callbacks, keeping dialogs fully stateless.
- * - Delegates all map-view rendering and side effects to [MapViewContainer].
- *
- * @param navController Used by [DrawerContent] for in-app navigation.
- * @param mapViewModel The screen's ViewModel; injected at the [NavHost] level.
+ * Replaces the legacy Material 3 top-bar and isolated FAB with:
+ * - Full-screen edge-to-edge interactive map canvas.
+ * - Top floating capsule status island (Drawer trigger, live spoof status & coordinates, layer switcher, center map).
+ * - Bottom floating dashboard control sheet (Direct pill action button, location info, favorites, quick clear).
  */
-@OptIn(androidx.compose.material3.ExperimentalMaterial3Api::class)
 @Composable
 fun MapScreen(
     navController: NavController,
@@ -77,12 +96,12 @@ fun MapScreen(
     val uiState by mapViewModel.uiState.collectAsStateWithLifecycle()
     val isPlaying = uiState.isPlaying
     val isFabClickable = uiState.isFabClickable
+    val clickedLocation = uiState.lastClickedLocation
     val showGoToPointDialog = uiState.isGoToPointDialogVisible
     val showAddToFavoritesDialog = uiState.isAddToFavoritesDialogVisible
     val showMapSourceDialog = uiState.isMapSourceDialogVisible
     val drawerState = rememberDrawerState(initialValue = DrawerValue.Closed)
     val scope = rememberCoroutineScope()
-    var showOptionsMenu by remember { mutableStateOf(false) }
     val fakeLocationSet = stringResource(R.string.toast_fake_location_set)
     val fakeLocationUnset = stringResource(R.string.toast_unset_fake_location)
 
@@ -90,14 +109,12 @@ fun MapScreen(
         scope.launch { drawerState.close() }
     }
 
-    // When returning to the map after navigating away via the drawer, restore the drawer open.
     LaunchedEffect(Unit) {
         if (mapViewModel.consumeReopenDrawerRequest()) {
             drawerState.open()
         }
     }
 
-    // Navigate to Favorites after a favorite is successfully saved.
     LaunchedEffect(mapViewModel.navigateToFavoritesEvent) {
         mapViewModel.navigateToFavoritesEvent.collect {
             navController.navigate(Screen.Favorites.route) { launchSingleTop = true }
@@ -112,164 +129,276 @@ fun MapScreen(
                 navController = navController
             )
         },
-        scrimColor = MaterialTheme.colorScheme.primary.copy(alpha = 0.32f),
+        scrimColor = Color.Black.copy(alpha = 0.45f),
         drawerState = drawerState,
-        // Only enable gestures while the drawer is open so that tapping the scrim (outside the
-        // drawer) closes it. When closed, gestures are off so map pan/zoom is not intercepted.
         gesturesEnabled = drawerState.isOpen,
         modifier = Modifier.fillMaxSize()
     ) {
-        Scaffold(
-            modifier = Modifier.fillMaxSize(),
-            topBar = {
-                TopAppBar(
-                    title = { Text(stringResource(R.string.app_name)) },
-                    colors = TopAppBarDefaults.topAppBarColors(
-                        containerColor = MaterialTheme.colorScheme.primary,
-                        titleContentColor = MaterialTheme.colorScheme.onPrimary,
-                        navigationIconContentColor = MaterialTheme.colorScheme.onPrimary,
-                        actionIconContentColor = MaterialTheme.colorScheme.onPrimary
-                    ),
-                    navigationIcon = {
-                        IconButton(onClick = { scope.launch { drawerState.open() } }) {
-                            Icon(imageVector = Icons.Default.Menu, contentDescription = stringResource(R.string.cd_menu))
+        Box(modifier = Modifier.fillMaxSize()) {
+            // 1. Full-screen Immersive Map Canvas
+            MapViewContainer(
+                isLoading = uiState.isLoading,
+                lastClickedLocation = uiState.lastClickedLocation,
+                userLocation = uiState.userLocation,
+                isPlaying = uiState.isPlaying,
+                mapZoom = uiState.mapZoom,
+                mapSource = uiState.mapSource,
+                tiandituToken = uiState.tiandituToken,
+                hasResolvedInitialLocation = uiState.hasResolvedInitialLocation,
+                goToPointEvent = mapViewModel.goToPointEvent,
+                centerMapEvent = mapViewModel.centerMapEvent,
+                onClickedLocationChange = mapViewModel::updateClickedLocation,
+                onUserLocationChange = mapViewModel::updateUserLocation,
+                onMapZoomChange = mapViewModel::updateMapZoom,
+                onLoadingFinished = mapViewModel::setLoadingFinished,
+                onInitialLocationResolved = mapViewModel::markInitialLocationResolved,
+            )
+
+            // 2. HyperOS Floating Top Status Island
+            Box(
+                modifier = Modifier
+                    .align(Alignment.TopCenter)
+                    .fillMaxWidth()
+                    .statusBarsPadding()
+                    .padding(horizontal = 16.dp, vertical = 10.dp)
+            ) {
+                MiuixFloatingIsland(
+                    modifier = Modifier.fillMaxWidth()
+                ) {
+                    // Drawer Hamburger Button
+                    IconButton(
+                        onClick = { scope.launch { drawerState.open() } },
+                        modifier = Modifier.size(38.dp)
+                    ) {
+                        Icon(
+                            imageVector = Icons.Default.Menu,
+                            contentDescription = stringResource(R.string.cd_menu),
+                            tint = MaterialTheme.colorScheme.onSurface
+                        )
+                    }
+
+                    // Middle Status & Location summary
+                    Row(
+                        verticalAlignment = Alignment.CenterVertically,
+                        modifier = Modifier
+                            .weight(1f)
+                            .padding(horizontal = 8.dp)
+                    ) {
+                        // Live Status indicator dot
+                        Box(
+                            modifier = Modifier
+                                .size(8.dp)
+                                .clip(CircleShape)
+                                .background(
+                                    if (isPlaying) Color(0xFF34C759)
+                                    else if (isFabClickable) MaterialTheme.colorScheme.primary
+                                    else Color(0xFF8E8E93)
+                                )
+                        )
+
+                        Spacer(modifier = Modifier.width(6.dp))
+
+                        Column {
+                            Text(
+                                text = if (isPlaying) "伪装运行中" else if (isFabClickable) "位置已选定" else stringResource(R.string.app_name),
+                                fontSize = 13.sp,
+                                fontWeight = FontWeight.Bold,
+                                color = MaterialTheme.colorScheme.onSurface,
+                                maxLines = 1,
+                                overflow = TextOverflow.Ellipsis
+                            )
+                            if (clickedLocation != null) {
+                                Text(
+                                    text = String.format(Locale.US, "%.4f, %.4f", clickedLocation.latitude, clickedLocation.longitude),
+                                    fontSize = 11.sp,
+                                    color = MaterialTheme.colorScheme.onSurfaceVariant,
+                                    maxLines = 1
+                                )
+                            }
                         }
-                    },
-                    actions = {
-                        IconButton(onClick = { mapViewModel.triggerCenterMapEvent() }) {
-                            Icon(imageVector = Icons.Default.MyLocation, contentDescription = stringResource(R.string.cd_center))
-                        }
-                        IconButton(onClick = { showOptionsMenu = true }) {
-                            Icon(imageVector = Icons.Default.MoreVert, contentDescription = stringResource(R.string.cd_options))
-                        }
-                        DropdownMenu(
-                            expanded = showOptionsMenu,
-                            onDismissRequest = { showOptionsMenu = false }
+                    }
+
+                    // Action Icons: Center, Switch Source, More
+                    Row(verticalAlignment = Alignment.CenterVertically) {
+                        IconButton(
+                            onClick = { mapViewModel.triggerCenterMapEvent() },
+                            modifier = Modifier.size(36.dp)
                         ) {
-                            DropdownMenuItem(
-                                leadingIcon = {
-                                    Icon(
-                                        imageVector = Icons.Default.LocationSearching,
-                                        contentDescription = stringResource(R.string.map_go_to_point)
-                                    )
-                                },
-                                text = { Text(stringResource(R.string.map_go_to_point)) },
-                                onClick = {
-                                    showOptionsMenu = false
-                                    mapViewModel.showGoToPointDialog()
-                                }
+                            Icon(
+                                imageVector = Icons.Default.MyLocation,
+                                contentDescription = stringResource(R.string.cd_center),
+                                tint = MaterialTheme.colorScheme.primary,
+                                modifier = Modifier.size(20.dp)
                             )
-                            DropdownMenuItem(
-                                leadingIcon = {
-                                    Icon(
-                                        imageVector = Icons.Default.Map,
-                                        contentDescription = stringResource(R.string.map_switch_source)
-                                    )
-                                },
-                                text = { Text(stringResource(R.string.map_switch_source)) },
-                                onClick = {
-                                    showOptionsMenu = false
-                                    mapViewModel.showMapSourceDialog()
-                                }
+                        }
+
+                        IconButton(
+                            onClick = { mapViewModel.showMapSourceDialog() },
+                            modifier = Modifier.size(36.dp)
+                        ) {
+                            Icon(
+                                imageVector = Icons.Default.Map,
+                                contentDescription = stringResource(R.string.map_switch_source),
+                                tint = MaterialTheme.colorScheme.onSurfaceVariant,
+                                modifier = Modifier.size(20.dp)
                             )
-                            DropdownMenuItem(
-                                leadingIcon = {
-                                    Icon(
-                                        imageVector = Icons.Default.FavoriteBorder,
-                                        contentDescription = stringResource(R.string.map_add_to_favorites)
-                                    )
-                                },
-                                text = { Text(stringResource(R.string.map_add_to_favorites)) },
-                                onClick = {
-                                    showOptionsMenu = false
-                                    mapViewModel.showAddToFavoritesDialog()
-                                }
+                        }
+
+                        val menuItems = remember(isFabClickable) {
+                            listOf(
+                                DropdownItem(
+                                    text = context.getString(R.string.map_go_to_point),
+                                    icon = {
+                                        Icon(
+                                            imageVector = MiuixIcons.Location,
+                                            contentDescription = null,
+                                            tint = MaterialTheme.colorScheme.primary,
+                                            modifier = Modifier.size(20.dp)
+                                        )
+                                    },
+                                    onClick = { mapViewModel.showGoToPointDialog() }
+                                ),
+                                DropdownItem(
+                                    text = context.getString(R.string.map_add_to_favorites),
+                                    icon = {
+                                        Icon(
+                                            imageVector = MiuixIcons.Favorites,
+                                            contentDescription = null,
+                                            tint = MaterialTheme.colorScheme.primary,
+                                            modifier = Modifier.size(20.dp)
+                                        )
+                                    },
+                                    enabled = isFabClickable,
+                                    onClick = { mapViewModel.showAddToFavoritesDialog() }
+                                ),
+                                DropdownItem(
+                                    text = context.getString(R.string.map_clear_location),
+                                    icon = {
+                                        Icon(
+                                            imageVector = MiuixIcons.Delete,
+                                            contentDescription = null,
+                                            tint = MaterialTheme.colorScheme.error,
+                                            modifier = Modifier.size(20.dp)
+                                        )
+                                    },
+                                    enabled = isFabClickable,
+                                    onClick = { mapViewModel.updateClickedLocation(null) }
+                                )
                             )
-                            DropdownMenuItem(
-                                leadingIcon = {
-                                    Icon(
-                                        imageVector = Icons.Default.Clear,
-                                        contentDescription = stringResource(R.string.map_clear_location)
-                                    )
-                                },
-                                text = { Text(stringResource(R.string.map_clear_location)) },
-                                onClick = {
-                                    showOptionsMenu = false
-                                    mapViewModel.updateClickedLocation(null)
-                                },
-                                enabled = isFabClickable
+                        }
+
+                        WindowIconDropdownMenu(
+                            entry = DropdownEntry(items = menuItems),
+                            modifier = Modifier.size(36.dp)
+                        ) {
+                            Icon(
+                                imageVector = MiuixIcons.More,
+                                contentDescription = stringResource(R.string.cd_options),
+                                tint = MaterialTheme.colorScheme.onSurfaceVariant,
+                                modifier = Modifier.size(20.dp)
                             )
                         }
                     }
-                )
-            },
-            floatingActionButton = {
-                FloatingActionButton(
-                    onClick = {
-                        if (isFabClickable) {
-                            val wasPlaying = uiState.isPlaying
-                            mapViewModel.togglePlaying()
-                            Toast.makeText(
-                                context,
-                                if (!wasPlaying) fakeLocationSet else fakeLocationUnset,
-                                Toast.LENGTH_SHORT
-                            ).show()
+                }
+            }
+
+            // 3. HyperOS Bottom Floating Dashboard Control Sheet
+            Box(
+                modifier = Modifier
+                    .align(Alignment.BottomCenter)
+                    .fillMaxWidth()
+                    .navigationBarsPadding()
+                    .padding(horizontal = 16.dp, vertical = 16.dp)
+            ) {
+                MiuixBottomPanel {
+                    if (clickedLocation != null) {
+                        // Location Info & Actions Row
+                        Row(
+                            modifier = Modifier.fillMaxWidth(),
+                            horizontalArrangement = Arrangement.SpaceBetween,
+                            verticalAlignment = Alignment.CenterVertically
+                        ) {
+                            Column(modifier = Modifier.weight(1f)) {
+                                Text(
+                                    text = "伪装目标位置",
+                                    fontSize = 12.sp,
+                                    fontWeight = FontWeight.Medium,
+                                    color = MaterialTheme.colorScheme.onSurfaceVariant
+                                )
+                                Spacer(modifier = Modifier.height(2.dp))
+                                Text(
+                                    text = String.format(Locale.US, "%.6f°, %.6f°", clickedLocation.latitude, clickedLocation.longitude),
+                                    fontSize = 15.sp,
+                                    fontWeight = FontWeight.Bold,
+                                    color = MaterialTheme.colorScheme.onSurface
+                                )
+                            }
+
+                            Row(horizontalArrangement = Arrangement.spacedBy(8.dp)) {
+                                MiuixChip(
+                                    text = "收藏",
+                                    isActive = true,
+                                    modifier = Modifier.clickable { mapViewModel.showAddToFavoritesDialog() }
+                                )
+                                MiuixChip(
+                                    text = "清除",
+                                    isActive = false,
+                                    modifier = Modifier.clickable { mapViewModel.updateClickedLocation(null) }
+                                )
+                            }
                         }
-                    },
-                    modifier = Modifier
-                        .navigationBarsPadding()
-                        .padding(16.dp),
-                    containerColor = if (isFabClickable) {
-                        MaterialTheme.colorScheme.primary
+
+                        Spacer(modifier = Modifier.height(14.dp))
                     } else {
-                        MaterialTheme.colorScheme.onSurface.copy(alpha = 0.12f)
-                    },
-                    contentColor = if (isFabClickable) {
-                        contentColorFor(MaterialTheme.colorScheme.primary)
-                    } else {
-                        MaterialTheme.colorScheme.onSurfaceVariant
-                    },
-                    elevation = FloatingActionButtonDefaults.elevation(
-                        defaultElevation = if (isFabClickable) 6.dp else 0.dp,
-                        pressedElevation = if (isFabClickable) 12.dp else 0.dp
-                    )
-                ) {
-                    Icon(
-                        imageVector = if (isPlaying) Icons.Default.Stop else Icons.Default.PlayArrow,
-                        contentDescription = if (isPlaying) {
-                            stringResource(R.string.cd_stop)
-                        } else {
-                            stringResource(R.string.cd_play)
+                        // Helpful Prompt when no pin is placed
+                        Row(
+                            modifier = Modifier
+                                .fillMaxWidth()
+                                .padding(vertical = 4.dp),
+                            verticalAlignment = Alignment.CenterVertically
+                        ) {
+                            Icon(
+                                imageVector = Icons.Default.LocationSearching,
+                                contentDescription = null,
+                                tint = MaterialTheme.colorScheme.primary,
+                                modifier = Modifier.size(18.dp)
+                            )
+                            Spacer(modifier = Modifier.width(8.dp))
+                            Text(
+                                text = "轻触地图任意位置放置图钉以选定虚拟位置",
+                                fontSize = 13.sp,
+                                color = MaterialTheme.colorScheme.onSurfaceVariant
+                            )
                         }
+
+                        Spacer(modifier = Modifier.height(12.dp))
+                    }
+
+                    // Main Action Pill Button
+                    MiuixPillButton(
+                        text = if (isPlaying) "停止虚拟定位" else if (isFabClickable) "开启虚拟定位" else "请先选定地图位置",
+                        icon = if (isPlaying) Icons.Default.Stop else Icons.Default.PlayArrow,
+                        onClick = {
+                            if (isFabClickable || isPlaying) {
+                                val wasPlaying = uiState.isPlaying
+                                mapViewModel.togglePlaying()
+                                Toast.makeText(
+                                    context,
+                                    if (!wasPlaying) fakeLocationSet else fakeLocationUnset,
+                                    Toast.LENGTH_SHORT
+                                ).show()
+                            }
+                        },
+                        isPrimary = !isPlaying,
+                        isDestructive = isPlaying,
+                        enabled = isFabClickable || isPlaying,
+                        modifier = Modifier.fillMaxWidth()
                     )
                 }
             }
-        ) { innerPadding ->
-            Box(
-                modifier = Modifier
-                    .fillMaxSize()
-                    .padding(innerPadding)
-            ) {
-                MapViewContainer(
-                    isLoading = uiState.isLoading,
-                    lastClickedLocation = uiState.lastClickedLocation,
-                    userLocation = uiState.userLocation,
-                    isPlaying = uiState.isPlaying,
-                    mapZoom = uiState.mapZoom,
-                    mapSource = uiState.mapSource,
-                    tiandituToken = uiState.tiandituToken,
-                    hasResolvedInitialLocation = uiState.hasResolvedInitialLocation,
-                    goToPointEvent = mapViewModel.goToPointEvent,
-                    centerMapEvent = mapViewModel.centerMapEvent,
-                    onClickedLocationChange = mapViewModel::updateClickedLocation,
-                    onUserLocationChange = mapViewModel::updateUserLocation,
-                    onMapZoomChange = mapViewModel::updateMapZoom,
-                    onLoadingFinished = mapViewModel::setLoadingFinished,
-                    onInitialLocationResolved = mapViewModel::markInitialLocationResolved,
-                )
-            }
         }
 
+        // Dialogs
         if (showGoToPointDialog) {
             val goToPoint = uiState.goToPointState
             GoToPointDialog(

@@ -1,5 +1,5 @@
 <resources>
-    <string name="app_name">XposedFakeLocation</string>
+    <string name="app_name">MockX</string>
 
     <string name="description">spoof your device location globally or for specific apps</string>
 
@@ -198,20 +198,20 @@
     <string name="target_apps_filter_no_results">No apps match the active filter</string>
     <string name="cd_filter_apps">Filter apps</string>
     <string name="target_apps_selected_count">%1$d selected</string>
-    <string name="target_apps_module_inactive">Module is not active. Enable XposedFakeLocation in your Xposed manager to choose target apps.</string>
+    <string name="target_apps_module_inactive">Module is not active. Enable MockX in your Xposed manager to choose target apps.</string>
     <string name="target_apps_scope_request_failed">Couldn\'t update scope: %1$s</string>
     <string name="target_apps_relaunch_cd">Relaunch %1$s</string>
     <string name="target_apps_relaunching">Relaunching %1$s…</string>
     <string name="target_apps_relaunch_failed">Couldn\'t relaunch %1$s. Is root granted?</string>
-    <string name="target_apps_root_required">Relaunching a target app requires XposedFakeLocation to have root access. Please grant it in your root manager.</string>
-
+    <string name="target_apps_root_required">Relaunching a target app requires MockX to have root access. Please grant it in your root manager.</string>
+    
     <string name="permissions_activity_error">Error: Unable to access activity.</string>
     <string name="permissions_required">Permissions are required to use this app</string>
     <string name="permissions_grant">Grant Permissions</string>
     <string name="permissions_permanently_denied">You have permanently denied location permissions. Please enable them from settings and restart the app.</string>
     <string name="permissions_open_settings">Open Settings</string>
 
-    <string name="about_description">XposedFakeLocation is an app designed to allow users to mock their location for testing or entertainment purposes.\n\nUse it responsibly, and make sure to comply with all applicable local regulations when using location services.\n\nYou are fully responsible for the use of this app.</string>
+    <string name="about_description">MockX is a modern, high-precision location mocking and leak-prevention utility designed for developers, security researchers, and power users.\n\nEquipped with bidirectional GCJ-02/WGS-84 coordinate correction, cellular base station filtering, and Wi-Fi probe sanitization.\n\nPlease use responsibly in compliance with all applicable laws and regulations.</string>
     <string name="about_version_label">Version:</string>
     <string name="about_developer_label">Created by:</string>
     <string name="about_contributors_label">Contributors:</string>

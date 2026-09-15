@@ -42,3 +42,9 @@
 # field names must not be renamed (otherwise JSON keys change and parsing breaks).
 # ---------------------------------------------------------------------------
 -keep class com.noobexon.xposedfakelocation.data.model.** { *; }
+
+# ---------------------------------------------------------------------------
+# Preserve all Xposed hook implementations and reflection helpers from stripping
+# ---------------------------------------------------------------------------
+-keep class com.noobexon.xposedfakelocation.xposed.** { *; }
+-keepclassmembers class com.noobexon.xposedfakelocation.xposed.** { *; }

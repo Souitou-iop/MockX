@@ -2,7 +2,7 @@
 package com.noobexon.xposedfakelocation.data
 
 // APP
-const val MANAGER_APP_PACKAGE_NAME = "com.noobexon.xposedfakelocation"
+const val MANAGER_APP_PACKAGE_NAME = "io.github.souitou.mockx"
 const val SHARED_PREFS_FILE = "xposed_shared_prefs"
 const val REMOTE_PREFS_GROUP = "settings"
 
