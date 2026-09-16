@@ -5,8 +5,8 @@ plugins {
 }
 
 // Version is derived from the release tag in CI (passed via -PappVersionName=vX.Y.Z or the
-// APP_VERSION_NAME env var). Local builds fall back to the dev version below.
-val fallbackVersionName = "0.0.1"
+// APP_VERSION_NAME env var). Local builds fall back to the version below.
+val fallbackVersionName = "1.0beta"
 
 fun resolveVersionName(): String {
     val provided = (project.findProperty("appVersionName") as String?)
@@ -14,14 +14,15 @@ fun resolveVersionName(): String {
     return provided?.trim()?.removePrefix("v")?.takeIf { it.isNotEmpty() } ?: fallbackVersionName
 }
 
-// Maps a semver name (e.g. "1.2.3") to a monotonically increasing integer (10203).
+// Maps a version name (e.g. "1.0.0", "1.0beta", "1.0-beta") to a monotonically increasing integer.
 fun resolveVersionCode(versionName: String): Int {
-    val core = versionName.substringBefore("-")
-    val parts = core.split(".")
-    val major = parts.getOrNull(0)?.toIntOrNull() ?: 0
+    val clean = versionName.substringBefore("-").takeWhile { it.isDigit() || it == '.' }
+    val parts = clean.split(".").filter { it.isNotEmpty() }
+    val major = parts.getOrNull(0)?.toIntOrNull() ?: 1
     val minor = parts.getOrNull(1)?.toIntOrNull() ?: 0
     val patch = parts.getOrNull(2)?.toIntOrNull() ?: 0
-    return major * 10000 + minor * 100 + patch
+    val base = major * 10000 + minor * 100 + patch
+    return if (base > 0) base else 10000
 }
 
 val appVersionName = resolveVersionName()

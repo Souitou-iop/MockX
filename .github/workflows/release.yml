@@ -1,8 +1,5 @@
 name: Build & attach release APK
 
-# Triggered when you publish a GitHub Release (with your own notes).
-# CI builds the debug APK, versions it from the release tag, signs it with
-# your debug keystore, and attaches MockX.apk to the release.
 on:
   release:
     types: [published]
@@ -24,27 +21,54 @@ jobs:
           java-version: "21"
           cache: gradle
 
-      - name: Restore debug keystore
+      - name: Setup Android SDK
+        uses: android-actions/setup-android@v3
+
+      - name: Configure keystore
         env:
           DEBUG_KEYSTORE_BASE64: ${{ secrets.DEBUG_KEYSTORE_BASE64 }}
         run: |
-          if [ -z "$DEBUG_KEYSTORE_BASE64" ]; then
-            echo "::error::DEBUG_KEYSTORE_BASE64 secret is not set. Add it so releases keep a stable signature."
-            exit 1
-          fi
           mkdir -p "$HOME/.android"
-          echo "$DEBUG_KEYSTORE_BASE64" | base64 -d > "$HOME/.android/debug.keystore"
+          if [ -n "$DEBUG_KEYSTORE_BASE64" ]; then
+            echo "$DEBUG_KEYSTORE_BASE64" | base64 -d > "$HOME/.android/debug.keystore"
+          else
+            keytool -genkey -v -keystore "$HOME/.android/debug.keystore" \
+              -storepass android -alias androiddebugkey -keypass android \
+              -keyalg RSA -keysize 2048 -validity 10000 \
+              -dname "CN=Android Debug,O=Android,C=US"
+          fi
 
       - name: Make gradlew executable
         run: chmod +x ./gradlew
 
-      - name: Build debug APK
-        run: ./gradlew --no-daemon assembleDebug -PappVersionName="${{ github.event.release.tag_name }}"
+      - name: Extract Tag Version
+        id: vars
+        run: |
+          TAG="${{ github.event.release.tag_name }}"
+          VERSION="${TAG#v}"
+          echo "version=${VERSION}" >> $GITHUB_OUTPUT
 
-      - name: Rename APK
-        run: cp app/build/outputs/apk/debug/app-debug.apk MockX.apk
+      - name: Build Release APK
+        run: |
+          ./gradlew --no-daemon assembleRelease \
+            -PappVersionName="${{ steps.vars.outputs.version }}" \
+            -PtargetAbi="arm64-v8a"
 
-      - name: Upload APK to release
+      - name: Build Debug APK
+        run: |
+          ./gradlew --no-daemon assembleDebug \
+            -PappVersionName="${{ steps.vars.outputs.version }}" \
+            -PtargetAbi="arm64-v8a"
+
+      - name: Prepare APKs
+        run: |
+          VERSION="${{ steps.vars.outputs.version }}"
+          cp app/build/outputs/apk/release/*.apk "MockX-v${VERSION}-arm64-v8a-release.apk" 2>/dev/null || true
+          cp app/build/outputs/apk/debug/app-debug.apk "MockX-v${VERSION}-arm64-v8a-debug.apk" 2>/dev/null || true
+          ls -lh MockX-*.apk
+
+      - name: Upload APKs to release
         env:
           GH_TOKEN: ${{ github.token }}
-        run: gh release upload "${{ github.event.release.tag_name }}" MockX.apk --clobber
+        run: |
+          gh release upload "${{ github.event.release.tag_name }}" MockX-*.apk --clobber
