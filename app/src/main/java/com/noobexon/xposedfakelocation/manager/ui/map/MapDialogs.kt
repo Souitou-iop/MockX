@@ -5,22 +5,22 @@ import androidx.compose.foundation.layout.Column
 import androidx.compose.foundation.layout.Spacer
 import androidx.compose.foundation.layout.fillMaxWidth
 import androidx.compose.foundation.layout.height
-import androidx.compose.foundation.shape.RoundedCornerShape
+import androidx.compose.foundation.layout.padding
 import androidx.compose.foundation.text.KeyboardOptions
-import androidx.compose.material3.MaterialTheme
-import androidx.compose.material3.OutlinedTextField
-import androidx.compose.material3.Text
 import androidx.compose.runtime.Composable
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.res.stringResource
 import androidx.compose.ui.text.input.KeyboardType
 import androidx.compose.ui.unit.dp
+import androidx.compose.ui.unit.sp
 import com.noobexon.xposedfakelocation.R
-import com.noobexon.xposedfakelocation.manager.ui.theme.MiuixDialog
-import com.noobexon.xposedfakelocation.manager.ui.theme.MiuixDialogButton
+import com.noobexon.xposedfakelocation.manager.ui.components.AppDialog
+import top.yukonga.miuix.kmp.basic.Text
+import top.yukonga.miuix.kmp.basic.TextField
+import top.yukonga.miuix.kmp.theme.MiuixTheme
 
 /**
- * HyperOS / Miuix Styled Dialog that lets the user jump to an arbitrary coordinate.
+ * Dialog that lets the user jump to an arbitrary coordinate.
  */
 @Composable
 fun GoToPointDialog(
@@ -33,22 +33,12 @@ fun GoToPointDialog(
     onConfirm: () -> Unit,
     onDismissRequest: () -> Unit,
 ) {
-    MiuixDialog(
-        onDismissRequest = onDismissRequest,
+    AppDialog(
         title = stringResource(R.string.map_go_to_point),
-        confirmButton = {
-            MiuixDialogButton(
-                text = stringResource(R.string.action_go),
-                isPrimary = true,
-                onClick = onConfirm
-            )
-        },
-        dismissButton = {
-            MiuixDialogButton(
-                text = stringResource(R.string.action_cancel),
-                onClick = onDismissRequest
-            )
-        }
+        onDismissRequest = onDismissRequest,
+        confirmText = stringResource(R.string.action_go),
+        onConfirm = onConfirm,
+        dismissText = stringResource(R.string.action_cancel),
     ) {
         Column {
             CoordinateInputField(
@@ -69,7 +59,7 @@ fun GoToPointDialog(
 }
 
 /**
- * HyperOS / Miuix Styled Dialog that lets the user save the current spoof location as a named favourite.
+ * Dialog that lets the user save the current spoof location as a named favourite.
  */
 @Composable
 fun AddToFavoritesDialog(
@@ -87,22 +77,12 @@ fun AddToFavoritesDialog(
     onConfirm: () -> Unit,
     onDismissRequest: () -> Unit,
 ) {
-    MiuixDialog(
-        onDismissRequest = onDismissRequest,
+    AppDialog(
         title = stringResource(R.string.map_add_to_favorites),
-        confirmButton = {
-            MiuixDialogButton(
-                text = stringResource(R.string.action_add),
-                isPrimary = true,
-                onClick = onConfirm
-            )
-        },
-        dismissButton = {
-            MiuixDialogButton(
-                text = stringResource(R.string.action_cancel),
-                onClick = onDismissRequest
-            )
-        }
+        onDismissRequest = onDismissRequest,
+        confirmText = stringResource(R.string.action_add),
+        onConfirm = onConfirm,
+        dismissText = stringResource(R.string.action_cancel),
     ) {
         Column {
             CoordinateInputField(
@@ -139,7 +119,7 @@ fun AddToFavoritesDialog(
 }
 
 /**
- * A single labelled [OutlinedTextField] with squircle corners and inline error annotations.
+ * A single labelled miuix [TextField] with inline error annotation below.
  */
 @Composable
 private fun CoordinateInputField(
@@ -150,21 +130,22 @@ private fun CoordinateInputField(
     modifier: Modifier = Modifier,
     keyboardType: KeyboardType = KeyboardType.Unspecified,
 ) {
-    OutlinedTextField(
+    TextField(
         value = value,
         onValueChange = onValueChange,
-        label = { Text(label) },
-        isError = errorRes != null,
-        shape = RoundedCornerShape(14.dp),
+        label = label,
+        singleLine = true,
         keyboardOptions = KeyboardOptions(keyboardType = keyboardType),
         modifier = modifier.fillMaxWidth()
     )
     if (errorRes != null) {
         Text(
             text = stringResource(errorRes),
-            color = MaterialTheme.colorScheme.error,
-            style = MaterialTheme.typography.bodySmall,
-            modifier = Modifier.fillMaxWidth()
+            color = MiuixTheme.colorScheme.error,
+            fontSize = 12.sp,
+            modifier = Modifier
+                .fillMaxWidth()
+                .padding(top = 4.dp)
         )
     }
 }

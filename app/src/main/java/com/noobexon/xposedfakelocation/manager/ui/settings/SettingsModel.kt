@@ -15,7 +15,9 @@ import com.noobexon.xposedfakelocation.data.DEFAULT_MEAN_SEA_LEVEL_ACCURACY
 import com.noobexon.xposedfakelocation.data.DEFAULT_RANDOMIZE_RADIUS
 import com.noobexon.xposedfakelocation.data.DEFAULT_SPEED
 import com.noobexon.xposedfakelocation.data.DEFAULT_SPEED_ACCURACY
-import com.noobexon.xposedfakelocation.data.DEFAULT_THEME_OPTION
+import com.noobexon.xposedfakelocation.data.DEFAULT_MONET_COLOR
+import com.noobexon.xposedfakelocation.data.DEFAULT_PREDICTIVE_BACK_ENABLED
+import com.noobexon.xposedfakelocation.data.DEFAULT_THEME_MODE
 import com.noobexon.xposedfakelocation.data.DEFAULT_TIANDITU_TOKEN
 import com.noobexon.xposedfakelocation.data.DEFAULT_USE_ACCURACY
 import com.noobexon.xposedfakelocation.data.DEFAULT_USE_ALTITUDE
@@ -31,7 +33,6 @@ import com.noobexon.xposedfakelocation.data.DEFAULT_WIFI_RSSI
 import com.noobexon.xposedfakelocation.data.DEFAULT_WIFI_SSID
 import com.noobexon.xposedfakelocation.manager.localization.LanguageOption
 import com.noobexon.xposedfakelocation.manager.ui.map.MapSourceOption
-import com.noobexon.xposedfakelocation.manager.ui.theme.ThemeOption
 import kotlin.math.round
 
 /**
@@ -169,6 +170,8 @@ object SettingKeys {
     const val WIFI_RSSI = "wifi_rssi"
     const val BROADCAST = "broadcast"
     const val THEME = "theme"
+    const val PREDICTIVE_BACK = "predictive_back"
+    const val MONET_COLOR = "monet_color"
     const val LANGUAGE = "language"
     const val MAP_SOURCE = "map_source"
     const val TIANDITU_TOKEN = "tianditu_token"
@@ -265,20 +268,34 @@ sealed interface SettingEntry {
     }
 
     /**
-     * The theme picker row. Tapping anywhere on the row opens a theme selection dialog; selecting
-     * an option there applies it immediately — no Activity recreation required.
+     * The appearance picker row (system/light/dark × plain/Monet), rendered as an inline
+     * dropdown; selecting an option applies it immediately — no Activity recreation required.
      *
-     * @property selected The currently active [ThemeOption], shown collapsed in the row.
-     * @property onSelected Callback invoked with the chosen [ThemeOption] when the user taps an
-     *   item in the dialog.
+     * @property selectedModeId Persisted [ThemeMode] id shown collapsed in the row.
+     * @property onSelected Callback invoked with the chosen mode id.
      */
     data class Theme(
-        val selected: ThemeOption,
-        val onSelected: (ThemeOption) -> Unit
+        val selectedModeId: Int,
+        val onSelected: (Int) -> Unit
     ) : SettingEntry {
         override val key: String get() = SettingKeys.THEME
         override val titleRes: Int get() = R.string.setting_theme_title
         override val descriptionRes: Int get() = R.string.setting_theme_description
+    }
+
+    /**
+     * The Monet seed color picker row, only shown while a Monet theme mode is active.
+     *
+     * @property selectedColorId Persisted [MonetColor] id.
+     * @property onSelected Callback invoked with the chosen color id.
+     */
+    data class MonetColor(
+        val selectedColorId: Int,
+        val onSelected: (Int) -> Unit
+    ) : SettingEntry {
+        override val key: String get() = SettingKeys.MONET_COLOR
+        override val titleRes: Int get() = R.string.setting_monet_color_title
+        override val descriptionRes: Int get() = R.string.setting_monet_color_description
     }
 
     /**
@@ -343,5 +360,7 @@ data class SettingsUiState(
     val wifiRssi: Int = DEFAULT_WIFI_RSSI,
     // App
     val languageTag: String = DEFAULT_LANGUAGE_TAG,
-    val themeOption: ThemeOption = ThemeOption.fromTag(DEFAULT_THEME_OPTION),
+    val predictiveBack: Boolean = DEFAULT_PREDICTIVE_BACK_ENABLED,
+    val themeModeId: Int = DEFAULT_THEME_MODE,
+    val monetColorId: Int = DEFAULT_MONET_COLOR,
 )

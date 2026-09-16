@@ -1,14 +1,9 @@
 package com.noobexon.xposedfakelocation.manager.ui.targetapps
 
 import android.graphics.Bitmap
-import androidx.activity.compose.BackHandler
-import androidx.compose.animation.AnimatedVisibility
-import androidx.compose.animation.fadeIn
-import androidx.compose.animation.fadeOut
 import androidx.compose.foundation.Image
 import androidx.compose.foundation.background
 import androidx.compose.foundation.clickable
-import androidx.compose.foundation.interaction.MutableInteractionSource
 import androidx.compose.foundation.layout.Arrangement
 import androidx.compose.foundation.layout.Box
 import androidx.compose.foundation.layout.Column
@@ -19,47 +14,25 @@ import androidx.compose.foundation.layout.fillMaxSize
 import androidx.compose.foundation.layout.fillMaxWidth
 import androidx.compose.foundation.layout.height
 import androidx.compose.foundation.layout.imePadding
-import androidx.compose.foundation.layout.navigationBarsPadding
 import androidx.compose.foundation.layout.padding
 import androidx.compose.foundation.layout.size
-import androidx.compose.foundation.layout.statusBarsPadding
 import androidx.compose.foundation.layout.width
 import androidx.compose.foundation.lazy.LazyColumn
-import androidx.compose.foundation.lazy.items
+import androidx.compose.foundation.lazy.itemsIndexed
 import androidx.compose.foundation.lazy.rememberLazyListState
 import androidx.compose.foundation.shape.CircleShape
 import androidx.compose.foundation.shape.RoundedCornerShape
-import androidx.compose.material.icons.Icons
-import androidx.compose.material.icons.automirrored.filled.ArrowBack
-import androidx.compose.material.icons.filled.FilterList
-import androidx.compose.material.icons.filled.RestartAlt
-import androidx.compose.material3.CircularProgressIndicator
-import androidx.compose.material3.ExperimentalMaterial3Api
-import androidx.compose.material3.Icon
-import androidx.compose.material3.IconButton
-import androidx.compose.material3.MaterialTheme
-import androidx.compose.material3.Scaffold
-import androidx.compose.material3.SnackbarHost
-import androidx.compose.material3.SnackbarHostState
-import androidx.compose.material3.Surface
-import androidx.compose.material3.Text
-import androidx.compose.material3.pulltorefresh.PullToRefreshBox
 import androidx.compose.runtime.Composable
 import androidx.compose.runtime.LaunchedEffect
 import androidx.compose.runtime.getValue
-import androidx.compose.runtime.mutableStateOf
 import androidx.compose.runtime.produceState
 import androidx.compose.runtime.remember
-import androidx.compose.runtime.setValue
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.draw.clip
-import androidx.compose.ui.draw.clipToBounds
 import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.graphics.asImageBitmap
-import androidx.compose.ui.input.nestedscroll.nestedScroll
 import androidx.compose.ui.platform.LocalContext
-import androidx.compose.ui.platform.LocalFocusManager
 import androidx.compose.ui.platform.LocalView
 import androidx.compose.ui.res.stringResource
 import androidx.compose.ui.text.font.FontWeight
@@ -75,29 +48,41 @@ import androidx.lifecycle.viewmodel.compose.viewModel
 import androidx.navigation.NavController
 import com.noobexon.xposedfakelocation.R
 import com.noobexon.xposedfakelocation.manager.RefreshRateHelper
-import com.noobexon.xposedfakelocation.manager.ui.theme.MiuixCard
-import com.noobexon.xposedfakelocation.manager.ui.theme.MiuixCardDivider
-import com.noobexon.xposedfakelocation.manager.ui.theme.MiuixChip
-import com.noobexon.xposedfakelocation.manager.ui.theme.MiuixLargeTitleHeader
-import com.noobexon.xposedfakelocation.manager.ui.theme.MiuixRoundCheckbox
-import com.noobexon.xposedfakelocation.manager.ui.theme.MiuixSearchBox
+import com.noobexon.xposedfakelocation.manager.ui.components.BlurredBar
+import com.noobexon.xposedfakelocation.manager.ui.components.BlurBackdropBox
+import com.noobexon.xposedfakelocation.manager.ui.components.StatusChip
+import com.noobexon.xposedfakelocation.manager.ui.components.LoadingIndicator
+import com.noobexon.xposedfakelocation.manager.ui.components.pageScrollModifiers
+import com.noobexon.xposedfakelocation.manager.ui.components.rememberBlurBackdrop
+import com.noobexon.xposedfakelocation.manager.ui.components.SearchField
+import top.yukonga.miuix.kmp.basic.Card
 import top.yukonga.miuix.kmp.basic.Checkbox
+import top.yukonga.miuix.kmp.basic.MiuixScrollBehavior
+import top.yukonga.miuix.kmp.basic.Scaffold
+import top.yukonga.miuix.kmp.basic.TopAppBar
+import top.yukonga.miuix.kmp.basic.CircularProgressIndicator
 import top.yukonga.miuix.kmp.basic.DropdownEntry
 import top.yukonga.miuix.kmp.basic.DropdownItem
+import top.yukonga.miuix.kmp.basic.Icon
+import top.yukonga.miuix.kmp.basic.IconButton
+import top.yukonga.miuix.kmp.basic.PullToRefresh
+import top.yukonga.miuix.kmp.basic.SnackbarHost
+import top.yukonga.miuix.kmp.basic.SnackbarHostState
+import top.yukonga.miuix.kmp.basic.Surface
+import top.yukonga.miuix.kmp.basic.Text
+import top.yukonga.miuix.kmp.basic.rememberPullToRefreshState
 import top.yukonga.miuix.kmp.icon.MiuixIcons
-import top.yukonga.miuix.kmp.icon.extended.More
+import top.yukonga.miuix.kmp.icon.extended.Back
+import top.yukonga.miuix.kmp.icon.extended.Filter
+import top.yukonga.miuix.kmp.icon.extended.Reset
 import top.yukonga.miuix.kmp.menu.WindowIconDropdownMenu
+import top.yukonga.miuix.kmp.theme.MiuixTheme
 import kotlinx.coroutines.Dispatchers
 import kotlinx.coroutines.withContext
 
 /**
- * HyperOS / Miuix Redesigned Target Apps Screen.
- *
- * Implements:
- * - HyperOS Large Title Header ("目标应用" / "Target Apps").
- * - Instant Pill Search Bar and Filter Chip Bar (selected count, user apps vs system apps).
- * - Grouped Squircle App Cards with smooth 18.dp rounded corners.
- * - MIUI iconic round blue ripple checkboxes and pill restart buttons.
+ * Target app picker with large title, instant search, filter menu and pull-to-refresh —
+ * rendered entirely with miuix components.
  */
 @Composable
 fun TargetAppsScreen(
@@ -148,7 +133,6 @@ fun TargetAppsScreen(
     )
 }
 
-@OptIn(ExperimentalMaterial3Api::class)
 @Composable
 private fun TargetAppsContent(
     uiState: TargetAppsUiState,
@@ -162,157 +146,205 @@ private fun TargetAppsContent(
     onSetShowSystemApps: (Boolean) -> Unit,
 ) {
     val listState = rememberLazyListState()
+    val colorScheme = MiuixTheme.colorScheme
+    val context = LocalContext.current
 
-    val filterMenuItems = remember(uiState.showUserApps, uiState.showSystemApps) {
+    val filterMenuItems = remember(uiState.showUserApps, uiState.showSystemApps, context) {
         listOf(
             DropdownItem(
-                text = "仅显示用户应用",
+                text = context.getString(R.string.target_apps_filter_user_only),
                 selected = uiState.showUserApps,
                 onClick = { onSetShowUserApps(!uiState.showUserApps) }
             ),
             DropdownItem(
-                text = "包含系统应用",
+                text = context.getString(R.string.target_apps_include_system),
                 selected = uiState.showSystemApps,
                 onClick = { onSetShowSystemApps(!uiState.showSystemApps) }
             )
         )
     }
 
+    val backdrop = rememberBlurBackdrop()
+    val blurActive = backdrop != null
+    val barColor = if (blurActive) Color.Transparent else colorScheme.surface
+    val topAppBarScrollBehavior = MiuixScrollBehavior()
+
     Scaffold(
         snackbarHost = {
             SnackbarHost(
-                hostState = snackbarHostState,
+                state = snackbarHostState,
                 modifier = Modifier.imePadding()
             )
         },
-        containerColor = MaterialTheme.colorScheme.background,
-        modifier = Modifier.fillMaxSize()
-    ) { innerPadding ->
-        Column(
-            modifier = Modifier
-                .fillMaxSize()
-                .padding(innerPadding)
-        ) {
-            // HyperOS Large Title Header
-            MiuixLargeTitleHeader(
-                title = stringResource(R.string.screen_target_apps),
-                subtitle = "仅针对选中的应用启用底层定位与基站拦截",
-                navigationIcon = {
-                    IconButton(onClick = onNavigateUp) {
-                        Icon(
-                            imageVector = Icons.AutoMirrored.Filled.ArrowBack,
-                            contentDescription = stringResource(R.string.cd_navigate_back),
-                            tint = MaterialTheme.colorScheme.onBackground
-                        )
-                    }
-                },
-                actions = {
-                    WindowIconDropdownMenu(
-                        entry = DropdownEntry(items = filterMenuItems),
-                        modifier = Modifier.size(36.dp)
-                    ) {
-                        Icon(
-                            imageVector = Icons.Default.FilterList,
-                            contentDescription = stringResource(R.string.cd_filter_apps),
-                            tint = MaterialTheme.colorScheme.onBackground,
-                            modifier = Modifier.size(20.dp)
-                        )
-                    }
-                }
-            )
-
-            // Capsule Search Box
-            MiuixSearchBox(
-                query = uiState.searchQuery,
-                onQueryChange = onSearchQueryChange,
-                placeholder = stringResource(R.string.target_apps_search_label),
-                modifier = Modifier.padding(horizontal = 20.dp, vertical = 6.dp)
-            )
-
-            // Status & Chips Row
-            Row(
-                modifier = Modifier
-                    .fillMaxWidth()
-                    .padding(horizontal = 20.dp, vertical = 8.dp),
-                horizontalArrangement = Arrangement.SpaceBetween,
-                verticalAlignment = Alignment.CenterVertically
-            ) {
-                MiuixChip(
-                    text = "已启用 ${uiState.selectedPackages.size} 个应用",
-                    isActive = uiState.selectedPackages.isNotEmpty()
-                )
-
-                if (!uiState.isModuleActive) {
-                    Text(
-                        text = stringResource(R.string.target_apps_module_inactive),
-                        style = MaterialTheme.typography.bodySmall,
-                        color = MaterialTheme.colorScheme.error,
-                        fontWeight = FontWeight.Bold
-                    )
-                }
-            }
-
-            Spacer(modifier = Modifier.height(4.dp))
-
-            // Main List or Empty State
-            when {
-                uiState.isLoading -> {
-                    Column(
-                        modifier = Modifier.fillMaxSize(),
-                        horizontalAlignment = Alignment.CenterHorizontally,
-                        verticalArrangement = Arrangement.Center
-                    ) {
-                        CircularProgressIndicator(color = MaterialTheme.colorScheme.primary)
-                    }
-                }
-                uiState.filteredApps.isEmpty() && uiState.searchQuery.isNotBlank() -> {
-                    Column(
-                        modifier = Modifier.fillMaxSize(),
-                        horizontalAlignment = Alignment.CenterHorizontally,
-                        verticalArrangement = Arrangement.Center
-                    ) {
-                        Text(
-                            text = stringResource(R.string.target_apps_no_results, uiState.searchQuery),
-                            style = MaterialTheme.typography.bodyMedium,
-                            color = MaterialTheme.colorScheme.onSurfaceVariant
-                        )
-                    }
-                }
-                uiState.filteredApps.isEmpty() && (!uiState.showUserApps || !uiState.showSystemApps) -> {
-                    Column(
-                        modifier = Modifier.fillMaxSize(),
-                        horizontalAlignment = Alignment.CenterHorizontally,
-                        verticalArrangement = Arrangement.Center
-                    ) {
-                        Text(
-                            text = stringResource(R.string.target_apps_filter_no_results),
-                            style = MaterialTheme.typography.bodyMedium,
-                            color = MaterialTheme.colorScheme.onSurfaceVariant
-                        )
-                    }
-                }
-                else -> {
-                    PullToRefreshBox(
-                        isRefreshing = uiState.isRefreshing,
-                        onRefresh = onRefresh,
-                        modifier = Modifier
-                            .fillMaxSize()
-                            .clipToBounds()
-                    ) {
-                        LazyColumn(
-                            state = listState,
-                            modifier = Modifier
-                                .fillMaxSize()
-                                .padding(horizontal = 16.dp),
-                            contentPadding = PaddingValues(bottom = 24.dp)
+        topBar = {
+            BlurredBar(backdrop, blurActive) {
+                TopAppBar(
+                    color = barColor,
+                    title = stringResource(R.string.screen_target_apps),
+                    subtitle = stringResource(R.string.screen_target_apps_subtitle),
+                    scrollBehavior = topAppBarScrollBehavior,
+                    navigationIcon = {
+                        IconButton(onClick = onNavigateUp) {
+                            Icon(
+                                imageVector = MiuixIcons.Back,
+                                contentDescription = stringResource(R.string.cd_navigate_back)
+                            )
+                        }
+                    },
+                    actions = {
+                        WindowIconDropdownMenu(
+                            entry = DropdownEntry(items = filterMenuItems),
+                            modifier = Modifier.size(36.dp)
                         ) {
-                            items(uiState.filteredApps, key = { it.packageName }) { app ->
-                                TargetAppCard(
+                            Icon(
+                                imageVector = MiuixIcons.Filter,
+                                contentDescription = stringResource(R.string.cd_filter_apps),
+                                modifier = Modifier.size(20.dp)
+                            )
+                        }
+                    }
+                )
+            }
+        }
+    ) { innerPadding ->
+        val top = innerPadding.calculateTopPadding()
+        val bottom = innerPadding.calculateBottomPadding()
+        val contentPadding = remember(top, bottom) {
+            PaddingValues(top = top, start = 0.dp, end = 0.dp, bottom = bottom + 16.dp)
+        }
+        val pullToRefreshState = rememberPullToRefreshState()
+        val refreshTexts = listOf(
+            stringResource(R.string.pull_to_refresh_pulling),
+            stringResource(R.string.pull_to_refresh_release),
+            stringResource(R.string.pull_to_refresh_refreshing),
+            stringResource(R.string.pull_to_refresh_refreshed)
+        )
+        BlurBackdropBox(backdrop) {
+            PullToRefresh(
+                isRefreshing = uiState.isRefreshing,
+                onRefresh = onRefresh,
+                pullToRefreshState = pullToRefreshState,
+                contentPadding = contentPadding,
+                topAppBarScrollBehavior = topAppBarScrollBehavior,
+                refreshTexts = refreshTexts,
+                modifier = Modifier.fillMaxSize()
+            ) {
+                LazyColumn(
+                    state = listState,
+                    modifier = Modifier
+                        .fillMaxSize()
+                        .pageScrollModifiers(
+                            enableScrollEndHaptic = true,
+                            showTopAppBar = true,
+                            topAppBarScrollBehavior = topAppBarScrollBehavior
+                        ),
+                    contentPadding = contentPadding
+                ) {
+                    item(key = "search") {
+                        SearchField(
+                            query = uiState.searchQuery,
+                            onQueryChange = onSearchQueryChange,
+                            label = stringResource(R.string.target_apps_search_label)
+                        )
+                    }
+                    item(key = "status") {
+                        Row(
+                            modifier = Modifier
+                                .fillMaxWidth()
+                                .padding(horizontal = 12.dp, vertical = 8.dp),
+                            horizontalArrangement = Arrangement.SpaceBetween,
+                            verticalAlignment = Alignment.CenterVertically
+                        ) {
+                            StatusChip(
+                                text = stringResource(R.string.target_apps_enabled_count, uiState.selectedPackages.size),
+                                isActive = uiState.selectedPackages.isNotEmpty()
+                            )
+
+                            if (!uiState.isModuleActive) {
+                                Text(
+                                    text = stringResource(R.string.target_apps_module_inactive),
+                                    fontSize = 12.sp,
+                                    color = colorScheme.error,
+                                    fontWeight = FontWeight.Bold
+                                )
+                            }
+                        }
+                    }
+                    if (uiState.isLoading) {
+                        item(key = "loading") {
+                            Box(
+                                modifier = Modifier
+                                    .fillMaxWidth()
+                                    .padding(vertical = 48.dp),
+                                contentAlignment = Alignment.Center
+                            ) {
+                                LoadingIndicator()
+                            }
+                        }
+                    } else if (uiState.filteredApps.isEmpty()) {
+                        item(key = "empty") {
+                            Card(
+                                modifier = Modifier
+                                    .padding(horizontal = 12.dp)
+                                    .padding(bottom = 12.dp)
+                                    .fillMaxWidth()
+                            ) {
+                                Box(
+                                    modifier = Modifier
+                                        .fillMaxWidth()
+                                        .padding(vertical = 20.dp),
+                                    contentAlignment = Alignment.Center
+                                ) {
+                                    Text(
+                                        text = if (uiState.searchQuery.isNotBlank()) {
+                                            stringResource(R.string.target_apps_no_results, uiState.searchQuery)
+                                        } else {
+                                            stringResource(R.string.target_apps_filter_no_results)
+                                        },
+                                        fontSize = MiuixTheme.textStyles.headline1.fontSize,
+                                        fontWeight = FontWeight.Medium,
+                                        color = colorScheme.onSurfaceVariantActions
+                                    )
+                                }
+                            }
+                        }
+                    } else {
+                        // Rows are independent lazy items, but the section background is painted
+                        // continuously so the whole list reads as one card (hle whitelist style).
+                        itemsIndexed(
+                            items = uiState.filteredApps,
+                            key = { _, app -> app.packageName },
+                            contentType = { _, _ -> "target_app" }
+                        ) { index, app ->
+                            val listSize = uiState.filteredApps.size
+                            val rowShape = when {
+                                listSize == 1 -> RoundedCornerShape(16.dp)
+                                index == 0 -> RoundedCornerShape(topStart = 16.dp, topEnd = 16.dp)
+                                index == listSize - 1 -> RoundedCornerShape(bottomStart = 16.dp, bottomEnd = 16.dp)
+                                else -> RoundedCornerShape(0.dp)
+                            }
+                            Box(
+                                modifier = Modifier
+                                    .padding(horizontal = 12.dp)
+                                    .padding(bottom = if (index == listSize - 1) 12.dp else 0.dp)
+                                    .fillMaxWidth()
+                                    .background(color = colorScheme.surfaceContainer, shape = rowShape)
+                                    .then(
+                                        if (app.isSelected) {
+                                            Modifier.background(
+                                                color = colorScheme.primary.copy(alpha = 0.08f),
+                                                shape = rowShape
+                                            )
+                                        } else {
+                                            Modifier
+                                        }
+                                    )
+                            ) {
+                                TargetAppRow(
                                     app = app,
                                     onToggle = { onToggle(app.packageName) },
                                     onRelaunch = { onRelaunch(app.packageName) }
                                 )
-                                Spacer(modifier = Modifier.height(8.dp))
                             }
                         }
                     }
@@ -323,96 +355,89 @@ private fun TargetAppsContent(
 }
 
 /**
- * HyperOS Grouped App Card with continuous smooth squircle corners.
+ * Single app row inside the shared card surface; the card background and corner radii are
+ * painted by the item container, not here.
  */
 @Composable
-private fun TargetAppCard(
+private fun TargetAppRow(
     app: TargetAppItem,
     onToggle: () -> Unit,
     onRelaunch: () -> Unit
 ) {
-    val cardBg = if (app.isSelected) {
-        MaterialTheme.colorScheme.primary.copy(alpha = 0.08f)
-    } else {
-        MaterialTheme.colorScheme.surface
-    }
+    val colorScheme = MiuixTheme.colorScheme
 
-    MiuixCard(
+    Row(
         modifier = Modifier
             .fillMaxWidth()
-            .clickable(enabled = !app.isPending, onClick = onToggle),
-        containerColor = cardBg,
-        contentPadding = PaddingValues(horizontal = 16.dp, vertical = 12.dp)
+            .clickable(enabled = !app.isPending, onClick = onToggle)
+            .padding(horizontal = 16.dp, vertical = 12.dp),
+        verticalAlignment = Alignment.CenterVertically
     ) {
-        Row(
-            modifier = Modifier.fillMaxWidth(),
-            verticalAlignment = Alignment.CenterVertically
-        ) {
-            AppIcon(
-                packageName = app.packageName,
-                label = app.label
+        AppIcon(
+            packageName = app.packageName,
+            label = app.label
+        )
+
+        Spacer(modifier = Modifier.width(14.dp))
+
+        Column(modifier = Modifier.weight(1f)) {
+            Text(
+                text = app.label,
+                fontSize = 15.sp,
+                fontWeight = if (app.isSelected) FontWeight.Bold else FontWeight.Medium,
+                color = colorScheme.onSurface,
+                maxLines = 1,
+                overflow = TextOverflow.Ellipsis
             )
+            Spacer(modifier = Modifier.height(2.dp))
+            Text(
+                text = app.packageName,
+                fontSize = 12.sp,
+                color = colorScheme.onSurfaceVariantSummary,
+                maxLines = 1,
+                overflow = TextOverflow.Ellipsis
+            )
+        }
 
-            Spacer(modifier = Modifier.width(14.dp))
-
-            Column(modifier = Modifier.weight(1f)) {
-                Text(
-                    text = app.label,
-                    style = MaterialTheme.typography.titleMedium.copy(
-                        fontSize = 15.sp,
-                        fontWeight = if (app.isSelected) FontWeight.Bold else FontWeight.Medium
-                    ),
-                    color = MaterialTheme.colorScheme.onSurface,
-                    maxLines = 1,
-                    overflow = TextOverflow.Ellipsis
-                )
-                Spacer(modifier = Modifier.height(2.dp))
-                Text(
-                    text = app.packageName,
-                    style = MaterialTheme.typography.bodySmall.copy(fontSize = 12.sp),
-                    color = MaterialTheme.colorScheme.onSurfaceVariant,
-                    maxLines = 1,
-                    overflow = TextOverflow.Ellipsis
-                )
-            }
-
-            if (app.isSelected) {
-                if (app.isRelaunching) {
-                    CircularProgressIndicator(
-                        modifier = Modifier.size(22.dp),
-                        strokeWidth = 2.dp,
-                        color = MaterialTheme.colorScheme.primary
-                    )
-                } else {
-                    Surface(
-                        shape = CircleShape,
-                        color = MaterialTheme.colorScheme.surfaceVariant.copy(alpha = 0.7f),
-                        modifier = Modifier.size(34.dp)
-                    ) {
-                        IconButton(onClick = onRelaunch) {
-                            Icon(
-                                Icons.Default.RestartAlt,
-                                contentDescription = stringResource(R.string.target_apps_relaunch_cd, app.label),
-                                tint = MaterialTheme.colorScheme.primary,
-                                modifier = Modifier.size(18.dp)
-                            )
-                        }
+        if (app.isSelected) {
+            if (app.isRelaunching) {
+                Box(
+                    modifier = Modifier.size(34.dp),
+                    contentAlignment = Alignment.Center
+                ) {
+                    CircularProgressIndicator(size = 22.dp, strokeWidth = 3.dp)
+                }
+            } else {
+                Surface(
+                    shape = CircleShape,
+                    color = colorScheme.surfaceVariant.copy(alpha = 0.7f),
+                    contentColor = colorScheme.primary,
+                    modifier = Modifier.size(34.dp)
+                ) {
+                    IconButton(onClick = onRelaunch) {
+                        Icon(
+                            MiuixIcons.Reset,
+                            contentDescription = stringResource(R.string.target_apps_relaunch_cd, app.label),
+                            modifier = Modifier.size(18.dp)
+                        )
                     }
                 }
-                Spacer(modifier = Modifier.width(10.dp))
             }
+            Spacer(modifier = Modifier.width(10.dp))
+        }
 
-            if (app.isPending) {
-                CircularProgressIndicator(
-                    modifier = Modifier.size(22.dp),
-                    strokeWidth = 2.dp
-                )
-            } else {
-                MiuixRoundCheckbox(
-                    checked = app.isSelected,
-                    onCheckedChange = { onToggle() }
-                )
+        if (app.isPending) {
+            Box(
+                modifier = Modifier.size(26.dp),
+                contentAlignment = Alignment.Center
+            ) {
+                CircularProgressIndicator(size = 22.dp, strokeWidth = 3.dp)
             }
+        } else {
+            Checkbox(
+                state = androidx.compose.ui.state.ToggleableState(app.isSelected),
+                onClick = { onToggle() },
+            )
         }
     }
 }
@@ -445,13 +470,13 @@ private fun AppIcon(
             modifier = Modifier
                 .size(44.dp)
                 .clip(RoundedCornerShape(12.dp)),
-            color = MaterialTheme.colorScheme.surfaceVariant
+            color = MiuixTheme.colorScheme.surfaceVariant,
+            contentColor = MiuixTheme.colorScheme.onSurfaceVariantSummary,
         ) {
             Box(contentAlignment = Alignment.Center) {
                 Text(
                     text = label.firstOrNull()?.uppercase() ?: "?",
-                    style = MaterialTheme.typography.labelLarge.copy(fontWeight = FontWeight.Bold),
-                    color = MaterialTheme.colorScheme.onSurfaceVariant
+                    fontWeight = FontWeight.Bold
                 )
             }
         }

@@ -60,6 +60,7 @@
     <string name="category_notifications">Benachrichtigungen</string>
     <string name="category_external_control">Externe Steuerung</string>
     <string name="category_system_hooks">System-Hooks</string>
+    <string name="category_wifi_identity">WLAN-Identität</string>
     <string name="category_map">Karte</string>
     <string name="category_location">Standort</string>
     <string name="category_altitude">Höhe</string>
@@ -70,6 +71,21 @@
     <string name="theme_system">Systemstandard</string>
     <string name="theme_light">Hell</string>
     <string name="theme_dark">Dunkel</string>
+        <string name="theme_system_monet">System (Monet)</string>
+        <string name="theme_light_monet">Hell (Monet)</string>
+        <string name="theme_dark_monet">Dunkel (Monet)</string>
+        <string name="setting_monet_color_title">Monet-Farbe</string>
+        <string name="setting_monet_color_description">Grundfarbe der dynamischen Palette; Standard folgt deinem Hintergrundbild.</string>
+        <string name="setting_predictive_back_title">Vorhersagende Rückgeste</string>
+        <string name="setting_predictive_back_description">Lässt das System während der Rückgeste eine Vorschau des vorherigen Bildschirms anzeigen. Wird nach dem Neustart der App wirksam.</string>
+        <string name="monet_default">Standard (Hintergrundbild)</string>
+        <string name="monet_blue">Blau</string>
+        <string name="monet_green">Grün</string>
+        <string name="monet_red">Rot</string>
+        <string name="monet_yellow">Gelb</string>
+        <string name="monet_orange">Orange</string>
+        <string name="monet_purple">Violett</string>
+        <string name="monet_pink">Rosa</string>
 
     <string name="setting_language_title">App-Sprache</string>
     <string name="setting_language_description">Ändert die von der Manager-App und ihren Xposed-Toast-Meldungen verwendete Sprache.</string>
@@ -79,6 +95,17 @@
     <string name="setting_external_broadcast_description">Aus (Standard): Blockiert den BroadcastReceiver — keine App oder ADB-Shell kann das Spoofing starten/stoppen oder Koordinaten über Intents setzen. Ein: Jede installierte App und \'adb shell am broadcast\' können das Modul steuern (keine Berechtigungsprüfung; Koordinaten werden auf gültige Breitengrad-/Längengradbereiche begrenzt). Aktiviere dies nur, wenn du jeder App auf dem Gerät vertraust oder die App auf einem kontrollierten Gerät (z. B. zur Automatisierung) läuft. Siehe docs/EXTERNAL_CONTROL.md für Aktionen und Sperroptionen.</string>
     <string name="setting_system_hooks_title">Systemweite Hooks aktivieren</string>
     <string name="setting_system_hooks_description">Fügt das Android-System-Framework (android) und den Telefonprozess (com.android.phone) zum Modulbereich hinzu, sodass der Standort auf Systemebene gefälscht werden kann. Ein Geräteneustart ist erforderlich, damit die Änderungen wirksam werden.</string>
+    <string name="setting_wifi_identity_title">WLAN-Identitäts-Hooks aktivieren</string>
+    <string name="setting_wifi_identity_description">Fälscht die WLAN-Verbindungsidentität und verbirgt echte Scan-Ergebnisse für die ausgewählten Ziel-Apps, solange die Standort-Modifizierung aktiv ist.</string>
+    <string name="setting_wifi_ssid_title">WLAN-SSID</string>
+    <string name="setting_wifi_ssid_description">SSID, die die WLAN-Verbindungs-Hooks für die ausgewählten Ziel-Apps melden, solange die Modifizierung aktiv ist.</string>
+    <string name="setting_wifi_ssid_label">SSID</string>
+    <string name="setting_wifi_bssid_title">WLAN-BSSID</string>
+    <string name="setting_wifi_bssid_description">BSSID, die die WLAN-Verbindungs-Hooks melden. Ungültige MAC-Adressen fallen auf den Standard-Platzhalter zurück.</string>
+    <string name="setting_wifi_bssid_label">BSSID</string>
+    <string name="setting_wifi_rssi_title">WLAN-RSSI</string>
+    <string name="setting_wifi_rssi_description">Signalstärke in dBm, die die WLAN-Verbindungs-Hooks melden. Werte werden auf -127 bis 0 begrenzt.</string>
+    <string name="setting_wifi_rssi_label">RSSI</string>
     <string name="dialog_restart_required_title">Neustart erforderlich</string>
     <string name="dialog_restart_required_enable_message">Systemweite Hooks wurden zum Modulbereich hinzugefügt. Bitte starte dein Gerät neu, damit sie wirksam werden.</string>
     <string name="dialog_restart_required_disable_message">Systemweite Hooks wurden aus dem Modulbereich entfernt. Bitte starte dein Gerät neu, um sie vollständig rückgängig zu machen.</string>
@@ -207,4 +234,70 @@
     <string name="about_contributors_error">Mitwirkende konnten nicht geladen werden.</string>
     <string name="about_contributors_empty">Keine Mitwirkenden gefunden.</string>
     <string name="about_contributors_retry">Wiederholen</string>
+    <!-- Miuix redesign: shared -->
+    <string name="screen_settings_subtitle">Spoofing-Algorithmen und Anti-Erkennungs-Strategie</string>
+    <string name="screen_favorites_subtitle">Gespeicherte Koordinaten und Standortvoreinstellungen</string>
+    <string name="screen_target_apps_subtitle">Hooks nur für die ausgewählten Apps aktivieren</string>
+    <string name="screen_about_subtitle">App-Version und Systemstatus</string>
+    <string name="not_set">Nicht festgelegt</string>
+    <string name="pull_to_refresh_pulling">Zum Aktualisieren ziehen</string>
+    <string name="pull_to_refresh_release">Loslassen zum Aktualisieren</string>
+    <string name="pull_to_refresh_refreshing">Wird aktualisiert…</string>
+    <string name="pull_to_refresh_refreshed">Aktualisiert</string>
+
+    <!-- Appearance: color mode -->
+
+    <!-- About -->
+    <string name="about_status_section">Status</string>
+    <string name="about_xposed_title">Xposed-Framework</string>
+    <string name="about_status_active">Aktiv</string>
+    <string name="about_status_inactive">Inaktiv</string>
+    <string name="about_refresh_title">Hohe Bildwiederholrate</string>
+    <string name="about_refresh_subtitle">Auf hohe Framerate gesperrt</string>
+    <string name="about_refresh_status">Bereit</string>
+    <string name="about_shield_title">Anti-Erkennungs-Schild</string>
+    <string name="about_shield_subtitle">Funkzellen- &amp; WLAN-Filterung</string>
+    <string name="about_shield_status">Schützt</string>
+    <string name="about_map_engine_title">Karten-Engine</string>
+    <string name="about_map_engine_subtitle">Gemischte Kacheln aus mehreren Quellen</string>
+    <string name="about_map_engine_status">Alle Protokolle</string>
+    <string name="about_source_section">Quellcode</string>
+    <string name="about_github_repo">GitHub-Repository</string>
+    <string name="about_contrib_section">Open Source &amp; Mitwirkende</string>
+    <string name="about_maintainer_role">Kern-Betreuer</string>
+    <string name="about_contributor_role">Aktiver Beitragender</string>
+    <string name="about_official_release">Offizielle Veröffentlichung</string>
+
+    <!-- Permissions -->
+    <string name="permissions_welcome_title">Willkommen bei MockX</string>
+    <string name="permissions_denied_title">Standortberechtigung erforderlich</string>
+    <string name="permissions_welcome_body">Wir benötigen den genauen Standort, um eine genaue Basiskarte anzuzeigen und echte und vorgetäuschte Koordinaten vergleichen zu können.</string>
+    <string name="permissions_denied_body">Du hast die Standortberechtigung zuvor dauerhaft verweigert. Aktiviere sie in den Systemeinstellungen, um fortzufahren.</string>
+    <string name="permissions_feature_map_title">Genaue Basiskarte</string>
+    <string name="permissions_feature_map_desc">Schnelles Rendern von TianDiTu- &amp; OSM-Kacheln um deinen Basispunkt</string>
+    <string name="permissions_feature_coords_title">Nahtlose Koordinatenkorrektur</string>
+    <string name="permissions_feature_coords_desc">Echtzeitumwandlung zwischen WGS-84, GCJ-02 und BD-09</string>
+    <string name="permissions_feature_shield_title">Anti-Cheat-Schutz</string>
+    <string name="permissions_feature_shield_desc">Filtert Karten-WLAN-Probes und Funkzellen-Scans</string>
+    <string name="permissions_grant_action">Standortberechtigung erteilen</string>
+    <string name="permissions_settings_action">Systemeinstellungen öffnen</string>
+
+    <!-- Map overlays -->
+    <string name="map_status_spoofing">Spoofing aktiv</string>
+    <string name="map_status_selected">Standort ausgewählt</string>
+    <string name="map_spoof_target">Spoofing-Ziel</string>
+    <string name="map_chip_favorite">Favorit</string>
+    <string name="map_chip_clear">Löschen</string>
+    <string name="map_hint_place_pin">Tippe auf die Karte, um eine Markierung zu setzen und einen virtuellen Standort zu wählen</string>
+    <string name="map_start_spoof">Spoofing starten</string>
+    <string name="map_stop_spoof">Spoofing stoppen</string>
+    <string name="map_select_location_first">Zuerst einen Standort wählen</string>
+
+    <!-- Target apps -->
+    <string name="target_apps_filter_user_only">Nur Nutzer-Apps anzeigen</string>
+    <string name="target_apps_include_system">System-Apps einbeziehen</string>
+    <string name="target_apps_enabled_count">%1$d Apps aktiviert</string>
+
+    <!-- Drawer -->
+    <string name="drawer_header_subtitle">Moderne Standort-Spoofing-Toolbox</string>
 </resources>

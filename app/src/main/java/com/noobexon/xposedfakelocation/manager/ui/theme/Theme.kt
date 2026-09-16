@@ -1,72 +1,95 @@
 package com.noobexon.xposedfakelocation.manager.ui.theme
 
+import android.app.Activity
+import android.content.Context
+import android.content.ContextWrapper
+import android.content.SharedPreferences
 import androidx.compose.foundation.isSystemInDarkTheme
-import androidx.compose.material3.MaterialTheme
-import androidx.compose.material3.darkColorScheme
-import androidx.compose.material3.lightColorScheme
 import androidx.compose.runtime.Composable
-import androidx.compose.runtime.CompositionLocalProvider
+import androidx.compose.runtime.DisposableEffect
+import androidx.compose.runtime.LaunchedEffect
+import androidx.compose.runtime.getValue
+import androidx.compose.runtime.mutableIntStateOf
+import androidx.compose.runtime.remember
+import androidx.compose.runtime.setValue
 import androidx.compose.ui.graphics.Color
-import androidx.navigationevent.compose.LocalNavigationEventDispatcherOwner
-import androidx.navigationevent.compose.rememberNavigationEventDispatcherOwner
+import androidx.compose.ui.platform.LocalContext
+import androidx.compose.ui.platform.LocalView
+import androidx.core.view.WindowCompat
+import com.noobexon.xposedfakelocation.data.KEY_MONET_COLOR
+import com.noobexon.xposedfakelocation.data.KEY_THEME_MODE
+import com.noobexon.xposedfakelocation.data.SHARED_PREFS_FILE
 import top.yukonga.miuix.kmp.theme.MiuixTheme
-import top.yukonga.miuix.kmp.theme.darkColorScheme as miuixDarkColorScheme
-import top.yukonga.miuix.kmp.theme.lightColorScheme as miuixLightColorScheme
+import top.yukonga.miuix.kmp.theme.ThemeController
 
-private val MiuixDarkColorScheme = darkColorScheme(
-    primary = MiuixBlueDark,
-    onPrimary = Color.White,
-    primaryContainer = Color(0xFF003875),
-    onPrimaryContainer = Color(0xFFD6E4FF),
-    secondary = Color(0xFF8A93A6),
-    onSecondary = Color.White,
-    background = MiuixDarkBackground,
-    onBackground = MiuixDarkTextPrimary,
-    surface = MiuixDarkCard,
-    onSurface = MiuixDarkTextPrimary,
-    surfaceVariant = MiuixDarkCardSecondary,
-    onSurfaceVariant = MiuixDarkTextSecondary,
-    outline = Color(0xFF38383A),
-    outlineVariant = MiuixDarkDivider
-)
-
-private val MiuixLightColorScheme = lightColorScheme(
-    primary = MiuixBlue,
-    onPrimary = Color.White,
-    primaryContainer = Color(0xFFE8F3FF),
-    onPrimaryContainer = Color(0xFF004899),
-    secondary = Color(0xFF6B7280),
-    onSecondary = Color.White,
-    background = MiuixLightBackground,
-    onBackground = MiuixLightTextPrimary,
-    surface = MiuixLightCard,
-    onSurface = MiuixLightTextPrimary,
-    surfaceVariant = MiuixLightCardSecondary,
-    onSurfaceVariant = MiuixLightTextSecondary,
-    outline = Color(0xFFE5E5EA),
-    outlineVariant = MiuixLightDivider
-)
-
+/**
+ * App theme root, following the same pattern as HyperLyrics-Enhanced: the wrapper observes the
+ * SharedPreferences keys directly so a settings change recomposes the tree immediately, without
+ * an Activity recreation and without routing through any ViewModel.
+ *
+ * The [ThemeController] uses miuix's stock HyperOS palette for the plain modes and generates
+ * Monet schemes for the dynamic modes, optionally seeded by [MonetColor].
+ */
 @Composable
-fun XposedFakeLocationTheme(
-    darkTheme: Boolean = isSystemInDarkTheme(),
-    content: @Composable () -> Unit
-) {
-    val colorScheme = if (darkTheme) MiuixDarkColorScheme else MiuixLightColorScheme
-    val miuixColors = if (darkTheme) miuixDarkColorScheme() else miuixLightColorScheme()
-    val navEventOwner = rememberNavigationEventDispatcherOwner(parent = null)
+fun MockXTheme(content: @Composable () -> Unit) {
+    val context = LocalContext.current
+    val prefs = remember {
+        context.getSharedPreferences(SHARED_PREFS_FILE, Context.MODE_PRIVATE)
+    }
 
-    CompositionLocalProvider(
-        LocalNavigationEventDispatcherOwner provides navEventOwner
-    ) {
-        MiuixTheme(
-            colors = miuixColors
-        ) {
-            MaterialTheme(
-                colorScheme = colorScheme,
-                typography = Typography,
-                content = content
-            )
+    var themeModeId by remember {
+        mutableIntStateOf(ThemeMode.readFromPrefs(prefs, KEY_THEME_MODE, ThemeMode.DEFAULT_ID))
+    }
+    var monetColorId by remember {
+        mutableIntStateOf(prefs.getInt(KEY_MONET_COLOR, MonetColor.DEFAULT_ID))
+    }
+
+    val listener = remember {
+        SharedPreferences.OnSharedPreferenceChangeListener { p, key ->
+            when (key) {
+                KEY_THEME_MODE -> themeModeId = ThemeMode.readFromPrefs(p, KEY_THEME_MODE, ThemeMode.DEFAULT_ID)
+                KEY_MONET_COLOR -> monetColorId = p.getInt(KEY_MONET_COLOR, MonetColor.DEFAULT_ID)
+            }
         }
+    }
+
+    DisposableEffect(prefs) {
+        prefs.registerOnSharedPreferenceChangeListener(listener)
+        onDispose { prefs.unregisterOnSharedPreferenceChangeListener(listener) }
+    }
+
+    val themeController = remember(themeModeId, monetColorId) {
+        ThemeController(
+            colorSchemeMode = ThemeMode.fromId(themeModeId).colorSchemeMode,
+            keyColor = MonetColor.fromId(monetColorId).seed,
+        )
+    }
+
+    val view = LocalView.current
+    val isSystemDark = isSystemInDarkTheme()
+    val isDark = when (ThemeMode.fromId(themeModeId)) {
+        ThemeMode.LIGHT, ThemeMode.MONET_LIGHT -> false
+        ThemeMode.DARK, ThemeMode.MONET_DARK -> true
+        ThemeMode.SYSTEM, ThemeMode.MONET_SYSTEM -> isSystemDark
+    }
+
+    LaunchedEffect(isDark, view) {
+        if (!view.isInEditMode) {
+            var currentContext = context
+            while (currentContext is ContextWrapper) {
+                if (currentContext is Activity) break
+                currentContext = currentContext.baseContext
+            }
+            val window = (currentContext as? Activity)?.window
+            if (window != null) {
+                val insetsController = WindowCompat.getInsetsController(window, view)
+                insetsController.isAppearanceLightStatusBars = !isDark
+                insetsController.isAppearanceLightNavigationBars = !isDark
+            }
+        }
+    }
+
+    MiuixTheme(controller = themeController) {
+        content()
     }
 }

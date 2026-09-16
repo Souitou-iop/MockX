@@ -84,6 +84,17 @@ class AboutViewModel : ViewModel() {
         contributions = 0
     )
 
+    /**
+     * A pre-built [Contributor] for the project's standing contributor, always shown directly
+     * below the developer row.
+     */
+    val contributorFallback = Contributor(
+        name = CONTRIBUTOR,
+        githubUrl = "https://github.com/$CONTRIBUTOR",
+        avatarUrl = "https://github.com/$CONTRIBUTOR.png",
+        contributions = 0
+    )
+
     init {
         loadContributors()
     }
@@ -135,7 +146,9 @@ class AboutViewModel : ViewModel() {
      */
     private fun splitContributors(all: List<Contributor>): ContributorsUiState.Success {
         val developer = all.firstOrNull { it.name.equals(DEVELOPER, ignoreCase = true) }
-        val others = all.filterNot { it.name.equals(DEVELOPER, ignoreCase = true) }
+        val others = all.filterNot {
+            it.name.equals(DEVELOPER, ignoreCase = true) || it.name.equals(CONTRIBUTOR, ignoreCase = true)
+        }
         return ContributorsUiState.Success(developer = developer, contributors = others)
     }
 
@@ -213,6 +226,7 @@ class AboutViewModel : ViewModel() {
         const val CONTRIBUTORS_URL =
             "https://api.github.com/repos/Souitou-iop/MockX/contributors?per_page=100"
         const val DEVELOPER = "Souitou-iop"
+        const val CONTRIBUTOR = "juren233"
         const val TIMEOUT_MILLIS = 10_000
         const val CACHE_TTL_MILLIS = 5 * 60 * 1000L
 
