@@ -134,5 +134,6 @@ jobs:
         with:
           files: output_apks/*.apk
           draft: false
-          prerelease: ${{ contains(steps.vars.outputs.version, 'beta') || contains(steps.vars.outputs.version, 'alpha') || contains(steps.vars.outputs.version, 'rc') }}
+          prerelease: false
+          make_latest: true
           generate_release_notes: true
