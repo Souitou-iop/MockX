@@ -71,6 +71,21 @@
     <string name="theme_system">System default</string>
     <string name="theme_light">Light</string>
     <string name="theme_dark">Dark</string>
+        <string name="theme_system_monet">System (Monet)</string>
+        <string name="theme_light_monet">Light (Monet)</string>
+        <string name="theme_dark_monet">Dark (Monet)</string>
+        <string name="setting_monet_color_title">Monet color</string>
+        <string name="setting_monet_color_description">Seed color for the dynamic palette; Default follows your wallpaper.</string>
+        <string name="setting_predictive_back_title">Predictive back gesture</string>
+        <string name="setting_predictive_back_description">Let the system preview the previous screen during the back gesture. Applies after the app restarts.</string>
+        <string name="monet_default">Default (wallpaper)</string>
+        <string name="monet_blue">Blue</string>
+        <string name="monet_green">Green</string>
+        <string name="monet_red">Red</string>
+        <string name="monet_yellow">Yellow</string>
+        <string name="monet_orange">Orange</string>
+        <string name="monet_purple">Purple</string>
+        <string name="monet_pink">Pink</string>
 
     <string name="setting_language_title">App language</string>
     <string name="setting_language_description">Changes the language used by the manager app and its Xposed toast messages.</string>
@@ -219,4 +234,70 @@
     <string name="about_contributors_error">Couldn\'t load contributors.</string>
     <string name="about_contributors_empty">No contributors found.</string>
     <string name="about_contributors_retry">Retry</string>
+    <!-- Miuix redesign: shared -->
+    <string name="screen_settings_subtitle">Spoofing algorithms and anti-detection strategy</string>
+    <string name="screen_favorites_subtitle">Saved coordinates and location presets</string>
+    <string name="screen_target_apps_subtitle">Enable hooks for the selected apps only</string>
+    <string name="screen_about_subtitle">App version and system status</string>
+    <string name="not_set">Not set</string>
+    <string name="pull_to_refresh_pulling">Pull down to refresh</string>
+    <string name="pull_to_refresh_release">Release to refresh</string>
+    <string name="pull_to_refresh_refreshing">Refreshing…</string>
+    <string name="pull_to_refresh_refreshed">Refreshed successfully</string>
+
+    <!-- Appearance: color mode -->
+
+    <!-- About -->
+    <string name="about_status_section">Status</string>
+    <string name="about_xposed_title">Xposed framework</string>
+    <string name="about_status_active">Active</string>
+    <string name="about_status_inactive">Inactive</string>
+    <string name="about_refresh_title">High refresh rate</string>
+    <string name="about_refresh_subtitle">Locked to high frame rate</string>
+    <string name="about_refresh_status">Ready</string>
+    <string name="about_shield_title">Anti-detection shield</string>
+    <string name="about_shield_subtitle">Cellular &amp; Wi-Fi filtering</string>
+    <string name="about_shield_status">Protecting</string>
+    <string name="about_map_engine_title">Map engine</string>
+    <string name="about_map_engine_subtitle">Multi-source hybrid tiles</string>
+    <string name="about_map_engine_status">All protocols</string>
+    <string name="about_source_section">Source code</string>
+    <string name="about_github_repo">GitHub repository</string>
+    <string name="about_contrib_section">Open source &amp; contributors</string>
+    <string name="about_maintainer_role">Core maintainer</string>
+    <string name="about_contributor_role">Active contributor</string>
+    <string name="about_official_release">Official release</string>
+
+    <!-- Permissions -->
+    <string name="permissions_welcome_title">Welcome to MockX</string>
+    <string name="permissions_denied_title">Location permission required</string>
+    <string name="permissions_welcome_body">We need precise location to show an accurate base map and let you verify real vs. spoofed coordinates.</string>
+    <string name="permissions_denied_body">You previously denied location permission permanently. Enable it in system settings to continue.</string>
+    <string name="permissions_feature_map_title">Accurate base map</string>
+    <string name="permissions_feature_map_desc">Fast TianDiTu &amp; OSM tile rendering around your base point</string>
+    <string name="permissions_feature_coords_title">Seamless coordinate correction</string>
+    <string name="permissions_feature_coords_desc">Real-time WGS-84 / GCJ-02 / BD-09 conversion</string>
+    <string name="permissions_feature_shield_title">Anti-cheat protection</string>
+    <string name="permissions_feature_shield_desc">Filters map Wi-Fi probes and cellular scans</string>
+    <string name="permissions_grant_action">Grant location permission</string>
+    <string name="permissions_settings_action">Open system settings</string>
+
+    <!-- Map overlays -->
+    <string name="map_status_spoofing">Spoofing active</string>
+    <string name="map_status_selected">Location selected</string>
+    <string name="map_spoof_target">Spoof target</string>
+    <string name="map_chip_favorite">Favorite</string>
+    <string name="map_chip_clear">Clear</string>
+    <string name="map_hint_place_pin">Tap the map to drop a pin and choose a virtual location</string>
+    <string name="map_start_spoof">Start spoofing</string>
+    <string name="map_stop_spoof">Stop spoofing</string>
+    <string name="map_select_location_first">Select a location first</string>
+
+    <!-- Target apps -->
+    <string name="target_apps_filter_user_only">Show user apps only</string>
+    <string name="target_apps_include_system">Include system apps</string>
+    <string name="target_apps_enabled_count">%1$d apps enabled</string>
+
+    <!-- Drawer -->
+    <string name="drawer_header_subtitle">Modern location mocking toolkit</string>
 </resources>

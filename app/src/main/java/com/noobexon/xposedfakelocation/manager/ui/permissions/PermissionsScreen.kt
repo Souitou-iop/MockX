@@ -2,7 +2,6 @@ package com.noobexon.xposedfakelocation.manager.ui.permissions
 
 import android.Manifest
 import android.app.Activity
-import android.content.Context
 import android.content.Intent
 import android.net.Uri
 import android.provider.Settings
@@ -24,17 +23,6 @@ import androidx.compose.foundation.layout.size
 import androidx.compose.foundation.layout.statusBarsPadding
 import androidx.compose.foundation.layout.width
 import androidx.compose.foundation.shape.CircleShape
-import androidx.compose.material.icons.Icons
-import androidx.compose.material.icons.filled.GpsFixed
-import androidx.compose.material.icons.filled.LockOpen
-import androidx.compose.material.icons.filled.Map
-import androidx.compose.material.icons.filled.MyLocation
-import androidx.compose.material.icons.filled.Security
-import androidx.compose.material3.CircularProgressIndicator
-import androidx.compose.material3.Icon
-import androidx.compose.material3.MaterialTheme
-import androidx.compose.material3.Surface
-import androidx.compose.material3.Text
 import androidx.compose.runtime.Composable
 import androidx.compose.runtime.DisposableEffect
 import androidx.compose.runtime.LaunchedEffect
@@ -42,7 +30,6 @@ import androidx.compose.runtime.getValue
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.draw.clip
-import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.graphics.vector.ImageVector
 import androidx.compose.ui.platform.LocalContext
 import androidx.compose.ui.res.stringResource
@@ -57,17 +44,24 @@ import androidx.lifecycle.compose.collectAsStateWithLifecycle
 import androidx.lifecycle.viewmodel.compose.viewModel
 import androidx.navigation.NavController
 import com.noobexon.xposedfakelocation.R
+import com.noobexon.xposedfakelocation.manager.ui.components.PillActionButton
+import com.noobexon.xposedfakelocation.manager.ui.components.LoadingIndicator
 import com.noobexon.xposedfakelocation.manager.ui.navigation.Screen
-import com.noobexon.xposedfakelocation.manager.ui.theme.MiuixCard
-import com.noobexon.xposedfakelocation.manager.ui.theme.MiuixPillButton
+import top.yukonga.miuix.kmp.basic.Card
+import top.yukonga.miuix.kmp.basic.Icon
+import top.yukonga.miuix.kmp.basic.Surface
+import top.yukonga.miuix.kmp.basic.Text
+import top.yukonga.miuix.kmp.icon.MiuixIcons
+import top.yukonga.miuix.kmp.icon.extended.Blocklist
+import top.yukonga.miuix.kmp.icon.extended.Location
+import top.yukonga.miuix.kmp.icon.extended.Lock
+import top.yukonga.miuix.kmp.icon.extended.MapAlbum
+import top.yukonga.miuix.kmp.icon.extended.Unlock
+import top.yukonga.miuix.kmp.theme.MiuixTheme
 
 /**
- * HyperOS Setup Hero Wizard Styled Permissions Screen.
- *
- * Replaces plain unstyled centered text with:
- * - Glowing Hero Location Compass/Radar badge.
- * - Clear Permission Rationale with 3 Feature Capability Cards.
- * - Full-width bottom pinned HyperOS Pill Action Button.
+ * Setup wizard shown until location permission is granted: glowing hero badge, rationale, three
+ * capability cards, and a full-width pill action button — all miuix components.
  */
 @Composable
 fun PermissionsScreen(
@@ -109,7 +103,7 @@ fun PermissionsScreen(
     }
 
     Surface(
-        color = MaterialTheme.colorScheme.background,
+        color = MiuixTheme.colorScheme.background,
         modifier = Modifier.fillMaxSize()
     ) {
         if (!uiState.permissionsChecked) {
@@ -117,9 +111,12 @@ fun PermissionsScreen(
                 modifier = Modifier.fillMaxSize(),
                 contentAlignment = Alignment.Center
             ) {
-                CircularProgressIndicator(color = MaterialTheme.colorScheme.primary)
+                LoadingIndicator()
             }
         } else if (!uiState.hasPermissions) {
+            val colorScheme = MiuixTheme.colorScheme
+            val heroIcon = if (uiState.permanentlyDenied) MiuixIcons.Unlock else MiuixIcons.Location
+
             Column(
                 modifier = Modifier
                     .fillMaxSize()
@@ -129,32 +126,31 @@ fun PermissionsScreen(
                 horizontalAlignment = Alignment.CenterHorizontally,
                 verticalArrangement = Arrangement.SpaceBetween
             ) {
-                // Top Hero Section
+                // Top hero section
                 Column(
                     horizontalAlignment = Alignment.CenterHorizontally,
                     modifier = Modifier.fillMaxWidth()
                 ) {
                     Spacer(modifier = Modifier.height(36.dp))
 
-                    // Glowing Icon Container
                     Box(
                         modifier = Modifier
                             .size(100.dp)
                             .clip(CircleShape)
-                            .background(MaterialTheme.colorScheme.primary.copy(alpha = 0.12f)),
+                            .background(colorScheme.primary.copy(alpha = 0.12f)),
                         contentAlignment = Alignment.Center
                     ) {
                         Box(
                             modifier = Modifier
                                 .size(72.dp)
                                 .clip(CircleShape)
-                                .background(MaterialTheme.colorScheme.primary.copy(alpha = 0.2f)),
+                                .background(colorScheme.primary.copy(alpha = 0.2f)),
                             contentAlignment = Alignment.Center
                         ) {
                             Icon(
-                                imageVector = if (uiState.permanentlyDenied) Icons.Default.LockOpen else Icons.Default.GpsFixed,
+                                imageVector = heroIcon,
                                 contentDescription = null,
-                                tint = MaterialTheme.colorScheme.primary,
+                                tint = colorScheme.primary,
                                 modifier = Modifier.size(38.dp)
                             )
                         }
@@ -163,56 +159,59 @@ fun PermissionsScreen(
                     Spacer(modifier = Modifier.height(24.dp))
 
                     Text(
-                        text = if (uiState.permanentlyDenied) "需要授予位置权限" else "欢迎使用虚拟定位",
-                        style = MaterialTheme.typography.headlineMedium.copy(
-                            fontSize = 24.sp,
-                            fontWeight = FontWeight.Bold
+                        text = stringResource(
+                            if (uiState.permanentlyDenied) R.string.permissions_denied_title
+                            else R.string.permissions_welcome_title
                         ),
-                        color = MaterialTheme.colorScheme.onBackground
+                        fontSize = 24.sp,
+                        fontWeight = FontWeight.Bold,
+                        color = colorScheme.onBackground
                     )
 
                     Spacer(modifier = Modifier.height(8.dp))
 
                     Text(
-                        text = if (uiState.permanentlyDenied)
-                            "您先前已永久拒绝系统定位权限，请在系统设置中手动开启以继续使用完整功能。"
-                        else
-                            "为准确展示初始底图位置并提供真实与伪装坐标的双向校验，我们需要访问您的精确位置。",
-                        style = MaterialTheme.typography.bodyMedium.copy(fontSize = 14.sp),
-                        color = MaterialTheme.colorScheme.onSurfaceVariant,
+                        text = stringResource(
+                            if (uiState.permanentlyDenied) R.string.permissions_denied_body
+                            else R.string.permissions_welcome_body
+                        ),
+                        fontSize = 14.sp,
+                        color = colorScheme.onSurfaceVariantSummary,
                         textAlign = TextAlign.Center,
                         modifier = Modifier.padding(horizontal = 16.dp)
                     )
 
                     Spacer(modifier = Modifier.height(32.dp))
 
-                    // 3 Feature Capability Cards
                     Column(
                         modifier = Modifier.fillMaxWidth(),
                         verticalArrangement = Arrangement.spacedBy(10.dp)
                     ) {
                         FeatureRow(
-                            icon = Icons.Default.Map,
-                            title = "地图精准底图加载",
-                            description = "基于当前基准点快速定位并渲染天地图与 OSM 瓦片"
+                            icon = MiuixIcons.MapAlbum,
+                            title = stringResource(R.string.permissions_feature_map_title),
+                            description = stringResource(R.string.permissions_feature_map_desc)
                         )
                         FeatureRow(
-                            icon = Icons.Default.MyLocation,
-                            title = "坐标系无缝校正",
-                            description = "实现 WGS-84、GCJ-02 与百度坐标的实时平滑转换"
+                            icon = MiuixIcons.Location,
+                            title = stringResource(R.string.permissions_feature_coords_title),
+                            description = stringResource(R.string.permissions_feature_coords_desc)
                         )
                         FeatureRow(
-                            icon = Icons.Default.Security,
-                            title = "全方位防反作弊保护",
-                            description = "拦截国内主流地图 Wi-Fi 探针与基站扫描"
+                            icon = MiuixIcons.Blocklist,
+                            title = stringResource(R.string.permissions_feature_shield_title),
+                            description = stringResource(R.string.permissions_feature_shield_desc)
                         )
                     }
                 }
 
-                // Bottom Action Pill
-                MiuixPillButton(
-                    text = if (uiState.permanentlyDenied) "前往系统设置开启权限" else "立即授予位置权限",
-                    icon = if (uiState.permanentlyDenied) Icons.Default.LockOpen else Icons.Default.GpsFixed,
+                // Bottom action pill
+                PillActionButton(
+                    text = stringResource(
+                        if (uiState.permanentlyDenied) R.string.permissions_settings_action
+                        else R.string.permissions_grant_action
+                    ),
+                    icon = heroIcon,
                     onClick = {
                         if (uiState.permanentlyDenied) {
                             val intent = Intent(Settings.ACTION_APPLICATION_DETAILS_SETTINGS).apply {
@@ -238,9 +237,10 @@ private fun FeatureRow(
     title: String,
     description: String
 ) {
-    MiuixCard(
+    val colorScheme = MiuixTheme.colorScheme
+    Card(
         modifier = Modifier.fillMaxWidth(),
-        contentPadding = PaddingValues(horizontal = 16.dp, vertical = 12.dp)
+        insideMargin = PaddingValues(horizontal = 16.dp, vertical = 12.dp)
     ) {
         Row(
             verticalAlignment = Alignment.CenterVertically,
@@ -250,13 +250,13 @@ private fun FeatureRow(
                 modifier = Modifier
                     .size(36.dp)
                     .clip(CircleShape)
-                    .background(MaterialTheme.colorScheme.primary.copy(alpha = 0.1f)),
+                    .background(colorScheme.primary.copy(alpha = 0.1f)),
                 contentAlignment = Alignment.Center
             ) {
                 Icon(
                     imageVector = icon,
                     contentDescription = null,
-                    tint = MaterialTheme.colorScheme.primary,
+                    tint = colorScheme.primary,
                     modifier = Modifier.size(18.dp)
                 )
             }
@@ -266,17 +266,15 @@ private fun FeatureRow(
             Column(modifier = Modifier.weight(1f)) {
                 Text(
                     text = title,
-                    style = MaterialTheme.typography.titleSmall.copy(
-                        fontWeight = FontWeight.Bold,
-                        fontSize = 14.sp
-                    ),
-                    color = MaterialTheme.colorScheme.onSurface
+                    fontSize = 14.sp,
+                    fontWeight = FontWeight.Bold,
+                    color = colorScheme.onSurface
                 )
                 Spacer(modifier = Modifier.height(2.dp))
                 Text(
                     text = description,
-                    style = MaterialTheme.typography.bodySmall.copy(fontSize = 12.sp),
-                    color = MaterialTheme.colorScheme.onSurfaceVariant
+                    fontSize = 12.sp,
+                    color = colorScheme.onSurfaceVariantSummary
                 )
             }
         }
