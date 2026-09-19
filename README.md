@@ -86,7 +86,10 @@ Then:
 2. **Target Apps** — search and select the apps that should receive spoofed locations; use the relaunch button (root) to apply immediately on first add.
 3. **Settings** — fine-tune spoofing values, Wi-Fi identity, map source, language, theme, and toggles.
 4. **Play/Stop** — the FAB toggles spoofing. Only apps selected in Target Apps see the fake location; everything else keeps real data.
-5. First time an app is added: force-stop and reopen it once (relaunch button or manually) so the module gets injected. After that, all changes are live.
+5. **Walking simulation** — place a destination pin, tap 步行 (Walk) on the map, and MockX plans a real walking route from your current real position (Amap Web Service, requires your own key in Settings → Amap Web-Service Key). The simulated location then moves along the route at a chosen pace via a foreground service — pause, resume, or stop at any time.
+6. First time an app is added: force-stop and reopen it once (relaunch button or manually) so the module gets injected. After that, all changes are live.
+
+> **Privacy note:** planning a walking route sends the origin (your current real position) and the destination coordinates to Amap's routing service, and only when you explicitly request a route. Your API key is stored locally on the device and is never bundled with the app or transmitted anywhere else.
 
 ## External Control
 
