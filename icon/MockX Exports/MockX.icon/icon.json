@@ -4,8 +4,15 @@
     {
       "layers" : [
         {
-          "image-name" : "1789480519850.png",
-          "name" : "1789480519850"
+          "image-name" : "Codex 图像 2026年9月16日 10_37_01.png",
+          "name" : "Codex 图像 2026年9月16日 10_37_01",
+          "position" : {
+            "scale" : 0.75,
+            "translation-in-points" : [
+              0,
+              0
+            ]
+          }
         }
       ],
       "shadow" : {
