@@ -39,6 +39,13 @@ import com.noobexon.xposedfakelocation.data.KEY_VERTICAL_ACCURACY
 import com.noobexon.xposedfakelocation.data.KEY_WIFI_BSSID
 import com.noobexon.xposedfakelocation.data.KEY_WIFI_RSSI
 import com.noobexon.xposedfakelocation.data.KEY_WIFI_SSID
+import com.noobexon.xposedfakelocation.data.KEY_WALKING_BEARING
+import com.noobexon.xposedfakelocation.data.KEY_WALKING_CURRENT_LATITUDE
+import com.noobexon.xposedfakelocation.data.KEY_WALKING_CURRENT_LONGITUDE
+import com.noobexon.xposedfakelocation.data.KEY_WALKING_ENABLED
+import com.noobexon.xposedfakelocation.data.KEY_WALKING_PHASE
+import com.noobexon.xposedfakelocation.data.KEY_WALKING_SPEED
+import com.noobexon.xposedfakelocation.data.KEY_WALKING_UPDATED_AT
 import com.noobexon.xposedfakelocation.data.MAC_ADDRESS_REGEX
 import com.noobexon.xposedfakelocation.data.MAX_WIFI_RSSI
 import com.noobexon.xposedfakelocation.data.MIN_WIFI_RSSI
@@ -111,6 +118,47 @@ object PreferencesUtil {
     fun getSpeedAccuracy(): Float? = getPreference(KEY_SPEED_ACCURACY)
     fun getHideFakeLocationToast(): Boolean? = getPreference(KEY_HIDE_FAKE_LOCATION_TOAST)
     fun getEnableSystemHooks(): Boolean = preferences?.getBoolean(KEY_ENABLE_SYSTEM_HOOKS, false) ?: false
+
+    // region Walking simulation (dynamic position written by the manager's foreground service)
+
+    /** Whether the walking-simulation dynamic position should take priority over the fixed point. */
+    fun getWalkingEnabled(): Boolean = preferences?.getBoolean(KEY_WALKING_ENABLED, false) ?: false
+
+    /** Persisted [com.noobexon.xposedfakelocation.manager.route.WalkingPhase] name, or `null` when unset. */
+    fun getWalkingPhase(): String? = preferences?.getString(KEY_WALKING_PHASE, null)
+
+    fun getWalkingCurrentLatitude(): Double? = getWalkingDouble(KEY_WALKING_CURRENT_LATITUDE)
+    fun getWalkingCurrentLongitude(): Double? = getWalkingDouble(KEY_WALKING_CURRENT_LONGITUDE)
+
+    fun getWalkingSpeed(): Float? {
+        val prefs = preferences ?: return null
+        if (!prefs.contains(KEY_WALKING_SPEED)) return null
+        val value = prefs.getFloat(KEY_WALKING_SPEED, Float.NaN)
+        return value.takeUnless { it.isNaN() }
+    }
+
+    fun getWalkingBearing(): Float? {
+        val prefs = preferences ?: return null
+        if (!prefs.contains(KEY_WALKING_BEARING)) return null
+        val value = prefs.getFloat(KEY_WALKING_BEARING, Float.NaN)
+        return value.takeUnless { it.isNaN() }
+    }
+
+    fun getWalkingUpdatedAt(): Long? {
+        val prefs = preferences ?: return null
+        if (!prefs.contains(KEY_WALKING_UPDATED_AT)) return null
+        val value = prefs.getLong(KEY_WALKING_UPDATED_AT, -1L)
+        return value.takeIf { it > 0 }
+    }
+
+    /** Doubles are stored as raw long bits; `null` when the key is absent or prefs are unbound. */
+    private fun getWalkingDouble(key: String): Double? {
+        val prefs = preferences ?: return null
+        if (!prefs.contains(key)) return null
+        return java.lang.Double.longBitsToDouble(prefs.getLong(key, 0L))
+    }
+
+    // endregion
 
     fun getWifiSsid(): String =
         normalizeWifiSsid(preferences?.getString(KEY_WIFI_SSID, DEFAULT_WIFI_SSID))

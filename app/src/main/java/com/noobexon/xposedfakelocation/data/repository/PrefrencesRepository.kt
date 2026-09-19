@@ -10,6 +10,7 @@ import com.google.gson.JsonSyntaxException
 import com.google.gson.reflect.TypeToken
 import com.noobexon.xposedfakelocation.data.DEFAULT_ACCURACY
 import com.noobexon.xposedfakelocation.data.DEFAULT_ALTITUDE
+import com.noobexon.xposedfakelocation.data.DEFAULT_AMAP_WEB_SERVICE_KEY
 import com.noobexon.xposedfakelocation.data.DEFAULT_ENABLE_BROADCAST_CONTROL
 import com.noobexon.xposedfakelocation.data.DEFAULT_ENABLE_SYSTEM_HOOKS
 import com.noobexon.xposedfakelocation.data.DEFAULT_ENABLE_WIFI_IDENTITY
@@ -33,11 +34,14 @@ import com.noobexon.xposedfakelocation.data.DEFAULT_USE_SPEED
 import com.noobexon.xposedfakelocation.data.DEFAULT_USE_SPEED_ACCURACY
 import com.noobexon.xposedfakelocation.data.DEFAULT_USE_VERTICAL_ACCURACY
 import com.noobexon.xposedfakelocation.data.DEFAULT_VERTICAL_ACCURACY
+import com.noobexon.xposedfakelocation.data.DEFAULT_WALKING_ENABLED
+import com.noobexon.xposedfakelocation.data.DEFAULT_WALKING_SPEED
 import com.noobexon.xposedfakelocation.data.DEFAULT_WIFI_BSSID
 import com.noobexon.xposedfakelocation.data.DEFAULT_WIFI_RSSI
 import com.noobexon.xposedfakelocation.data.DEFAULT_WIFI_SSID
 import com.noobexon.xposedfakelocation.data.KEY_ACCURACY
 import com.noobexon.xposedfakelocation.data.KEY_ALTITUDE
+import com.noobexon.xposedfakelocation.data.KEY_AMAP_WEB_SERVICE_KEY
 import com.noobexon.xposedfakelocation.data.KEY_ENABLE_BROADCAST_CONTROL
 import com.noobexon.xposedfakelocation.data.KEY_ENABLE_SYSTEM_HOOKS
 import com.noobexon.xposedfakelocation.data.KEY_ENABLE_WIFI_IDENTITY
@@ -68,6 +72,19 @@ import com.noobexon.xposedfakelocation.data.KEY_VERTICAL_ACCURACY
 import com.noobexon.xposedfakelocation.data.KEY_WIFI_BSSID
 import com.noobexon.xposedfakelocation.data.KEY_WIFI_RSSI
 import com.noobexon.xposedfakelocation.data.KEY_WIFI_SSID
+import com.noobexon.xposedfakelocation.data.KEY_WALKING_BEARING
+import com.noobexon.xposedfakelocation.data.KEY_WALKING_CURRENT_LATITUDE
+import com.noobexon.xposedfakelocation.data.KEY_WALKING_CURRENT_LONGITUDE
+import com.noobexon.xposedfakelocation.data.KEY_WALKING_DISTANCE_TRAVELLED
+import com.noobexon.xposedfakelocation.data.KEY_WALKING_ENABLED
+import com.noobexon.xposedfakelocation.data.KEY_WALKING_ERROR_CODE
+import com.noobexon.xposedfakelocation.data.KEY_WALKING_PHASE
+import com.noobexon.xposedfakelocation.data.KEY_WALKING_ROUTE_JSON
+import com.noobexon.xposedfakelocation.data.KEY_WALKING_SESSION_ID
+import com.noobexon.xposedfakelocation.data.KEY_WALKING_SPEED
+import com.noobexon.xposedfakelocation.data.KEY_WALKING_STARTED_AT
+import com.noobexon.xposedfakelocation.data.KEY_WALKING_TOTAL_DISTANCE
+import com.noobexon.xposedfakelocation.data.KEY_WALKING_UPDATED_AT
 import com.noobexon.xposedfakelocation.data.MAC_ADDRESS_REGEX
 import com.noobexon.xposedfakelocation.data.MAX_WIFI_RSSI
 import com.noobexon.xposedfakelocation.data.MIN_WIFI_RSSI
@@ -77,6 +94,10 @@ import com.noobexon.xposedfakelocation.data.model.FavoriteLocation
 import com.noobexon.xposedfakelocation.data.model.LastClickedLocation
 import com.noobexon.xposedfakelocation.data.normalizeWifiSsid
 import com.noobexon.xposedfakelocation.manager.App
+import com.noobexon.xposedfakelocation.manager.route.WalkingPhase
+import com.noobexon.xposedfakelocation.manager.route.WalkingRoute
+import com.noobexon.xposedfakelocation.manager.route.WalkingRouteCodec
+import java.util.UUID
 import kotlinx.coroutines.ExperimentalCoroutinesApi
 import kotlinx.coroutines.channels.awaitClose
 import kotlinx.coroutines.flow.Flow
@@ -444,5 +465,177 @@ class PreferencesRepository(context: Context) {
     suspend fun saveTianDiTuToken(token: String) = editLocal { putString(KEY_TIANDITU_TOKEN, token.trim()) }
     fun getTianDiTuToken(): String = localPrefs.getString(KEY_TIANDITU_TOKEN, DEFAULT_TIANDITU_TOKEN) ?: DEFAULT_TIANDITU_TOKEN
     // endregion
+
+    // region Amap Web Service Key (local; manager-only, never read by the hooks)
+    fun getAmapWebServiceKeyFlow(): Flow<String> = localFlow(KEY_AMAP_WEB_SERVICE_KEY) { it.getString(KEY_AMAP_WEB_SERVICE_KEY, DEFAULT_AMAP_WEB_SERVICE_KEY) ?: DEFAULT_AMAP_WEB_SERVICE_KEY }
+    suspend fun saveAmapWebServiceKey(value: String) = editLocal { putString(KEY_AMAP_WEB_SERVICE_KEY, value.trim()) }
+    fun getAmapWebServiceKey(): String = localPrefs.getString(KEY_AMAP_WEB_SERVICE_KEY, DEFAULT_AMAP_WEB_SERVICE_KEY) ?: DEFAULT_AMAP_WEB_SERVICE_KEY
+
+    fun isAmapWebServiceKeyConfigured(): Boolean = getAmapWebServiceKey().isNotBlank()
+    // endregion
+
+    // region Walking simulation (remote; hooks read the dynamic position from these keys)
+    fun isRemotePreferencesAvailable(): Boolean = remotePrefs() != null
+
+    fun getWalkingEnabledFlow(): Flow<Boolean> = remoteFlow(KEY_WALKING_ENABLED, DEFAULT_WALKING_ENABLED) { it.getBoolean(KEY_WALKING_ENABLED, DEFAULT_WALKING_ENABLED) }
+    fun getWalkingEnabled(): Boolean = remotePrefs()?.getBoolean(KEY_WALKING_ENABLED, DEFAULT_WALKING_ENABLED) ?: DEFAULT_WALKING_ENABLED
+
+    fun getWalkingPhaseFlow(): Flow<WalkingPhase> = remoteFlow(KEY_WALKING_PHASE, WalkingPhase.IDLE) { WalkingPhase.fromName(it.getString(KEY_WALKING_PHASE, null)) }
+    fun getWalkingPhase(): WalkingPhase = WalkingPhase.fromName(remotePrefs()?.getString(KEY_WALKING_PHASE, null))
+
+    fun getWalkingRouteJsonFlow(): Flow<String?> = remoteFlow<String?>(KEY_WALKING_ROUTE_JSON, null) { it.getString(KEY_WALKING_ROUTE_JSON, null) }
+    fun getWalkingRouteJson(): String? = remotePrefs()?.getString(KEY_WALKING_ROUTE_JSON, null)
+
+    fun getWalkingDistanceTravelledFlow(): Flow<Double> = remoteFlow(KEY_WALKING_DISTANCE_TRAVELLED, 0.0) { readRemoteDouble(KEY_WALKING_DISTANCE_TRAVELLED, 0.0) }
+    fun getWalkingTotalDistanceFlow(): Flow<Double> = remoteFlow(KEY_WALKING_TOTAL_DISTANCE, 0.0) { readRemoteDouble(KEY_WALKING_TOTAL_DISTANCE, 0.0) }
+
+    /** Synchronous reads used by the walking service when restoring a session. */
+    fun getWalkingDistanceTravelled(): Double = readRemoteDouble(KEY_WALKING_DISTANCE_TRAVELLED, 0.0)
+    fun getWalkingTotalDistance(): Double = readRemoteDouble(KEY_WALKING_TOTAL_DISTANCE, 0.0)
+
+    fun getWalkingCurrentLatitudeFlow(): Flow<Double> = remoteFlow(KEY_WALKING_CURRENT_LATITUDE, 0.0) { readRemoteDouble(KEY_WALKING_CURRENT_LATITUDE, 0.0) }
+    fun getWalkingCurrentLongitudeFlow(): Flow<Double> = remoteFlow(KEY_WALKING_CURRENT_LONGITUDE, 0.0) { readRemoteDouble(KEY_WALKING_CURRENT_LONGITUDE, 0.0) }
+
+    fun getWalkingErrorCodeFlow(): Flow<String> = remoteFlow(KEY_WALKING_ERROR_CODE, "") { it.getString(KEY_WALKING_ERROR_CODE, "") ?: "" }
+
+    /**
+     * Session-generation id of the live walking session, or `null` when no session is active
+     * (terminal states clear it). Used by the walking service to drop writes from a stale
+     * generation (MockX完整功能规划.md §5.1).
+     */
+    fun getWalkingSessionId(): String? = remotePrefs()?.getString(KEY_WALKING_SESSION_ID, null)
+
+    /**
+     * Current walking speed in m/s. Read by the service on every tick so the user can change
+     * the pace mid-walk without restarting the session.
+     */
+    fun getWalkingSpeed(): Float = remotePrefs()?.getFloat(KEY_WALKING_SPEED, DEFAULT_WALKING_SPEED) ?: DEFAULT_WALKING_SPEED
+
+    suspend fun saveWalkingSpeed(speed: Float) = editRemote { putFloat(KEY_WALKING_SPEED, speed) }
+
+    /**
+     * Writes the whole prepared-session snapshot: route, totals, and the WALKING phase. Also
+     * turns the fixed-location spoof on ([KEY_IS_PLAYING] = true) so the hooks actually apply
+     * the dynamic coordinates. One [commit] keeps the hook-visible state consistent.
+     */
+    suspend fun startWalkingSession(route: WalkingRoute, speedMetersPerSecond: Float) {
+        val now = System.currentTimeMillis()
+        editRemote {
+            putString(KEY_WALKING_ROUTE_JSON, WalkingRouteCodec.encode(route))
+            putString(KEY_WALKING_SESSION_ID, UUID.randomUUID().toString())
+            putBoolean(KEY_WALKING_ENABLED, true)
+            putString(KEY_WALKING_PHASE, WalkingPhase.WALKING.name)
+            putDoubleBits(KEY_WALKING_CURRENT_LATITUDE, route.origin.latitude)
+            putDoubleBits(KEY_WALKING_CURRENT_LONGITUDE, route.origin.longitude)
+            putDoubleBits(KEY_WALKING_DISTANCE_TRAVELLED, 0.0)
+            putDoubleBits(KEY_WALKING_TOTAL_DISTANCE, route.totalDistanceMeters)
+            putFloat(KEY_WALKING_SPEED, speedMetersPerSecond)
+            putBoolean(KEY_IS_PLAYING, true)
+            putLong(KEY_WALKING_STARTED_AT, now)
+            putLong(KEY_WALKING_UPDATED_AT, now)
+            putString(KEY_WALKING_ERROR_CODE, "")
+        }
+    }
+
+    /** Per-tick dynamic-position write. High-frequency; must stay cheap and atomic. */
+    suspend fun updateWalkingTick(
+        latitude: Double,
+        longitude: Double,
+        speedMetersPerSecond: Float,
+        bearingDegrees: Float,
+        distanceTravelledMeters: Double,
+        updatedAtEpochMillis: Long,
+    ) {
+        editRemote {
+            putDoubleBits(KEY_WALKING_CURRENT_LATITUDE, latitude)
+            putDoubleBits(KEY_WALKING_CURRENT_LONGITUDE, longitude)
+            putFloat(KEY_WALKING_SPEED, speedMetersPerSecond)
+            putFloat(KEY_WALKING_BEARING, bearingDegrees)
+            putDoubleBits(KEY_WALKING_DISTANCE_TRAVELLED, distanceTravelledMeters)
+            putLong(KEY_WALKING_UPDATED_AT, updatedAtEpochMillis)
+        }
+    }
+
+    suspend fun pauseWalkingSession() {
+        editRemote {
+            putString(KEY_WALKING_PHASE, WalkingPhase.PAUSED.name)
+            putLong(KEY_WALKING_UPDATED_AT, System.currentTimeMillis())
+        }
+    }
+
+    suspend fun resumeWalkingSession() {
+        editRemote {
+            putString(KEY_WALKING_PHASE, WalkingPhase.WALKING.name)
+            putLong(KEY_WALKING_UPDATED_AT, System.currentTimeMillis())
+        }
+    }
+
+    suspend fun markWalkingArrived(latitude: Double, longitude: Double) {
+        editRemote {
+            putString(KEY_WALKING_PHASE, WalkingPhase.ARRIVED.name)
+            putDoubleBits(KEY_WALKING_CURRENT_LATITUDE, latitude)
+            putDoubleBits(KEY_WALKING_CURRENT_LONGITUDE, longitude)
+            putLong(KEY_WALKING_UPDATED_AT, System.currentTimeMillis())
+        }
+    }
+
+    /**
+     * Tears the session down the same way the fixed-location flow does: dynamic state cleared,
+     * spoof switched off. The destination marker (last_clicked_location) is intentionally kept
+     * so the user can re-plan from the same place.
+     */
+    suspend fun stopWalkingSession() {
+        editRemote {
+            putBoolean(KEY_WALKING_ENABLED, false)
+            putString(KEY_WALKING_PHASE, WalkingPhase.IDLE.name)
+            putString(KEY_WALKING_ERROR_CODE, "")
+            remove(KEY_WALKING_SESSION_ID)
+            remove(KEY_WALKING_ROUTE_JSON)
+            remove(KEY_WALKING_CURRENT_LATITUDE)
+            remove(KEY_WALKING_CURRENT_LONGITUDE)
+            remove(KEY_WALKING_DISTANCE_TRAVELLED)
+            remove(KEY_WALKING_TOTAL_DISTANCE)
+            remove(KEY_WALKING_SPEED)
+            remove(KEY_WALKING_BEARING)
+            remove(KEY_WALKING_STARTED_AT)
+            remove(KEY_WALKING_UPDATED_AT)
+            putBoolean(KEY_IS_PLAYING, false)
+        }
+    }
+
+    suspend fun markWalkingFailed(errorCode: String) {
+        editRemote {
+            putBoolean(KEY_WALKING_ENABLED, false)
+            putString(KEY_WALKING_PHASE, WalkingPhase.FAILED.name)
+            putString(KEY_WALKING_ERROR_CODE, errorCode)
+            remove(KEY_WALKING_SESSION_ID)
+            putBoolean(KEY_IS_PLAYING, false)
+        }
+    }
+
+    /** Preview-only write: stores the planned route and moves the shared session to READY. */
+    suspend fun savePreparedWalkingRoute(route: WalkingRoute) {
+        editRemote {
+            putString(KEY_WALKING_ROUTE_JSON, WalkingRouteCodec.encode(route))
+            putDoubleBits(KEY_WALKING_TOTAL_DISTANCE, route.totalDistanceMeters)
+            // READY is a preview state with no live session; drop any stale generation id so
+            // late writes from a previous session cannot sneak past the session guard.
+            remove(KEY_WALKING_SESSION_ID)
+            putString(KEY_WALKING_PHASE, WalkingPhase.READY.name)
+        }
+    }
+
+    suspend fun clearWalkingRoute() {
+        editRemote {
+            remove(KEY_WALKING_ROUTE_JSON)
+            remove(KEY_WALKING_SESSION_ID)
+            putString(KEY_WALKING_PHASE, WalkingPhase.IDLE.name)
+        }
+    }
+    // endregion
+
+    private fun SharedPreferences.Editor.putDoubleBits(key: String, value: Double) {
+        putLong(key, java.lang.Double.doubleToRawLongBits(value))
+    }
 
 }

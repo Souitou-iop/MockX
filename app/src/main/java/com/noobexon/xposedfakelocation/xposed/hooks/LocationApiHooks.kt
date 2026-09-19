@@ -39,7 +39,12 @@ class LocationApiHooks(private val module: XposedInterface, private val classLoa
                 hookMethod("getAccuracy", enabled = { PreferencesUtil.getUseAccuracy() == true }) { LocationUtil.accuracy }
                 hookMethod("getAltitude", enabled = { PreferencesUtil.getUseAltitude() == true }) { LocationUtil.altitude }
                 hookMethod("getVerticalAccuracyMeters", enabled = { PreferencesUtil.getUseVerticalAccuracy() == true }) { LocationUtil.verticalAccuracy }
-                hookMethod("getSpeed", enabled = { PreferencesUtil.getUseSpeed() == true }) { LocationUtil.speed }
+                // During a walking simulation the speed must always follow the route, bypassing
+                // the static "use speed" toggle.
+                hookMethod("getSpeed", enabled = { PreferencesUtil.getUseSpeed() == true || LocationUtil.isWalkingActive }) { LocationUtil.speed }
+                // Bearing is only overridden once the walking service has published a segment
+                // direction; before the first tick the original value passes through untouched.
+                hookMethod("getBearing", enabled = { LocationUtil.isWalkingActive && LocationUtil.walkingBearingDegrees != null }) { LocationUtil.walkingBearingDegrees ?: 0f }
                 hookMethod("getSpeedAccuracyMetersPerSecond", enabled = { PreferencesUtil.getUseSpeedAccuracy() == true }) { LocationUtil.speedAccuracy }
                 if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.UPSIDE_DOWN_CAKE) {
                     hookMethod("getMslAltitudeMeters", enabled = { PreferencesUtil.getUseMeanSeaLevel() == true }) { LocationUtil.meanSeaLevel }

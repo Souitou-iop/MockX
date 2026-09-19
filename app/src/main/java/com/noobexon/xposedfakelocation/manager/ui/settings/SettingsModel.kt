@@ -172,6 +172,7 @@ object SettingKeys {
     const val LANGUAGE = "language"
     const val MAP_SOURCE = "map_source"
     const val TIANDITU_TOKEN = "tianditu_token"
+    const val AMAP_KEY = "amap_key"
 }
 
 enum class TextInputKind {
@@ -248,6 +249,21 @@ sealed interface SettingEntry {
     ) : SettingEntry
 
     /**
+     * A secret (credential) text row. The collapsed state only shows whether the credential is
+     * configured — never its value; the edit dialog hides input as it is typed. [onClear]
+     * removes the stored credential entirely.
+     */
+    data class SecretText(
+        override val key: String,
+        @StringRes override val titleRes: Int,
+        @StringRes override val descriptionRes: Int,
+        @StringRes val labelRes: Int,
+        val isConfigured: Boolean,
+        val onValueChange: (String) -> Unit,
+        val onClear: () -> Unit,
+    ) : SettingEntry
+
+    /**
      * The language picker row. Tapping anywhere on the row opens a language selection dialog;
      * selecting an option there applies it immediately and recreates the host Activity.
      *
@@ -320,6 +336,7 @@ data class SettingsUiState(
     // Map
     val mapSource: MapSourceOption = MapSourceOption.fromTag(DEFAULT_MAP_SOURCE),
     val tiandituToken: String = DEFAULT_TIANDITU_TOKEN,
+    val amapKeyConfigured: Boolean = false,
     // Altitude
     val useAltitude: Boolean = DEFAULT_USE_ALTITUDE,
     val altitude: Float = DEFAULT_ALTITUDE.toFloat(),

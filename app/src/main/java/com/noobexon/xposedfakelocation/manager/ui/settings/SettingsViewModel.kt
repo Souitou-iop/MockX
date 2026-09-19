@@ -8,6 +8,7 @@ import androidx.lifecycle.AndroidViewModel
 import androidx.lifecycle.viewModelScope
 import com.noobexon.xposedfakelocation.data.DEFAULT_ACCURACY
 import com.noobexon.xposedfakelocation.data.DEFAULT_ALTITUDE
+import com.noobexon.xposedfakelocation.data.DEFAULT_AMAP_WEB_SERVICE_KEY
 import com.noobexon.xposedfakelocation.data.DEFAULT_ENABLE_BROADCAST_CONTROL
 import com.noobexon.xposedfakelocation.data.DEFAULT_ENABLE_SYSTEM_HOOKS
 import com.noobexon.xposedfakelocation.data.DEFAULT_ENABLE_WIFI_IDENTITY
@@ -323,6 +324,12 @@ class SettingsViewModel(application: Application) : AndroidViewModel(application
         preferencesRepository::saveTianDiTuToken
     )
 
+    private val _amapWebServiceKey = Preference(
+        DEFAULT_AMAP_WEB_SERVICE_KEY,
+        preferencesRepository.getAmapWebServiceKeyFlow(),
+        preferencesRepository::saveAmapWebServiceKey
+    )
+
     // ---- UI state ----------------------------------------------------------------------------
 
     /**
@@ -370,6 +377,7 @@ class SettingsViewModel(application: Application) : AndroidViewModel(application
         .combine(_themeOption.state)             { s, v -> s.copy(themeOption = ThemeOption.fromTag(v)) }
         .combine(_mapSource.state)               { s, v -> s.copy(mapSource = MapSourceOption.fromTag(v)) }
         .combine(_tiandituToken.state)           { s, v -> s.copy(tiandituToken = v) }
+        .combine(_amapWebServiceKey.state)       { s, v -> s.copy(amapKeyConfigured = v.isNotBlank()) }
         .stateIn(viewModelScope, SharingStarted.Eagerly, SettingsUiState())
 
     // ---- Setters -----------------------------------------------------------------------------
@@ -503,6 +511,19 @@ class SettingsViewModel(application: Application) : AndroidViewModel(application
     fun setMapSource(option: MapSourceOption) = _mapSource.set(option.tag)
 
     fun setTianDiTuToken(token: String) = _tiandituToken.set(token.trim())
+
+    /**
+     * Stores the user's Amap Web-Service key (used only for walking route planning). The value
+     * is trimmed; an empty submission keeps any existing key untouched — clearing is a separate
+     * explicit action ([clearAmapWebServiceKey]) so an accidental OK cannot wipe the credential.
+     */
+    fun setAmapWebServiceKey(value: String) {
+        val trimmed = value.trim()
+        if (trimmed.isEmpty()) return
+        _amapWebServiceKey.set(trimmed)
+    }
+
+    fun clearAmapWebServiceKey() = _amapWebServiceKey.set(DEFAULT_AMAP_WEB_SERVICE_KEY)
 
     /**
      * Selects the UI language identified by [tag]. Persists the choice through both the normal

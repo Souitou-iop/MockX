@@ -6,6 +6,13 @@
     <uses-permission android:name="android.permission.ACCESS_NETWORK_STATE"/>
     <uses-permission android:name="android.permission.ACCESS_FINE_LOCATION"/>
     <uses-permission android:name="android.permission.ACCESS_COARSE_LOCATION"/>
+    <!-- Walking simulation foreground service -->
+    <uses-permission android:name="android.permission.FOREGROUND_SERVICE"/>
+    <uses-permission android:name="android.permission.FOREGROUND_SERVICE_LOCATION"/>
+    <uses-permission android:name="android.permission.POST_NOTIFICATIONS"/>
+    <!-- Android 16 Live Update eligibility (non-runtime; requested per notification) -->
+    <uses-permission android:name="android.permission.POST_PROMOTED_NOTIFICATIONS"/>
+    <uses-permission android:name="android.permission.WAKE_LOCK"/>
     <uses-permission
         android:name="android.permission.QUERY_ALL_PACKAGES"
         tools:ignore="PackageVisibilityPolicy,QueryAllPackagesPermission" />
@@ -47,5 +54,15 @@
                 <action android:name="io.github.souitou.mockx.action.SET_LOCATION" />
             </intent-filter>
         </receiver>
+
+        <!--
+            Walk-simulation foreground service. Not exported: it is only commanded by the
+            manager app's own UI via explicit intents. The `location` type keeps the per-second
+            position tick alive while the user is in other apps or the screen is off.
+        -->
+        <service
+            android:name=".manager.walking.WalkingSimulationService"
+            android:exported="false"
+            android:foregroundServiceType="location" />
     </application>
 </manifest>

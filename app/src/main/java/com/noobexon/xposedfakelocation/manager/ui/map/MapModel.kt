@@ -2,6 +2,10 @@ package com.noobexon.xposedfakelocation.manager.ui.map
 
 import androidx.annotation.StringRes
 import androidx.compose.runtime.Immutable
+import com.noobexon.xposedfakelocation.manager.route.WalkingErrorCode
+import com.noobexon.xposedfakelocation.manager.route.WalkingPhase
+import com.noobexon.xposedfakelocation.manager.route.WalkingRoute
+import com.noobexon.xposedfakelocation.manager.route.WalkingSpeedPreset
 import org.osmdroid.util.GeoPoint
 
 /**
@@ -64,8 +68,29 @@ data class MapUiState(
     val isAddToFavoritesDialogVisible: Boolean = false,
     val goToPointState: GoToPointInputState = GoToPointInputState(),
     val hasResolvedInitialLocation: Boolean = false,
+    // Walking simulation
+    val walkingPhase: WalkingPhase = WalkingPhase.IDLE,
+    val walkingRoute: WalkingRoute? = null,
+    /** Live dynamic position of the simulated walker in WGS-84, or `null` when idle. */
+    val walkingCurrentPosition: GeoPoint? = null,
+    val walkingDistanceTravelled: Double = 0.0,
+    val walkingSpeedPreset: WalkingSpeedPreset = WalkingSpeedPreset.NORMAL,
+    val walkingErrorCode: WalkingErrorCode? = null,
+    /** Whether starting a walk should ask to replace an active fixed-position session. */
+    val isReplaceSessionDialogVisible: Boolean = false,
 ) {
     /** `true` when the FAB should be interactive, i.e. a spoof target has been placed on the map. */
     val isFabClickable: Boolean
         get() = lastClickedLocation != null
+
+    /** `true` while a walking session (or its teardown) owns the spoofing pipeline. */
+    val isWalkingActive: Boolean
+        get() = walkingPhase == WalkingPhase.WALKING ||
+            walkingPhase == WalkingPhase.PAUSED ||
+            walkingPhase == WalkingPhase.ARRIVED ||
+            walkingPhase == WalkingPhase.STOPPING
+
+    /** Map taps must be ignored while spoofing is live or a route is being planned. */
+    val isMapInteractionLocked: Boolean
+        get() = isPlaying || isWalkingActive || walkingPhase == WalkingPhase.PLANNING
 }

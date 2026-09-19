@@ -219,4 +219,57 @@
     <string name="about_contributors_error">Couldn\'t load contributors.</string>
     <string name="about_contributors_empty">No contributors found.</string>
     <string name="about_contributors_retry">Retry</string>
+
+    <!-- Amap web-service key (walking route planning) -->
+    <string name="setting_amap_key_title">Amap Web-Service Key</string>
+    <string name="setting_amap_key_description">Your own Amap REST API key, used only for walking route planning. Stored locally and never bundled with the app.</string>
+    <string name="setting_amap_key_label">API Key</string>
+    <string name="setting_secret_configured">Configured</string>
+    <string name="setting_secret_not_configured">Not set</string>
+    <string name="setting_secret_clear">Clear saved key</string>
+
+    <!-- Walking simulation -->
+    <string name="walk_speed_relaxed">Stroll 1.0</string>
+    <string name="walk_speed_normal">Normal 1.4</string>
+    <string name="walk_speed_brisk">Brisk 1.8</string>
+    <string name="walk_status_planning">Planning route…</string>
+    <string name="walk_status_ready">Route ready</string>
+    <string name="walk_status_walking">Simulating walk</string>
+    <string name="walk_status_paused">Walk paused</string>
+    <string name="walk_status_arrived">Arrived at destination</string>
+    <string name="walk_status_stopping">Stopping…</string>
+    <string name="walk_status_failed">Route planning failed</string>
+    <string name="walk_start">Start Walking</string>
+    <string name="walk_pause">Pause</string>
+    <string name="walk_resume">Resume</string>
+    <string name="walk_stop">Stop</string>
+    <string name="walk_replan">Plan again</string>
+    <string name="walk_active_pill">Walking simulation active</string>
+    <string name="walk_planning_pill">Planning route…</string>
+    <string name="walk_progress_format">Walked %1$s · total %2$s</string>
+    <string name="walk_eta_format">approx. %1$d min</string>
+    <string name="walk_route_ready_toast">Walking route is ready</string>
+    <string name="walk_replace_title">Replace current spoofing?</string>
+    <string name="walk_replace_message">A fixed-position spoof is active. Starting the walking simulation will stop it and move along the planned route instead.</string>
+    <string name="walk_replace_confirm">Start Walking</string>
+
+    <string name="walk_error_missing_api_key">Please configure your Amap Web-Service key in Settings first.</string>
+    <string name="walk_error_location_unavailable">Could not get your real location. Please enable location, wait for a fix and try again.</string>
+    <string name="walk_error_invalid_destination">Please select a valid destination on the map first.</string>
+    <string name="walk_error_network_timeout">Route request timed out. Please try again.</string>
+    <string name="walk_error_network_unavailable">Network unavailable. Check your connection and try again.</string>
+    <string name="walk_error_api_auth_failed">Amap rejected the key. Please check or re-enter your Web-Service key.</string>
+    <string name="walk_error_api_quota_exceeded">Amap quota exceeded. Please try again later.</string>
+    <string name="walk_error_no_route">No walkable route found between these two points.</string>
+    <string name="walk_error_invalid_route_data">The route data was invalid. Please re-plan.</string>
+    <string name="walk_error_preference_unavailable">MockX service is not connected. Enable the module and reopen the app.</string>
+    <string name="walk_error_service_start_failed">Could not start the walking service. Please try again.</string>
+    <string name="walk_error_location_state_stale">The walking state is out of date; falling back to the fixed location.</string>
+
+    <string name="walk_notification_channel_name">Walking simulation</string>
+    <string name="walk_notification_channel_description">Shown while MockX simulates movement along a walking route.</string>
+    <string name="walk_notification_title">MockX is simulating a walk</string>
+    <string name="walk_notification_text">Walked %1$s / %2$s</string>
+    <string name="walk_notification_paused_text">Walk paused — position held</string>
+    <string name="walk_notification_arrived_text">Arrived at the destination</string>
 </resources>

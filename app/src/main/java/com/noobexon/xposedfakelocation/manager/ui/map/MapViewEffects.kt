@@ -1,10 +1,6 @@
 package com.noobexon.xposedfakelocation.manager.ui.map
 
-import android.Manifest
 import android.content.Context
-import android.content.pm.PackageManager
-import android.location.Location
-import android.location.LocationManager
 import android.widget.Toast
 import androidx.compose.runtime.Composable
 import androidx.compose.runtime.DisposableEffect
@@ -15,7 +11,6 @@ import androidx.compose.runtime.remember
 import androidx.compose.runtime.rememberUpdatedState
 import androidx.compose.ui.platform.LocalContext
 import androidx.compose.ui.res.stringResource
-import androidx.core.content.ContextCompat
 import androidx.lifecycle.Lifecycle
 import androidx.lifecycle.compose.LocalLifecycleOwner
 import androidx.lifecycle.repeatOnLifecycle
@@ -24,6 +19,7 @@ import com.noobexon.xposedfakelocation.data.DEFAULT_MAP_ZOOM
 import com.noobexon.xposedfakelocation.data.LOCATION_DETECTION_DELAY_MS
 import com.noobexon.xposedfakelocation.data.LOCATION_DETECTION_MAX_ATTEMPTS
 import com.noobexon.xposedfakelocation.data.WORLD_MAP_ZOOM
+import com.noobexon.xposedfakelocation.manager.route.RealLocationProvider
 import kotlinx.coroutines.Dispatchers
 import kotlinx.coroutines.delay
 import kotlinx.coroutines.flow.Flow
@@ -378,41 +374,15 @@ private fun centerOnGeoPoint(
 }
 
 /**
- * Queries all enabled [LocationManager] providers on [Dispatchers.IO] and returns the most recent
- * last-known fix, or `null` if none is available or permission is not granted.
- *
- * Running on [Dispatchers.IO] avoids blocking the main thread; [LocationManager.getLastKnownLocation]
- * can perform disk I/O on some devices.
+ * Returns the freshest last-known device fix as a [GeoPoint], or `null` if none is available or
+ * permission is not granted. Delegates to [RealLocationProvider]; runs on [Dispatchers.IO]
+ * because [LocationManager.getLastKnownLocation] can perform disk I/O on some devices.
  *
  * @param context Application context used to access [LocationManager] and check permissions.
  * @return The freshest available [GeoPoint], or `null`.
  */
 private suspend fun getLastKnownDeviceLocation(context: Context): GeoPoint? = withContext(Dispatchers.IO) {
-    val granted = ContextCompat.checkSelfPermission(
-        context, Manifest.permission.ACCESS_FINE_LOCATION
-    ) == PackageManager.PERMISSION_GRANTED ||
-        ContextCompat.checkSelfPermission(
-            context, Manifest.permission.ACCESS_COARSE_LOCATION
-        ) == PackageManager.PERMISSION_GRANTED
-    if (!granted) return@withContext null
-
-    val lm = context.getSystemService(Context.LOCATION_SERVICE) as? LocationManager
-        ?: return@withContext null
-    val providers = try {
-        lm.getProviders(true)
-    } catch (e: SecurityException) {
-        return@withContext null
-    }
-    var best: Location? = null
-    for (provider in providers) {
-        val loc = try {
-            lm.getLastKnownLocation(provider)
-        } catch (e: SecurityException) {
-            null
-        } ?: continue
-        if (best == null || loc.time > best.time) best = loc
-    }
-    best?.let { GeoPoint(it.latitude, it.longitude) }
+    RealLocationProvider.getLastKnown(context)?.let { GeoPoint(it.latitude, it.longitude) }
 }
 
 /**
@@ -522,3 +492,113 @@ internal fun ManageMapViewLifecycle(
         }
     }
 }
+
+/**
+ * Draws the prepared walking route as a polyline, converting the internally stored WGS-84
+ * points to GCJ-02 when the active tile source requires it ([MapSourceOption.isGcj02]).
+ *
+ * The overlay is inserted at the bottom of the overlay stack so markers and the blue-dot
+ * location overlay always render above it. When [route] is `null` the overlay is removed.
+ * On a new route the camera is fitted to the route's bounding box.
+ *
+ * @param mapView The map to draw on.
+ * @param route The prepared route in WGS-84, or `null` to clear.
+ * @param mapSource Current tile source option, determining the display coordinate system.
+ */
+@Composable
+internal fun HandleWalkingRouteOverlay(
+    mapView: MapView,
+    route: com.noobexon.xposedfakelocation.manager.route.WalkingRoute?,
+    mapSource: MapSourceOption,
+) {
+    val polyline = remember(mapView) {
+        org.osmdroid.views.overlay.Polyline(mapView).apply {
+            outlinePaint.color = ROUTE_LINE_COLOR
+            outlinePaint.strokeWidth = ROUTE_LINE_WIDTH_DP * mapView.context.resources.displayMetrics.density
+            outlinePaint.strokeCap = android.graphics.Paint.Cap.ROUND
+            outlinePaint.strokeJoin = android.graphics.Paint.Join.ROUND
+        }
+    }
+
+    LaunchedEffect(route, mapSource) {
+        val exists = mapView.overlays.contains(polyline)
+        if (route == null) {
+            if (exists) {
+                mapView.overlays.remove(polyline)
+                mapView.invalidate()
+            }
+            return@LaunchedEffect
+        }
+
+        val displayPoints = route.points.map { point ->
+            if (mapSource.isGcj02) {
+                val (gcjLat, gcjLon) = CoordinateTransform.wgs84ToGcj02(point.latitude, point.longitude)
+                GeoPoint(gcjLat, gcjLon)
+            } else {
+                GeoPoint(point.latitude, point.longitude)
+            }
+        }
+        polyline.setPoints(displayPoints)
+        if (!exists) {
+            // Index 0 keeps the route beneath every marker and the location overlay.
+            mapView.overlays.add(0, polyline)
+        }
+        mapView.zoomToBoundingBox(
+            org.osmdroid.util.BoundingBox.fromGeoPoints(displayPoints),
+            false,
+            ROUTE_FIT_PADDING_PX,
+        )
+        mapView.invalidate()
+    }
+}
+
+/**
+ * Keeps the moving "simulated walker" marker in sync with the dynamic walking position.
+ *
+ * Same coordinate rule as [HandleWalkingRouteOverlay]: input is WGS-84, converted for display
+ * on GCJ-02 tile sources. `null` removes the marker.
+ *
+ * @param mapView The map to draw on.
+ * @param position The simulated walker's current WGS-84 position, or `null` to clear.
+ * @param mapSource Current tile source option.
+ */
+@Composable
+internal fun HandleWalkingPositionOverlay(
+    mapView: MapView,
+    position: GeoPoint?,
+    mapSource: MapSourceOption,
+) {
+    val context = LocalContext.current
+    val walkerMarker = remember(mapView) {
+        Marker(mapView).apply {
+            setAnchor(Marker.ANCHOR_CENTER, Marker.ANCHOR_CENTER)
+            icon = androidx.core.content.ContextCompat.getDrawable(context, android.R.drawable.ic_menu_mylocation)
+        }
+    }
+
+    LaunchedEffect(position, mapSource) {
+        val exists = mapView.overlays.contains(walkerMarker)
+        if (position == null) {
+            if (exists) {
+                mapView.overlays.remove(walkerMarker)
+                mapView.invalidate()
+            }
+            return@LaunchedEffect
+        }
+
+        val displayPoint = if (mapSource.isGcj02) {
+            val (gcjLat, gcjLon) = CoordinateTransform.wgs84ToGcj02(position.latitude, position.longitude)
+            GeoPoint(gcjLat, gcjLon)
+        } else {
+            position
+        }
+        walkerMarker.position = displayPoint
+        if (!exists) mapView.overlays.add(walkerMarker)
+        mapView.invalidate()
+    }
+}
+
+/** Route line tint (iOS green) matching the active-spoof status dot. */
+private const val ROUTE_LINE_COLOR = 0xFF34C759.toInt()
+private const val ROUTE_LINE_WIDTH_DP = 6f
+private const val ROUTE_FIT_PADDING_PX = 140

@@ -70,11 +70,12 @@ fun MapViewContainer(
     isLoading: Boolean,
     lastClickedLocation: GeoPoint?,
     userLocation: GeoPoint?,
-    isPlaying: Boolean,
     mapZoom: Double?,
     mapSource: MapSourceOption,
     tiandituToken: String,
     hasResolvedInitialLocation: Boolean,
+    walkingRoute: com.noobexon.xposedfakelocation.manager.route.WalkingRoute?,
+    walkingCurrentPosition: GeoPoint?,
     goToPointEvent: Flow<GeoPoint>,
     centerMapEvent: Flow<Unit>,
     onClickedLocationChange: (GeoPoint?) -> Unit,
@@ -82,6 +83,8 @@ fun MapViewContainer(
     onMapZoomChange: (Double) -> Unit,
     onLoadingFinished: () -> Unit,
     onInitialLocationResolved: () -> Unit,
+    /** `false` while spoofing or planning locks map taps (see [MapUiState.isMapInteractionLocked]). */
+    isMapInteractionEnabled: Boolean,
 ) {
     val context = LocalContext.current
 
@@ -103,7 +106,14 @@ fun MapViewContainer(
     HandleCenterMapEvent(mapView, locationOverlay, centerMapEvent)
     HandleGoToPointEvent(mapView, mapSource, goToPointEvent, onClickedLocationChange)
     HandleMarkerUpdates(mapView, userMarker, lastClickedLocation, mapSource)
-    SetupMapClickListener(mapView, isPlaying, mapSource, onClickedLocationChange)
+    HandleWalkingRouteOverlay(mapView, walkingRoute, mapSource)
+    HandleWalkingPositionOverlay(mapView, walkingCurrentPosition, mapSource)
+    SetupMapClickListener(
+        mapView = mapView,
+        isPlaying = !isMapInteractionEnabled,
+        mapSource = mapSource,
+        onClickedLocationChange = onClickedLocationChange,
+    )
     CenterMapOnUserLocation(
         mapView = mapView,
         locationOverlay = locationOverlay,

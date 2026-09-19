@@ -43,6 +43,12 @@
 # ---------------------------------------------------------------------------
 -keep class com.noobexon.xposedfakelocation.data.model.** { *; }
 
+# Walking simulation: the route model travels through the shared-preferences JSON blob and
+# the Amap wire format is parsed into the parser's private DTO classes via Gson reflection.
+-keep class com.noobexon.xposedfakelocation.manager.route.WalkingRoute { *; }
+-keep class com.noobexon.xposedfakelocation.manager.route.Coordinate { *; }
+-keep class com.noobexon.xposedfakelocation.manager.route.AmapRouteParser$* { *; }
+
 # ---------------------------------------------------------------------------
 # Preserve all Xposed hook implementations and reflection helpers from stripping
 # ---------------------------------------------------------------------------

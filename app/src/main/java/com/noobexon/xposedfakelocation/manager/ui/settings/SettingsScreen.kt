@@ -68,6 +68,7 @@ import androidx.compose.ui.semantics.semantics
 import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.text.input.ImeAction
 import androidx.compose.ui.text.input.KeyboardType
+import androidx.compose.ui.text.input.PasswordVisualTransformation
 import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
 import androidx.lifecycle.Lifecycle
@@ -163,6 +164,17 @@ fun SettingsScreen(
                     )
                 )
             }
+            add(
+                SettingEntry.SecretText(
+                    SettingKeys.AMAP_KEY,
+                    R.string.setting_amap_key_title,
+                    R.string.setting_amap_key_description,
+                    R.string.setting_amap_key_label,
+                    isConfigured = uiState.amapKeyConfigured,
+                    onValueChange = settingsViewModel::setAmapWebServiceKey,
+                    onClear = settingsViewModel::clearAmapWebServiceKey,
+                )
+            )
         },
         SettingsCategory.ALTITUDE to listOf(
             SettingEntry.Numeric(NumericSetting.ALTITUDE, uiState.useAltitude, settingsViewModel::setUseAltitude, uiState.altitude) { settingsViewModel.setAltitude(it.toDouble()) },
@@ -454,6 +466,15 @@ private fun SettingEntryRow(entry: SettingEntry) {
             onValueChange = entry.onValueChange,
         )
 
+        is SettingEntry.SecretText -> SecretTextRow(
+            title = stringResource(entry.titleRes),
+            description = stringResource(entry.descriptionRes),
+            label = stringResource(entry.labelRes),
+            isConfigured = entry.isConfigured,
+            onValueChange = entry.onValueChange,
+            onClear = entry.onClear,
+        )
+
         is SettingEntry.Theme -> ThemeRow(
             current = entry.selected,
             onSelect = entry.onSelected,
@@ -659,6 +680,107 @@ private fun TextRow(
                 ),
                 modifier = Modifier.fillMaxWidth()
             )
+        }
+    }
+}
+
+/**
+ * Credential row (e.g. Amap Web-Service key). The collapsed value only ever shows whether the
+ * credential is configured — the stored value is never echoed back. The dialog hides input as
+ * it is typed and offers an explicit clear action; an empty OK keeps the existing value.
+ */
+@Composable
+private fun SecretTextRow(
+    title: String,
+    description: String,
+    label: String,
+    isConfigured: Boolean,
+    onValueChange: (String) -> Unit,
+    onClear: () -> Unit,
+) {
+    var dialogOpen by remember { mutableStateOf(false) }
+
+    Row(
+        modifier = Modifier
+            .fillMaxWidth()
+            .clickable { dialogOpen = true }
+            .padding(horizontal = Dimensions.SPACING_MEDIUM, vertical = 12.dp),
+        horizontalArrangement = Arrangement.SpaceBetween,
+        verticalAlignment = Alignment.CenterVertically,
+    ) {
+        Column(modifier = Modifier.weight(1f).padding(end = Dimensions.SPACING_MEDIUM)) {
+            Text(
+                text = title,
+                style = MaterialTheme.typography.bodyLarge.copy(fontWeight = FontWeight.Medium),
+                color = MaterialTheme.colorScheme.onSurface
+            )
+            Spacer(modifier = Modifier.height(2.dp))
+            Text(
+                text = description,
+                style = MaterialTheme.typography.bodySmall,
+                color = MaterialTheme.colorScheme.onSurfaceVariant
+            )
+        }
+        Text(
+            text = stringResource(if (isConfigured) R.string.setting_secret_configured else R.string.setting_secret_not_configured),
+            style = MaterialTheme.typography.bodyMedium,
+            color = MaterialTheme.colorScheme.primary,
+            fontWeight = FontWeight.SemiBold
+        )
+    }
+
+    if (dialogOpen) {
+        var textValue by remember { mutableStateOf("") }
+        MiuixDialog(
+            onDismissRequest = { dialogOpen = false },
+            title = title,
+            confirmButton = {
+                MiuixDialogButton(
+                    text = stringResource(R.string.action_ok),
+                    isPrimary = true,
+                    onClick = {
+                        onValueChange(textValue)
+                        dialogOpen = false
+                    }
+                )
+            },
+            dismissButton = {
+                MiuixDialogButton(
+                    text = stringResource(R.string.action_cancel),
+                    onClick = { dialogOpen = false }
+                )
+            }
+        ) {
+            Column {
+                OutlinedTextField(
+                    value = textValue,
+                    onValueChange = { textValue = it },
+                    label = { Text(label) },
+                    singleLine = true,
+                    shape = RoundedCornerShape(14.dp),
+                    visualTransformation = PasswordVisualTransformation(),
+                    keyboardOptions = KeyboardOptions(
+                        keyboardType = KeyboardType.Password,
+                        autoCorrect = false,
+                    ),
+                    modifier = Modifier.fillMaxWidth()
+                )
+                if (isConfigured) {
+                    Spacer(modifier = Modifier.height(8.dp))
+                    Text(
+                        text = stringResource(R.string.setting_secret_clear),
+                        style = MaterialTheme.typography.bodyMedium,
+                        color = MaterialTheme.colorScheme.error,
+                        fontWeight = FontWeight.SemiBold,
+                        modifier = Modifier
+                            .clickable {
+                                onClear()
+                                dialogOpen = false
+                            }
+                            .padding(vertical = 6.dp)
+                    )
+                }
+            }
         }
     }
 }
@@ -880,6 +1002,7 @@ private fun searchTextOf(entry: SettingEntry, context: Context): String = when (
     is SettingEntry.Switch -> "${context.getString(entry.titleRes)} ${context.getString(entry.descriptionRes)}"
     is SettingEntry.Numeric -> "${context.getString(entry.setting.titleRes)} ${context.getString(entry.setting.descriptionRes)}"
     is SettingEntry.Text -> "${context.getString(entry.titleRes)} ${context.getString(entry.descriptionRes)}"
+    is SettingEntry.SecretText -> "${context.getString(entry.titleRes)} ${context.getString(entry.descriptionRes)}"
     is SettingEntry.Theme -> "${context.getString(R.string.setting_theme_title)} ${context.getString(R.string.setting_theme_description)}"
     is SettingEntry.Language -> "${context.getString(R.string.setting_language_title)} ${context.getString(R.string.setting_language_description)}"
     is SettingEntry.MapSource -> "${context.getString(R.string.setting_map_source_title)} ${context.getString(R.string.setting_map_source_description)}"

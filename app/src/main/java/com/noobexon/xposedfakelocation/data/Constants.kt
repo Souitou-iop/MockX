@@ -53,6 +53,27 @@ const val KEY_WIFI_SSID = "wifi_ssid"
 const val KEY_WIFI_BSSID = "wifi_bssid"
 const val KEY_WIFI_RSSI = "wifi_rssi"
 
+// WALKING SIMULATION (remote; written by the manager, read by the Xposed hooks)
+const val KEY_WALKING_ENABLED = "walking_enabled"
+const val KEY_WALKING_PHASE = "walking_phase"
+const val KEY_WALKING_ROUTE_JSON = "walking_route_json"
+const val KEY_WALKING_CURRENT_LATITUDE = "walking_current_latitude"
+const val KEY_WALKING_CURRENT_LONGITUDE = "walking_current_longitude"
+const val KEY_WALKING_DISTANCE_TRAVELLED = "walking_distance_travelled"
+const val KEY_WALKING_TOTAL_DISTANCE = "walking_total_distance"
+const val KEY_WALKING_SPEED = "walking_speed"
+const val KEY_WALKING_BEARING = "walking_bearing"
+const val KEY_WALKING_STARTED_AT = "walking_started_at"
+const val KEY_WALKING_UPDATED_AT = "walking_updated_at"
+const val KEY_WALKING_ERROR_CODE = "walking_error_code"
+/**
+ * Session-generation id (UUID). Written when a session starts, cleared when it reaches a
+ * terminal state; every session-scoped write validates it before mutating shared state so a
+ * delayed stop/fail/tick from a previous generation can never clobber a newer session
+ * (MockX完整功能规划.md §5.1).
+ */
+const val KEY_WALKING_SESSION_ID = "walking_session_id"
+
 // Packages added/removed from module scope when system-level hooks are toggled.
 // Modern libxposed uses `system` as the virtual package name for system_server.
 val SYSTEM_HOOK_PACKAGES = listOf("system", "com.android.phone")
@@ -100,6 +121,18 @@ const val MIN_WIFI_RSSI = -127
 const val MAX_WIFI_RSSI = 0
 val MAC_ADDRESS_REGEX = Regex("(?i)^[0-9a-f]{2}(:[0-9a-f]{2}){5}$")
 
+// AMAP WEB SERVICE (local; manager-only, never shared with the hook side)
+const val KEY_AMAP_WEB_SERVICE_KEY = "amap_web_service_key"
+const val DEFAULT_AMAP_WEB_SERVICE_KEY = ""
+
+// WALKING SIMULATION DEFAULTS
+const val DEFAULT_WALKING_ENABLED = false
+const val DEFAULT_WALKING_SPEED = 1.4f
+/** Hard cap on route points kept in memory and in the shared-preferences JSON blob. */
+const val MAX_ROUTE_POINTS = 5000
+/** Distance (metres) between two coordinates treated as "the same point" when de-duplicating. */
+const val ROUTE_POINT_DEDUP_EPSILON_METERS = 0.05
+
 fun normalizeWifiSsid(rawSsid: String?): String {
     val trimmed = rawSsid?.trim().orEmpty()
     val utf8 = trimmed.toByteArray(Charsets.UTF_8)
@@ -125,3 +158,11 @@ const val DEFAULT_MAP_ZOOM = 18.0
 const val WORLD_MAP_ZOOM = 2.0
 const val LOCATION_DETECTION_MAX_ATTEMPTS = 80
 const val LOCATION_DETECTION_DELAY_MS = 100L
+
+// WALKING SIMULATION TIMING
+/** Interval between simulated-position ticks in the foreground walking service. */
+const val WALKING_TICK_INTERVAL_MS = 1000L
+/** Upper bound for compensating a single delayed tick; beyond this the advance is clamped. */
+const val WALKING_MAX_CATCHUP_SECONDS = 30.0
+/** A WALKING state whose updated_at is older than this is considered stale by the hooks. */
+const val WALKING_STATE_STALE_MS = 15_000L
