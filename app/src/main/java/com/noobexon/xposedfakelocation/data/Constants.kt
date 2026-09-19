@@ -49,6 +49,11 @@ const val KEY_ENABLE_WIFI_IDENTITY = "enable_wifi_identity"
 
 const val KEY_THEME_OPTION = "theme_option"
 
+const val KEY_THEME_MODE = "theme_mode"
+const val KEY_MONET_COLOR = "monet_color"
+
+const val KEY_PREDICTIVE_BACK_ENABLED = "predictive_back_enabled"
+
 const val KEY_WIFI_SSID = "wifi_ssid"
 const val KEY_WIFI_BSSID = "wifi_bssid"
 const val KEY_WIFI_RSSI = "wifi_rssi"
@@ -105,13 +110,16 @@ const val DEFAULT_SPEED_ACCURACY = 0.0f
 
 const val DEFAULT_HIDE_FAKE_LOCATION_TOAST = false
 
+const val DEFAULT_PREDICTIVE_BACK_ENABLED = true
+
 const val DEFAULT_ENABLE_BROADCAST_CONTROL = false
 const val DEFAULT_LANGUAGE_TAG = ""
 
 const val DEFAULT_ENABLE_SYSTEM_HOOKS = false
 const val DEFAULT_ENABLE_WIFI_IDENTITY = false
 
-const val DEFAULT_THEME_OPTION = ""
+const val DEFAULT_THEME_MODE = 0
+const val DEFAULT_MONET_COLOR = 0
 
 const val DEFAULT_WIFI_SSID = "AndroidAP"
 const val DEFAULT_WIFI_BSSID = "02:00:00:00:00:00"

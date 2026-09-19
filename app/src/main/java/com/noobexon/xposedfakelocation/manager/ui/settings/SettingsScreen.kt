@@ -3,74 +3,44 @@ package com.noobexon.xposedfakelocation.manager.ui.settings
 import android.app.Activity
 import android.content.Context
 import android.content.ContextWrapper
-import androidx.activity.compose.BackHandler
-import androidx.compose.foundation.clickable
-import androidx.compose.foundation.interaction.MutableInteractionSource
-import androidx.compose.foundation.layout.Arrangement
+import androidx.compose.animation.animateContentSize
 import androidx.compose.foundation.layout.Box
+import androidx.compose.foundation.text.KeyboardOptions
+import androidx.compose.foundation.clickable
+import androidx.compose.foundation.layout.Arrangement
+import androidx.compose.foundation.layout.Spacer
+import androidx.compose.foundation.layout.height
+import androidx.compose.foundation.layout.Row
+import androidx.compose.ui.unit.sp
+import androidx.compose.ui.Alignment
 import androidx.compose.foundation.layout.Column
 import androidx.compose.foundation.layout.PaddingValues
-import androidx.compose.foundation.layout.Row
-import androidx.compose.foundation.layout.Spacer
 import androidx.compose.foundation.layout.fillMaxSize
 import androidx.compose.foundation.layout.fillMaxWidth
-import androidx.compose.foundation.layout.height
-import androidx.compose.foundation.layout.navigationBarsPadding
 import androidx.compose.foundation.layout.padding
 import androidx.compose.foundation.layout.size
-import androidx.compose.foundation.layout.statusBarsPadding
-import androidx.compose.foundation.layout.width
-import androidx.compose.foundation.rememberScrollState
-import androidx.compose.foundation.selection.selectable
-import androidx.compose.foundation.selection.selectableGroup
-import androidx.compose.foundation.shape.RoundedCornerShape
-import androidx.compose.foundation.text.KeyboardActions
-import androidx.compose.foundation.text.KeyboardOptions
-import androidx.compose.foundation.verticalScroll
-import androidx.compose.material.icons.Icons
-import androidx.compose.material.icons.automirrored.filled.ArrowBack
-import androidx.compose.material.icons.filled.Info
-import androidx.compose.material.icons.filled.MoreVert
-import androidx.compose.material.icons.filled.Refresh
-import androidx.compose.material3.Icon
-import androidx.compose.material3.IconButton
-import androidx.compose.material3.MaterialTheme
-import androidx.compose.material3.OutlinedTextField
-import androidx.compose.material3.RadioButton
-import androidx.compose.material3.Scaffold
-import androidx.compose.material3.SnackbarHost
-import androidx.compose.material3.SnackbarHostState
-import androidx.compose.material3.Text
+import androidx.compose.foundation.lazy.LazyColumn
+import androidx.compose.foundation.lazy.rememberLazyListState
 import androidx.compose.runtime.Composable
 import androidx.compose.runtime.LaunchedEffect
-import androidx.compose.runtime.ReadOnlyComposable
 import androidx.compose.runtime.getValue
-import androidx.compose.runtime.key
-import androidx.compose.runtime.mutableFloatStateOf
 import androidx.compose.runtime.mutableStateOf
 import androidx.compose.runtime.remember
-import androidx.compose.runtime.rememberCoroutineScope
+import androidx.compose.runtime.saveable.rememberSaveable
 import androidx.compose.runtime.setValue
-import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
-import androidx.compose.ui.draw.clip
-import androidx.compose.ui.focus.FocusRequester
-import androidx.compose.ui.focus.focusRequester
-import androidx.compose.ui.focus.onFocusChanged
 import androidx.compose.ui.graphics.Color
+import androidx.compose.ui.hapticfeedback.HapticFeedbackType
 import androidx.compose.ui.platform.LocalContext
-import androidx.compose.ui.platform.LocalFocusManager
+import androidx.compose.ui.platform.LocalHapticFeedback
 import androidx.compose.ui.platform.LocalView
 import androidx.compose.ui.res.stringResource
-import androidx.compose.ui.semantics.Role
-import androidx.compose.ui.semantics.contentDescription
-import androidx.compose.ui.semantics.semantics
 import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.text.input.ImeAction
 import androidx.compose.ui.text.input.KeyboardType
 import androidx.compose.ui.text.input.PasswordVisualTransformation
+import androidx.compose.ui.text.style.TextAlign
 import androidx.compose.ui.unit.dp
-import androidx.compose.ui.unit.sp
 import androidx.lifecycle.Lifecycle
 import androidx.lifecycle.compose.LocalLifecycleOwner
 import androidx.lifecycle.compose.collectAsStateWithLifecycle
@@ -80,35 +50,42 @@ import androidx.navigation.NavController
 import com.noobexon.xposedfakelocation.R
 import com.noobexon.xposedfakelocation.manager.RefreshRateHelper
 import com.noobexon.xposedfakelocation.manager.localization.LanguageOption
-import com.noobexon.xposedfakelocation.manager.ui.theme.MiuixCard
-import com.noobexon.xposedfakelocation.manager.ui.theme.MiuixCardDivider
-import com.noobexon.xposedfakelocation.manager.ui.theme.MiuixCategoryTitle
-import com.noobexon.xposedfakelocation.manager.ui.theme.MiuixDialog
-import com.noobexon.xposedfakelocation.manager.ui.theme.MiuixDialogButton
-import com.noobexon.xposedfakelocation.manager.ui.theme.MiuixLargeTitleHeader
-import com.noobexon.xposedfakelocation.manager.ui.theme.MiuixSearchBox
-import com.noobexon.xposedfakelocation.manager.ui.theme.MiuixSlider
-import com.noobexon.xposedfakelocation.manager.ui.theme.MiuixSwitch
+import com.noobexon.xposedfakelocation.manager.localization.LocaleController
+import com.noobexon.xposedfakelocation.manager.ui.components.AppDialog
+import com.noobexon.xposedfakelocation.manager.ui.components.BlurredBar
+import com.noobexon.xposedfakelocation.manager.ui.components.BlurBackdropBox
+import com.noobexon.xposedfakelocation.manager.ui.components.SearchField
+import com.noobexon.xposedfakelocation.manager.ui.components.TextInputDialog
+import com.noobexon.xposedfakelocation.manager.ui.components.pageScrollModifiers
+import com.noobexon.xposedfakelocation.manager.ui.components.rememberBlurBackdrop
+import com.noobexon.xposedfakelocation.manager.ui.map.MapSourceOption
+import com.noobexon.xposedfakelocation.manager.ui.map.MapSourceSelectionDialog
+import com.noobexon.xposedfakelocation.manager.ui.theme.MonetColor
+import com.noobexon.xposedfakelocation.manager.ui.theme.ThemeMode
+import top.yukonga.miuix.kmp.basic.Card
 import top.yukonga.miuix.kmp.basic.DropdownEntry
 import top.yukonga.miuix.kmp.basic.DropdownItem
+import top.yukonga.miuix.kmp.basic.Icon
+import top.yukonga.miuix.kmp.basic.IconButton
+import top.yukonga.miuix.kmp.basic.MiuixScrollBehavior
+import top.yukonga.miuix.kmp.basic.Scaffold
+import top.yukonga.miuix.kmp.basic.SmallTitle
+import top.yukonga.miuix.kmp.basic.SnackbarHost
+import top.yukonga.miuix.kmp.basic.SnackbarHostState
+import top.yukonga.miuix.kmp.basic.Text
+import top.yukonga.miuix.kmp.basic.TopAppBar
+import top.yukonga.miuix.kmp.basic.TextField
 import top.yukonga.miuix.kmp.icon.MiuixIcons
+import top.yukonga.miuix.kmp.icon.extended.Back
 import top.yukonga.miuix.kmp.icon.extended.Delete
 import top.yukonga.miuix.kmp.icon.extended.More
 import top.yukonga.miuix.kmp.menu.WindowIconDropdownMenu
-import com.noobexon.xposedfakelocation.manager.localization.LocaleController
-import com.noobexon.xposedfakelocation.manager.ui.map.MapSourceOption
-import com.noobexon.xposedfakelocation.manager.ui.map.MapSourceSelectionDialog
-import com.noobexon.xposedfakelocation.manager.ui.theme.ThemeOption
-import kotlinx.coroutines.launch
+import top.yukonga.miuix.kmp.preference.ArrowPreference
+import top.yukonga.miuix.kmp.preference.SliderPreference
+import top.yukonga.miuix.kmp.preference.SwitchPreference
+import top.yukonga.miuix.kmp.preference.WindowDropdownPreference
+import top.yukonga.miuix.kmp.theme.MiuixTheme
 import java.util.Locale
-
-private object Dimensions {
-    val SPACING_EXTRA_SMALL = 4.dp
-    val SPACING_SMALL = 8.dp
-    val SPACING_MEDIUM = 16.dp
-    val SPACING_LARGE = 24.dp
-    val CARD_CORNER_RADIUS = 18.dp
-}
 
 @Composable
 fun SettingsScreen(
@@ -122,7 +99,6 @@ fun SettingsScreen(
         RefreshRateHelper.applyFrameRateToView(view)
     }
 
-    val scope = rememberCoroutineScope()
     val snackbarHostState = remember { SnackbarHostState() }
     var restartDialogEnabled by remember { mutableStateOf<Boolean?>(null) }
 
@@ -202,17 +178,17 @@ fun SettingsScreen(
         SettingsCategory.EXTERNAL_CONTROL to listOf(
             SettingEntry.Switch(SettingKeys.BROADCAST, R.string.setting_external_broadcast_title, R.string.setting_external_broadcast_description, uiState.enableBroadcastControl, settingsViewModel::setEnableBroadcastControl)
         ),
-        SettingsCategory.APPEARANCE to listOf(
-            SettingEntry.Theme(uiState.themeOption) { option ->
-                settingsViewModel.setTheme(option)
+        SettingsCategory.APPEARANCE to buildList {
+            add(SettingEntry.Theme(uiState.themeModeId, settingsViewModel::setThemeMode))
+            add(SettingEntry.Switch(SettingKeys.PREDICTIVE_BACK, R.string.setting_predictive_back_title, R.string.setting_predictive_back_description, uiState.predictiveBack, settingsViewModel::setPredictiveBack))
+            if (ThemeMode.fromId(uiState.themeModeId).isMonet) {
+                add(SettingEntry.MonetColor(uiState.monetColorId, settingsViewModel::setMonetColor))
             }
-        ),
-        SettingsCategory.LANGUAGE to listOf(
-            SettingEntry.Language(selectedLanguage) { option ->
+            add(SettingEntry.Language(selectedLanguage) { option ->
                 settingsViewModel.setLanguage(option.tag)
                 context.findActivity()?.recreate()
-            }
-        )
+            })
+        }
     )
 
     SettingsContent(
@@ -223,22 +199,16 @@ fun SettingsScreen(
         onBack = { navController.navigateUp() },
         onResetConfirmed = {
             settingsViewModel.resetToDefaults()
-            scope.launch {
-                snackbarHostState.showSnackbar(context.getString(R.string.settings_reset_done))
-            }
         }
     )
 }
 
-/**
- * HyperOS / Miuix Redesigned Settings Screen Layout.
- *
- * Implements:
- * - Collapsible / Expandable Large Title Header ("设置").
- * - Always accessible Capsule Search Bar.
- * - Squircle Grouped Cards with smooth 18.dp rounded corners and inset dividers.
- * - Reset All Options dropdown dialog.
- */
+private tailrec fun Context.findActivity(): Activity? = when (this) {
+    is Activity -> this
+    is ContextWrapper -> baseContext.findActivity()
+    else -> null
+}
+
 @Composable
 private fun SettingsContent(
     categories: List<Pair<SettingsCategory, List<SettingEntry>>>,
@@ -246,24 +216,29 @@ private fun SettingsContent(
     restartDialogEnabled: Boolean?,
     onRestartDialogDismiss: () -> Unit,
     onBack: () -> Unit,
-    onResetConfirmed: () -> Unit
+    onResetConfirmed: () -> Unit,
 ) {
     val context = LocalContext.current
-    val scrollState = rememberScrollState()
+    val listState = rememberLazyListState()
 
-    var query by remember { mutableStateOf("") }
+    var searchQuery by rememberSaveable { mutableStateOf("") }
     var showResetDialog by remember { mutableStateOf(false) }
+
+    val backdrop = rememberBlurBackdrop()
+    val blurActive = backdrop != null
+    val barColor = if (blurActive) Color.Transparent else MiuixTheme.colorScheme.surface
+    val topAppBarScrollBehavior = MiuixScrollBehavior()
 
     val resetMenuItems = remember {
         listOf(
             DropdownItem(
                 text = context.getString(R.string.settings_reset_all),
-                icon = {
+                icon = { modifier ->
                     Icon(
                         imageVector = MiuixIcons.Delete,
                         contentDescription = null,
-                        tint = MaterialTheme.colorScheme.error,
-                        modifier = Modifier.size(20.dp)
+                        tint = MiuixTheme.colorScheme.error,
+                        modifier = modifier.size(20.dp)
                     )
                 },
                 onClick = { showResetDialog = true }
@@ -271,166 +246,157 @@ private fun SettingsContent(
         )
     }
 
-    val filtered = if (query.isBlank()) {
+    val filtered = if (searchQuery.isBlank()) {
         categories
     } else {
         categories
-            .map { (category, entries) -> category to entries.filter { entryMatches(query, searchTextOf(it, context)) } }
+            .map { (category, entries) -> category to entries.filter { entryMatches(searchQuery, searchTextOf(it, context)) } }
             .filter { it.second.isNotEmpty() }
     }
 
     Scaffold(
-        snackbarHost = { SnackbarHost(snackbarHostState) },
-        containerColor = MaterialTheme.colorScheme.background,
-        modifier = Modifier.fillMaxSize()
+        snackbarHost = { SnackbarHost(state = snackbarHostState) },
+        topBar = {
+            BlurredBar(backdrop, blurActive) {
+                TopAppBar(
+                    color = barColor,
+                    title = stringResource(R.string.screen_settings),
+                    subtitle = stringResource(R.string.screen_settings_subtitle),
+                    scrollBehavior = topAppBarScrollBehavior,
+                    navigationIcon = {
+                        IconButton(onClick = onBack) {
+                            Icon(
+                                imageVector = MiuixIcons.Back,
+                                contentDescription = stringResource(R.string.cd_navigate_back)
+                            )
+                        }
+                    },
+                    actions = {
+                        WindowIconDropdownMenu(
+                            entry = DropdownEntry(items = resetMenuItems),
+                            modifier = Modifier.size(36.dp)
+                        ) {
+                            Icon(
+                                imageVector = MiuixIcons.More,
+                                contentDescription = stringResource(R.string.cd_options),
+                                modifier = Modifier.size(20.dp)
+                            )
+                        }
+                    }
+                )
+            }
+        }
     ) { innerPadding ->
-        Column(
-            modifier = Modifier
-                .fillMaxSize()
-                .padding(innerPadding)
-                .verticalScroll(scrollState)
-        ) {
-            // HyperOS Large Title Header with back button and menu
-            MiuixLargeTitleHeader(
-                title = stringResource(R.string.screen_settings),
-                subtitle = "自定义定位算法与系统防检测策略",
-                navigationIcon = {
-                    IconButton(onClick = onBack) {
-                        Icon(
-                            imageVector = Icons.AutoMirrored.Filled.ArrowBack,
-                            contentDescription = stringResource(R.string.cd_navigate_back),
-                            tint = MaterialTheme.colorScheme.onBackground
-                        )
-                    }
-                },
-                actions = {
-                    WindowIconDropdownMenu(
-                        entry = DropdownEntry(items = resetMenuItems),
-                        modifier = Modifier.size(36.dp)
-                    ) {
-                        Icon(
-                            imageVector = MiuixIcons.More,
-                            contentDescription = stringResource(R.string.cd_options),
-                            tint = MaterialTheme.colorScheme.onBackground,
-                            modifier = Modifier.size(20.dp)
-                        )
-                    }
-                }
-            )
-
-            // HyperOS Capsule Search Box
-            MiuixSearchBox(
-                query = query,
-                onQueryChange = { query = it },
-                placeholder = stringResource(R.string.settings_search_hint),
+        val top = innerPadding.calculateTopPadding()
+        val bottom = innerPadding.calculateBottomPadding()
+        val contentPadding = remember(top, bottom) {
+            PaddingValues(top = top, start = 0.dp, end = 0.dp, bottom = bottom + 16.dp)
+        }
+        BlurBackdropBox(backdrop) {
+            LazyColumn(
+                state = listState,
                 modifier = Modifier
-                    .padding(horizontal = 20.dp, vertical = 6.dp)
-            )
-
-            Spacer(modifier = Modifier.height(10.dp))
-
-            // Settings Grouped Cards
-            Column(
-                modifier = Modifier
-                    .fillMaxWidth()
-                    .padding(horizontal = 16.dp)
+                    .fillMaxSize()
+                    .pageScrollModifiers(
+                        enableScrollEndHaptic = true,
+                        showTopAppBar = true,
+                        topAppBarScrollBehavior = topAppBarScrollBehavior
+                    ),
+                contentPadding = contentPadding,
             ) {
-                if (filtered.isEmpty()) {
-                    Box(
-                        modifier = Modifier
-                            .fillMaxWidth()
-                            .padding(vertical = 40.dp),
-                        contentAlignment = Alignment.Center
-                    ) {
-                        Text(
-                            text = stringResource(R.string.settings_search_empty),
-                            style = MaterialTheme.typography.bodyMedium,
-                            color = MaterialTheme.colorScheme.onSurfaceVariant
-                        )
+                item(key = "search_box") {
+                    SearchField(
+                        query = searchQuery,
+                        onQueryChange = { searchQuery = it },
+                        label = stringResource(R.string.settings_search_hint)
+                    )
+                }
+
+                val display = if (searchQuery.isBlank()) categories else filtered
+                display.forEach { (category, entries) ->
+                    item(key = "${category.name}_title") {
+                        SmallTitle(text = stringResource(category.titleRes))
                     }
-                } else {
-                    filtered.forEach { (category, entries) ->
-                        MiuixCategoryTitle(stringResource(category.titleRes))
-                        MiuixCard(
+                    item(key = "${category.name}_card") {
+                        Card(
                             modifier = Modifier
                                 .fillMaxWidth()
-                                .padding(vertical = 4.dp),
-                            contentPadding = PaddingValues(vertical = 6.dp)
+                                .padding(horizontal = 12.dp)
+                                .padding(bottom = 12.dp)
                         ) {
-                            entries.forEachIndexed { index, entry ->
-                                key(entry.key) {
+                            // animateContentSize gives hle-style expand/collapse when a switch
+                            // reveals or hides its dependent rows (sliders, text inputs, …).
+                            Column(
+                                modifier = Modifier.animateContentSize()
+                            ) {
+                                entries.forEach { entry ->
                                     SettingEntryRow(entry)
-                                    if (index != entries.lastIndex) {
-                                        MiuixCardDivider(startPadding = 16.dp, endPadding = 16.dp)
-                                    }
                                 }
                             }
                         }
                     }
                 }
-            }
 
-            Spacer(modifier = Modifier.height(32.dp))
-        }
-
-        if (showResetDialog) {
-            MiuixDialog(
-                onDismissRequest = { showResetDialog = false },
-                title = stringResource(R.string.settings_reset_title),
-                confirmButton = {
-                    MiuixDialogButton(
-                        text = stringResource(R.string.action_ok),
-                        isDestructive = true,
-                        onClick = {
-                            showResetDialog = false
-                            onResetConfirmed()
+                if (searchQuery.isNotBlank() && filtered.isEmpty()) {
+                    item(key = "search_empty") {
+                        Card(
+                            modifier = Modifier
+                                .fillMaxWidth()
+                                .padding(horizontal = 12.dp)
+                                .padding(bottom = 12.dp)
+                        ) {
+                            Text(
+                                text = stringResource(R.string.settings_search_empty),
+                                fontSize = MiuixTheme.textStyles.headline1.fontSize,
+                                fontWeight = FontWeight.Medium,
+                                color = MiuixTheme.colorScheme.onSurfaceVariantActions,
+                                modifier = Modifier
+                                    .fillMaxWidth()
+                                    .padding(vertical = 20.dp),
+                                textAlign = TextAlign.Center
+                            )
                         }
-                    )
-                },
-                dismissButton = {
-                    MiuixDialogButton(
-                        text = stringResource(R.string.action_cancel),
-                        onClick = { showResetDialog = false }
-                    )
+                    }
                 }
-            ) {
-                Text(
-                    text = stringResource(R.string.settings_reset_message),
-                    style = MaterialTheme.typography.bodyMedium,
-                    color = MaterialTheme.colorScheme.onSurfaceVariant
-                )
-            }
-        }
-
-        restartDialogEnabled?.let { enabled ->
-            MiuixDialog(
-                onDismissRequest = onRestartDialogDismiss,
-                title = stringResource(R.string.dialog_restart_required_title),
-                confirmButton = {
-                    MiuixDialogButton(
-                        text = stringResource(R.string.action_ok),
-                        isPrimary = true,
-                        onClick = onRestartDialogDismiss
-                    )
-                }
-            ) {
-                Text(
-                    text = stringResource(
-                        if (enabled) R.string.dialog_restart_required_enable_message
-                        else R.string.dialog_restart_required_disable_message
-                    ),
-                    style = MaterialTheme.typography.bodyMedium,
-                    color = MaterialTheme.colorScheme.onSurfaceVariant
-                )
             }
         }
     }
-}
 
-private tailrec fun Context.findActivity(): Activity? = when (this) {
-    is Activity -> this
-    is ContextWrapper -> baseContext.findActivity()
-    else -> null
+    if (showResetDialog) {
+        AppDialog(
+            title = stringResource(R.string.settings_reset_title),
+            onDismissRequest = { showResetDialog = false },
+            confirmText = stringResource(R.string.action_ok),
+            onConfirm = {
+                showResetDialog = false
+                onResetConfirmed()
+            },
+            confirmDestructive = true,
+            dismissText = stringResource(R.string.action_cancel)
+        ) {
+            Text(
+                text = stringResource(R.string.settings_reset_message),
+                color = MiuixTheme.colorScheme.onSurfaceVariantSummary
+            )
+        }
+    }
+
+    restartDialogEnabled?.let { enabled ->
+        AppDialog(
+            title = stringResource(R.string.dialog_restart_required_title),
+            onDismissRequest = onRestartDialogDismiss,
+            confirmText = stringResource(R.string.action_ok),
+            onConfirm = onRestartDialogDismiss
+        ) {
+            Text(
+                text = stringResource(
+                    if (enabled) R.string.dialog_restart_required_enable_message
+                    else R.string.dialog_restart_required_disable_message
+                ),
+                color = MiuixTheme.colorScheme.onSurfaceVariantSummary
+            )
+        }
+    }
 }
 
 @Composable
@@ -452,16 +418,14 @@ private fun SettingEntryRow(entry: SettingEntry) {
             onValueChange = entry.onValueChange,
             range = entry.setting.min..entry.setting.max,
             unit = stringResource(entry.setting.unitRes),
-            steps = 0,
             fractionDigits = entry.setting.decimals,
             stepSize = entry.setting.precision,
         )
 
         is SettingEntry.Text -> TextRow(
             title = stringResource(entry.titleRes),
-            description = stringResource(entry.descriptionRes),
-            label = stringResource(entry.labelRes),
             value = entry.value,
+            label = stringResource(entry.labelRes),
             kind = entry.inputKind,
             onValueChange = entry.onValueChange,
         )
@@ -476,13 +440,18 @@ private fun SettingEntryRow(entry: SettingEntry) {
         )
 
         is SettingEntry.Theme -> ThemeRow(
-            current = entry.selected,
-            onSelect = entry.onSelected,
+            selectedModeId = entry.selectedModeId,
+            onSelected = entry.onSelected,
+        )
+
+        is SettingEntry.MonetColor -> MonetColorRow(
+            selectedColorId = entry.selectedColorId,
+            onSelected = entry.onSelected,
         )
 
         is SettingEntry.Language -> LanguageRow(
-            current = entry.selected,
-            onSelect = entry.onSelected,
+            selectedTag = entry.selected.tag,
+            onSelected = entry.onSelected,
         )
 
         is SettingEntry.MapSource -> MapSourceRow(
@@ -499,32 +468,12 @@ private fun SwitchRow(
     checked: Boolean,
     onCheckedChange: (Boolean) -> Unit,
 ) {
-    Row(
-        modifier = Modifier
-            .fillMaxWidth()
-            .clickable { onCheckedChange(!checked) }
-            .padding(horizontal = Dimensions.SPACING_MEDIUM, vertical = 12.dp),
-        horizontalArrangement = Arrangement.SpaceBetween,
-        verticalAlignment = Alignment.CenterVertically,
-    ) {
-        Column(modifier = Modifier.weight(1f).padding(end = Dimensions.SPACING_MEDIUM)) {
-            Text(
-                text = title,
-                style = MaterialTheme.typography.bodyLarge.copy(fontWeight = FontWeight.Medium),
-                color = MaterialTheme.colorScheme.onSurface
-            )
-            Spacer(modifier = Modifier.height(2.dp))
-            Text(
-                text = description,
-                style = MaterialTheme.typography.bodySmall,
-                color = MaterialTheme.colorScheme.onSurfaceVariant
-            )
-        }
-        MiuixSwitch(
-            checked = checked,
-            onCheckedChange = onCheckedChange
-        )
-    }
+    SwitchPreference(
+        checked = checked,
+        onCheckedChange = onCheckedChange,
+        title = title,
+        summary = description,
+    )
 }
 
 @Composable
@@ -537,55 +486,21 @@ private fun NumericRow(
     onValueChange: (Float) -> Unit,
     range: ClosedFloatingPointRange<Float>,
     unit: String,
-    steps: Int,
     fractionDigits: Int,
     stepSize: Float = 0f,
 ) {
-    Column(
-        modifier = Modifier
-            .fillMaxWidth()
-            .padding(horizontal = Dimensions.SPACING_MEDIUM, vertical = 10.dp)
-    ) {
-        Row(
-            modifier = Modifier
-                .fillMaxWidth()
-                .clickable { onCheckedChange(!checked) },
-            horizontalArrangement = Arrangement.SpaceBetween,
-            verticalAlignment = Alignment.CenterVertically,
-        ) {
-            Column(modifier = Modifier.weight(1f).padding(end = Dimensions.SPACING_MEDIUM)) {
-                Text(
-                    text = title,
-                    style = MaterialTheme.typography.bodyLarge.copy(fontWeight = FontWeight.Medium),
-                    color = MaterialTheme.colorScheme.onSurface
-                )
-                Spacer(modifier = Modifier.height(2.dp))
-                Text(
-                    text = description,
-                    style = MaterialTheme.typography.bodySmall,
-                    color = MaterialTheme.colorScheme.onSurfaceVariant
-                )
-            }
-            MiuixSwitch(
-                checked = checked,
-                onCheckedChange = onCheckedChange
-            )
-        }
+    val hapticFeedback = LocalHapticFeedback.current
+
+    Column {
+        SwitchPreference(
+            checked = checked,
+            onCheckedChange = onCheckedChange,
+            title = title,
+            summary = description,
+        )
 
         if (checked) {
-            Spacer(modifier = Modifier.height(8.dp))
-            Row(
-                modifier = Modifier.fillMaxWidth(),
-                horizontalArrangement = Arrangement.SpaceBetween,
-                verticalAlignment = Alignment.CenterVertically,
-            ) {
-                Text(
-                    text = String.format(Locale.US, "%.${fractionDigits}f %s", value, unit),
-                    style = MaterialTheme.typography.labelMedium.copy(fontWeight = FontWeight.SemiBold),
-                    color = MaterialTheme.colorScheme.primary,
-                )
-            }
-            MiuixSlider(
+            SliderPreference(
                 value = value,
                 onValueChange = { newValue ->
                     val snapped = if (stepSize > 0f) {
@@ -594,11 +509,14 @@ private fun NumericRow(
                     } else {
                         newValue
                     }
+                    // Soft linear-motor tick per step (CLOCK_TICK), never the harsh long-press buzz.
+                    if (snapped != value) {
+                        hapticFeedback.performHapticFeedback(HapticFeedbackType.TextHandleMove)
+                    }
                     onValueChange(snapped)
                 },
+                valueText = String.format(Locale.US, "%.${fractionDigits}f %s", value, unit),
                 valueRange = range,
-                steps = steps,
-                modifier = Modifier.fillMaxWidth()
             )
         }
     }
@@ -607,80 +525,29 @@ private fun NumericRow(
 @Composable
 private fun TextRow(
     title: String,
-    description: String,
-    label: String,
     value: String,
+    label: String,
     kind: TextInputKind = TextInputKind.TEXT,
     onValueChange: (String) -> Unit,
 ) {
     var dialogOpen by remember { mutableStateOf(false) }
 
-    Row(
-        modifier = Modifier
-            .fillMaxWidth()
-            .clickable { dialogOpen = true }
-            .padding(horizontal = Dimensions.SPACING_MEDIUM, vertical = 12.dp),
-        horizontalArrangement = Arrangement.SpaceBetween,
-        verticalAlignment = Alignment.CenterVertically,
-    ) {
-        Column(modifier = Modifier.weight(1f).padding(end = Dimensions.SPACING_MEDIUM)) {
-            Text(
-                text = title,
-                style = MaterialTheme.typography.bodyLarge.copy(fontWeight = FontWeight.Medium),
-                color = MaterialTheme.colorScheme.onSurface
-            )
-            Spacer(modifier = Modifier.height(2.dp))
-            Text(
-                text = description,
-                style = MaterialTheme.typography.bodySmall,
-                color = MaterialTheme.colorScheme.onSurfaceVariant
-            )
-        }
-        Text(
-            text = value.ifEmpty { "未设置" },
-            style = MaterialTheme.typography.bodyMedium,
-            color = MaterialTheme.colorScheme.primary,
-            fontWeight = FontWeight.SemiBold
-        )
-    }
+    ArrowPreference(
+        title = title,
+        summary = value.ifEmpty { stringResource(R.string.not_set) },
+        onClick = { dialogOpen = true },
+    )
 
     if (dialogOpen) {
-        var textValue by remember { mutableStateOf(value) }
-        MiuixDialog(
-            onDismissRequest = { dialogOpen = false },
+        TextInputDialog(
             title = title,
-            confirmButton = {
-                MiuixDialogButton(
-                    text = stringResource(R.string.action_ok),
-                    isPrimary = true,
-                    onClick = {
-                        onValueChange(textValue)
-                        dialogOpen = false
-                    }
-                )
-            },
-            dismissButton = {
-                MiuixDialogButton(
-                    text = stringResource(R.string.action_cancel),
-                    onClick = { dialogOpen = false }
-                )
-            }
-        ) {
-            OutlinedTextField(
-                value = textValue,
-                onValueChange = { textValue = it },
-                label = { Text(label) },
-                singleLine = true,
-                shape = RoundedCornerShape(14.dp),
-                keyboardOptions = KeyboardOptions(
-                    keyboardType = when (kind) {
-                        TextInputKind.TEXT -> KeyboardType.Text
-                        TextInputKind.SIGNED_NUMBER -> KeyboardType.Number
-                    }
-                ),
-                modifier = Modifier.fillMaxWidth()
-            )
-        }
+            label = label,
+            initialValue = value,
+            confirmText = stringResource(R.string.action_ok),
+            dismissText = stringResource(R.string.action_cancel),
+            onDismissRequest = { dialogOpen = false },
+            onConfirm = onValueChange,
+        )
     }
 }
 
@@ -704,73 +571,61 @@ private fun SecretTextRow(
         modifier = Modifier
             .fillMaxWidth()
             .clickable { dialogOpen = true }
-            .padding(horizontal = Dimensions.SPACING_MEDIUM, vertical = 12.dp),
+            .padding(horizontal = 16.dp, vertical = 12.dp),
         horizontalArrangement = Arrangement.SpaceBetween,
         verticalAlignment = Alignment.CenterVertically,
     ) {
-        Column(modifier = Modifier.weight(1f).padding(end = Dimensions.SPACING_MEDIUM)) {
+        Column(modifier = Modifier.weight(1f).padding(end = 16.dp)) {
             Text(
                 text = title,
-                style = MaterialTheme.typography.bodyLarge.copy(fontWeight = FontWeight.Medium),
-                color = MaterialTheme.colorScheme.onSurface
+                fontSize = 16.sp,
+                fontWeight = FontWeight.Medium,
+                color = MiuixTheme.colorScheme.onSurface
             )
             Spacer(modifier = Modifier.height(2.dp))
             Text(
                 text = description,
-                style = MaterialTheme.typography.bodySmall,
-                color = MaterialTheme.colorScheme.onSurfaceVariant
+                fontSize = 13.sp,
+                color = MiuixTheme.colorScheme.onSurfaceVariantSummary
             )
         }
         Text(
             text = stringResource(if (isConfigured) R.string.setting_secret_configured else R.string.setting_secret_not_configured),
-            style = MaterialTheme.typography.bodyMedium,
-            color = MaterialTheme.colorScheme.primary,
+            fontSize = 14.sp,
+            color = MiuixTheme.colorScheme.primary,
             fontWeight = FontWeight.SemiBold
         )
     }
 
     if (dialogOpen) {
         var textValue by remember { mutableStateOf("") }
-        MiuixDialog(
-            onDismissRequest = { dialogOpen = false },
+        AppDialog(
             title = title,
-            confirmButton = {
-                MiuixDialogButton(
-                    text = stringResource(R.string.action_ok),
-                    isPrimary = true,
-                    onClick = {
-                        onValueChange(textValue)
-                        dialogOpen = false
-                    }
-                )
+            onDismissRequest = { dialogOpen = false },
+            confirmText = stringResource(R.string.action_ok),
+            onConfirm = {
+                onValueChange(textValue)
+                dialogOpen = false
             },
-            dismissButton = {
-                MiuixDialogButton(
-                    text = stringResource(R.string.action_cancel),
-                    onClick = { dialogOpen = false }
-                )
-            }
+            dismissText = stringResource(R.string.action_cancel),
         ) {
-            Column {
-                OutlinedTextField(
-                    value = textValue,
-                    onValueChange = { textValue = it },
-                    label = { Text(label) },
-                    singleLine = true,
-                    shape = RoundedCornerShape(14.dp),
-                    visualTransformation = PasswordVisualTransformation(),
-                    keyboardOptions = KeyboardOptions(
-                        keyboardType = KeyboardType.Password,
-                        autoCorrect = false,
-                    ),
-                    modifier = Modifier.fillMaxWidth()
-                )
+            TextField(
+                value = textValue,
+                onValueChange = { textValue = it },
+                label = label,
+                singleLine = true,
+                visualTransformation = PasswordVisualTransformation(),
+                keyboardOptions = KeyboardOptions(
+                    keyboardType = KeyboardType.Password,
+                ),
+                modifier = Modifier.fillMaxWidth()
+            )
                 if (isConfigured) {
                     Spacer(modifier = Modifier.height(8.dp))
                     Text(
                         text = stringResource(R.string.setting_secret_clear),
-                        style = MaterialTheme.typography.bodyMedium,
-                        color = MaterialTheme.colorScheme.error,
+                        fontSize = 14.sp,
+                        color = MiuixTheme.colorScheme.error,
                         fontWeight = FontWeight.SemiBold,
                         modifier = Modifier
                             .clickable {
@@ -780,171 +635,71 @@ private fun SecretTextRow(
                             .padding(vertical = 6.dp)
                     )
                 }
-            }
         }
     }
 }
 
 @Composable
 private fun ThemeRow(
-    current: ThemeOption,
-    onSelect: (ThemeOption) -> Unit,
+    selectedModeId: Int,
+    onSelected: (Int) -> Unit,
 ) {
-    var dialogOpen by remember { mutableStateOf(false) }
+    val modeOptions = listOf(
+        stringResource(R.string.theme_system),
+        stringResource(R.string.theme_light),
+        stringResource(R.string.theme_dark),
+        stringResource(R.string.theme_system_monet),
+        stringResource(R.string.theme_light_monet),
+        stringResource(R.string.theme_dark_monet),
+    )
+    WindowDropdownPreference(
+        title = stringResource(R.string.setting_theme_title),
+        summary = stringResource(R.string.setting_theme_description),
+        items = modeOptions,
+        selectedIndex = selectedModeId,
+        onSelectedIndexChange = onSelected,
+    )
+}
 
-    Row(
-        modifier = Modifier
-            .fillMaxWidth()
-            .clickable { dialogOpen = true }
-            .padding(horizontal = Dimensions.SPACING_MEDIUM, vertical = 12.dp),
-        horizontalArrangement = Arrangement.SpaceBetween,
-        verticalAlignment = Alignment.CenterVertically,
-    ) {
-        Column(modifier = Modifier.weight(1f).padding(end = Dimensions.SPACING_MEDIUM)) {
-            Text(
-                text = stringResource(R.string.setting_theme_title),
-                style = MaterialTheme.typography.bodyLarge.copy(fontWeight = FontWeight.Medium),
-                color = MaterialTheme.colorScheme.onSurface
-            )
-            Spacer(modifier = Modifier.height(2.dp))
-            Text(
-                text = stringResource(R.string.setting_theme_description),
-                style = MaterialTheme.typography.bodySmall,
-                color = MaterialTheme.colorScheme.onSurfaceVariant
-            )
-        }
-        Text(
-            text = stringResource(current.labelRes),
-            style = MaterialTheme.typography.bodyMedium,
-            color = MaterialTheme.colorScheme.primary,
-            fontWeight = FontWeight.SemiBold
-        )
-    }
-
-    if (dialogOpen) {
-        MiuixDialog(
-            onDismissRequest = { dialogOpen = false },
-            title = stringResource(R.string.setting_theme_title),
-            dismissButton = {
-                MiuixDialogButton(
-                    text = stringResource(R.string.action_cancel),
-                    onClick = { dialogOpen = false }
-                )
-            }
-        ) {
-            Column(modifier = Modifier.selectableGroup()) {
-                ThemeOption.entries.forEach { option ->
-                    Row(
-                        modifier = Modifier
-                            .fillMaxWidth()
-                            .clip(RoundedCornerShape(12.dp))
-                            .selectable(
-                                selected = option == current,
-                                onClick = {
-                                    onSelect(option)
-                                    dialogOpen = false
-                                },
-                                role = Role.RadioButton
-                            )
-                            .padding(vertical = 12.dp, horizontal = 8.dp),
-                        verticalAlignment = Alignment.CenterVertically
-                    ) {
-                        RadioButton(
-                            selected = option == current,
-                            onClick = null
-                        )
-                        Spacer(modifier = Modifier.width(12.dp))
-                        Text(
-                            text = stringResource(option.labelRes),
-                            style = MaterialTheme.typography.bodyLarge,
-                            color = MaterialTheme.colorScheme.onSurface
-                        )
-                    }
-                }
-            }
-        }
-    }
+@Composable
+private fun MonetColorRow(
+    selectedColorId: Int,
+    onSelected: (Int) -> Unit,
+) {
+    val colorOptions = listOf(
+        stringResource(R.string.monet_default),
+        stringResource(R.string.monet_blue),
+        stringResource(R.string.monet_green),
+        stringResource(R.string.monet_red),
+        stringResource(R.string.monet_yellow),
+        stringResource(R.string.monet_orange),
+        stringResource(R.string.monet_purple),
+        stringResource(R.string.monet_pink),
+    )
+    WindowDropdownPreference(
+        title = stringResource(R.string.setting_monet_color_title),
+        items = colorOptions,
+        selectedIndex = MonetColor.fromId(selectedColorId).id,
+        onSelectedIndexChange = onSelected,
+    )
 }
 
 @Composable
 private fun LanguageRow(
-    current: LanguageOption,
-    onSelect: (LanguageOption) -> Unit,
+    selectedTag: String,
+    onSelected: (LanguageOption) -> Unit,
 ) {
-    var dialogOpen by remember { mutableStateOf(false) }
-
-    Row(
-        modifier = Modifier
-            .fillMaxWidth()
-            .clickable { dialogOpen = true }
-            .padding(horizontal = Dimensions.SPACING_MEDIUM, vertical = 12.dp),
-        horizontalArrangement = Arrangement.SpaceBetween,
-        verticalAlignment = Alignment.CenterVertically,
-    ) {
-        Column(modifier = Modifier.weight(1f).padding(end = Dimensions.SPACING_MEDIUM)) {
-            Text(
-                text = stringResource(R.string.setting_language_title),
-                style = MaterialTheme.typography.bodyLarge.copy(fontWeight = FontWeight.Medium),
-                color = MaterialTheme.colorScheme.onSurface
-            )
-            Spacer(modifier = Modifier.height(2.dp))
-            Text(
-                text = stringResource(R.string.setting_language_description),
-                style = MaterialTheme.typography.bodySmall,
-                color = MaterialTheme.colorScheme.onSurfaceVariant
-            )
-        }
-        Text(
-            text = stringResource(current.labelRes),
-            style = MaterialTheme.typography.bodyMedium,
-            color = MaterialTheme.colorScheme.primary,
-            fontWeight = FontWeight.SemiBold
-        )
-    }
-
-    if (dialogOpen) {
-        MiuixDialog(
-            onDismissRequest = { dialogOpen = false },
-            title = stringResource(R.string.setting_language_title),
-            dismissButton = {
-                MiuixDialogButton(
-                    text = stringResource(R.string.action_cancel),
-                    onClick = { dialogOpen = false }
-                )
-            }
-        ) {
-            Column(modifier = Modifier.selectableGroup()) {
-                LanguageOption.entries.forEach { option ->
-                    Row(
-                        modifier = Modifier
-                            .fillMaxWidth()
-                            .clip(RoundedCornerShape(12.dp))
-                            .selectable(
-                                selected = option == current,
-                                onClick = {
-                                    onSelect(option)
-                                    dialogOpen = false
-                                },
-                                role = Role.RadioButton
-                            )
-                            .padding(vertical = 12.dp, horizontal = 8.dp),
-                        verticalAlignment = Alignment.CenterVertically
-                    ) {
-                        RadioButton(
-                            selected = option == current,
-                            onClick = null
-                        )
-                        Spacer(modifier = Modifier.width(12.dp))
-                        Text(
-                            text = stringResource(option.labelRes),
-                            style = MaterialTheme.typography.bodyLarge,
-                            color = MaterialTheme.colorScheme.onSurface
-                        )
-                    }
-                }
-            }
-        }
-    }
+    val selected = LanguageOption.fromTag(selectedTag)
+    val languageOptions = LanguageOption.entries.map { stringResource(it.labelRes) }
+    WindowDropdownPreference(
+        title = stringResource(R.string.setting_language_title),
+        summary = stringResource(R.string.setting_language_description),
+        items = languageOptions,
+        selectedIndex = LanguageOption.entries.indexOf(selected),
+        onSelectedIndexChange = { index ->
+            LanguageOption.entries.getOrNull(index)?.let(onSelected)
+        },
+    )
 }
 
 @Composable
@@ -954,34 +709,11 @@ private fun MapSourceRow(
 ) {
     var showDialog by remember { mutableStateOf(false) }
 
-    Row(
-        modifier = Modifier
-            .fillMaxWidth()
-            .clickable { showDialog = true }
-            .padding(horizontal = Dimensions.SPACING_MEDIUM, vertical = 12.dp),
-        horizontalArrangement = Arrangement.SpaceBetween,
-        verticalAlignment = Alignment.CenterVertically
-    ) {
-        Column(modifier = Modifier.weight(1f).padding(end = Dimensions.SPACING_MEDIUM)) {
-            Text(
-                text = stringResource(R.string.setting_map_source_title),
-                style = MaterialTheme.typography.bodyLarge.copy(fontWeight = FontWeight.Medium),
-                color = MaterialTheme.colorScheme.onSurface
-            )
-            Spacer(modifier = Modifier.height(2.dp))
-            Text(
-                text = stringResource(R.string.setting_map_source_description),
-                style = MaterialTheme.typography.bodySmall,
-                color = MaterialTheme.colorScheme.onSurfaceVariant
-            )
-        }
-        Text(
-            text = stringResource(selectedSource.labelRes),
-            style = MaterialTheme.typography.bodyMedium,
-            color = MaterialTheme.colorScheme.primary,
-            fontWeight = FontWeight.SemiBold
-        )
-    }
+    ArrowPreference(
+        title = stringResource(R.string.setting_map_source_title),
+        summary = stringResource(selectedSource.labelRes),
+        onClick = { showDialog = true },
+    )
 
     if (showDialog) {
         MapSourceSelectionDialog(
@@ -1004,6 +736,7 @@ private fun searchTextOf(entry: SettingEntry, context: Context): String = when (
     is SettingEntry.Text -> "${context.getString(entry.titleRes)} ${context.getString(entry.descriptionRes)}"
     is SettingEntry.SecretText -> "${context.getString(entry.titleRes)} ${context.getString(entry.descriptionRes)}"
     is SettingEntry.Theme -> "${context.getString(R.string.setting_theme_title)} ${context.getString(R.string.setting_theme_description)}"
+    is SettingEntry.MonetColor -> "${context.getString(R.string.setting_monet_color_title)} ${context.getString(R.string.setting_monet_color_description)}"
     is SettingEntry.Language -> "${context.getString(R.string.setting_language_title)} ${context.getString(R.string.setting_language_description)}"
     is SettingEntry.MapSource -> "${context.getString(R.string.setting_map_source_title)} ${context.getString(R.string.setting_map_source_description)}"
 }

@@ -1,5 +1,11 @@
 package com.noobexon.xposedfakelocation.manager.ui.navigation
 
+import androidx.compose.animation.EnterTransition
+import androidx.compose.animation.ExitTransition
+import androidx.compose.animation.core.FastOutSlowInEasing
+import androidx.compose.animation.core.tween
+import androidx.compose.animation.slideInHorizontally
+import androidx.compose.animation.slideOutHorizontally
 import androidx.compose.runtime.Composable
 import androidx.lifecycle.viewmodel.compose.viewModel
 import androidx.navigation.NavHostController
@@ -14,6 +20,14 @@ import com.noobexon.xposedfakelocation.manager.ui.settings.SettingsScreen
 import com.noobexon.xposedfakelocation.manager.ui.targetapps.TargetAppsScreen
 import org.osmdroid.util.GeoPoint
 
+/**
+ * Layered cover-slide between pages: the pushed page slides in from the right edge on top of
+ * the current page (NavHost assigns the pushed entry the higher zIndex), which stays put
+ * underneath; on back the top page slides back out to the right. Spec follows
+ * HyperLyrics-Enhanced's page slide: 400 ms, FastOutSlowIn.
+ */
+private const val PAGE_SLIDE_DURATION = 400
+
 @Composable
 fun AppNavGraph(
     navController: NavHostController,
@@ -23,6 +37,18 @@ fun AppNavGraph(
     NavHost(
         navController = navController,
         startDestination = Screen.Permissions.route,
+        enterTransition = {
+            slideInHorizontally(
+                animationSpec = tween(PAGE_SLIDE_DURATION, easing = FastOutSlowInEasing),
+            ) { it }
+        },
+        exitTransition = { ExitTransition.None },
+        popEnterTransition = { EnterTransition.None },
+        popExitTransition = {
+            slideOutHorizontally(
+                animationSpec = tween(PAGE_SLIDE_DURATION, easing = FastOutSlowInEasing),
+            ) { it }
+        },
     ) {
         composable(route = Screen.About.route) {
             AboutScreen(navController = navController)

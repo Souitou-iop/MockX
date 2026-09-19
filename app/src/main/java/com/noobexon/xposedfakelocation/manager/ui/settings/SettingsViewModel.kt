@@ -20,7 +20,9 @@ import com.noobexon.xposedfakelocation.data.DEFAULT_MEAN_SEA_LEVEL_ACCURACY
 import com.noobexon.xposedfakelocation.data.DEFAULT_RANDOMIZE_RADIUS
 import com.noobexon.xposedfakelocation.data.DEFAULT_SPEED
 import com.noobexon.xposedfakelocation.data.DEFAULT_SPEED_ACCURACY
-import com.noobexon.xposedfakelocation.data.DEFAULT_THEME_OPTION
+import com.noobexon.xposedfakelocation.data.DEFAULT_MONET_COLOR
+import com.noobexon.xposedfakelocation.data.DEFAULT_PREDICTIVE_BACK_ENABLED
+import com.noobexon.xposedfakelocation.data.DEFAULT_THEME_MODE
 import com.noobexon.xposedfakelocation.data.DEFAULT_TIANDITU_TOKEN
 import com.noobexon.xposedfakelocation.data.DEFAULT_USE_ACCURACY
 import com.noobexon.xposedfakelocation.data.DEFAULT_USE_ALTITUDE
@@ -42,7 +44,6 @@ import com.noobexon.xposedfakelocation.manager.App
 import com.noobexon.xposedfakelocation.manager.control.ControlReceiver
 import com.noobexon.xposedfakelocation.manager.localization.LocaleController
 import com.noobexon.xposedfakelocation.manager.ui.map.MapSourceOption
-import com.noobexon.xposedfakelocation.manager.ui.theme.ThemeOption
 import io.github.libxposed.service.XposedService
 import kotlinx.coroutines.CancellationException
 import kotlinx.coroutines.Dispatchers
@@ -306,10 +307,22 @@ class SettingsViewModel(application: Application) : AndroidViewModel(application
         preferencesRepository::saveLanguageTag
     )
 
-    private val _themeOption = Preference(
-        DEFAULT_THEME_OPTION,
-        preferencesRepository.getThemeOptionFlow(),
-        preferencesRepository::saveThemeOption
+    private val _themeMode = Preference(
+        DEFAULT_THEME_MODE,
+        preferencesRepository.getThemeModeFlow(),
+        preferencesRepository::saveThemeMode
+    )
+
+    private val _monetColor = Preference(
+        DEFAULT_MONET_COLOR,
+        preferencesRepository.getMonetColorFlow(),
+        preferencesRepository::saveMonetColor
+    )
+
+    private val _predictiveBack = Preference(
+        DEFAULT_PREDICTIVE_BACK_ENABLED,
+        preferencesRepository.getPredictiveBackFlow(),
+        preferencesRepository::savePredictiveBack
     )
 
     private val _mapSource = Preference(
@@ -374,7 +387,9 @@ class SettingsViewModel(application: Application) : AndroidViewModel(application
         .combine(_wifiBssid.state)               { s, v -> s.copy(wifiBssid = v) }
         .combine(_wifiRssi.state)                { s, v -> s.copy(wifiRssi = v) }
         .combine(_languageTag.state)             { s, v -> s.copy(languageTag = v) }
-        .combine(_themeOption.state)             { s, v -> s.copy(themeOption = ThemeOption.fromTag(v)) }
+        .combine(_themeMode.state)               { s, v -> s.copy(themeModeId = v) }
+        .combine(_monetColor.state)              { s, v -> s.copy(monetColorId = v) }
+        .combine(_predictiveBack.state)          { s, v -> s.copy(predictiveBack = v) }
         .combine(_mapSource.state)               { s, v -> s.copy(mapSource = MapSourceOption.fromTag(v)) }
         .combine(_tiandituToken.state)           { s, v -> s.copy(tiandituToken = v) }
         .combine(_amapWebServiceKey.state)       { s, v -> s.copy(amapKeyConfigured = v.isNotBlank()) }
@@ -499,14 +514,21 @@ class SettingsViewModel(application: Application) : AndroidViewModel(application
     }
 
     /**
-     * Applies the given [option] as the active UI theme. The preference is persisted locally and
-     * reflected immediately in [SettingsUiState.themeOption]; [AppViewModel] observes the same
-     * underlying flow so [MainActivity] recomposes with the new [darkTheme] without any Activity
+     * Applies the appearance mode id (see [ThemeMode]). Persisted locally; the theme wrapper
+     * observes the same SharedPreferences key and recomposes immediately, without an Activity
      * recreation.
-     *
-     * @param option The [ThemeOption] to activate.
      */
-    fun setTheme(option: ThemeOption) = _themeOption.set(option.tag)
+    fun setThemeMode(modeId: Int) = _themeMode.set(modeId)
+
+    /** Applies the Monet seed color id (see [MonetColor]); 0 means "follow the wallpaper". */
+    fun setMonetColor(colorId: Int) = _monetColor.set(colorId)
+
+    /**
+     * Enables or disables the Android predictive back gesture for the manager. The value is read
+     * once in [com.noobexon.xposedfakelocation.manager.App] at process start, so a change applies
+     * on the next app launch.
+     */
+    fun setPredictiveBack(value: Boolean) = _predictiveBack.set(value)
 
     fun setMapSource(option: MapSourceOption) = _mapSource.set(option.tag)
 

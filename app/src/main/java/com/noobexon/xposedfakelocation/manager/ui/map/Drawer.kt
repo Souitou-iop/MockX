@@ -7,24 +7,16 @@ import androidx.compose.foundation.clickable
 import androidx.compose.foundation.layout.Arrangement
 import androidx.compose.foundation.layout.Box
 import androidx.compose.foundation.layout.Column
+import androidx.compose.foundation.layout.ColumnScope
 import androidx.compose.foundation.layout.Row
 import androidx.compose.foundation.layout.Spacer
-import androidx.compose.foundation.layout.fillMaxHeight
 import androidx.compose.foundation.layout.fillMaxWidth
 import androidx.compose.foundation.layout.height
 import androidx.compose.foundation.layout.padding
 import androidx.compose.foundation.layout.size
-import androidx.compose.foundation.layout.statusBarsPadding
 import androidx.compose.foundation.layout.width
 import androidx.compose.foundation.shape.CircleShape
 import androidx.compose.foundation.shape.RoundedCornerShape
-import androidx.compose.material.icons.Icons
-import androidx.compose.material.icons.filled.Settings
-import androidx.compose.material3.Icon
-import androidx.compose.material3.MaterialTheme
-import androidx.compose.material3.ModalDrawerSheet
-import androidx.compose.material3.Surface
-import androidx.compose.material3.Text
 import androidx.compose.runtime.Composable
 import androidx.compose.runtime.getValue
 import androidx.compose.ui.Alignment
@@ -42,14 +34,17 @@ import androidx.navigation.compose.currentBackStackEntryAsState
 import com.noobexon.xposedfakelocation.BuildConfig
 import com.noobexon.xposedfakelocation.R
 import com.noobexon.xposedfakelocation.manager.ui.navigation.Screen
-import compose.icons.LineAwesomeIcons
-import compose.icons.lineawesomeicons.Discord
-import compose.icons.lineawesomeicons.Github
-import compose.icons.lineawesomeicons.HeartSolid
-import compose.icons.lineawesomeicons.InfoCircleSolid
-import compose.icons.lineawesomeicons.MapSolid
-import compose.icons.lineawesomeicons.MobileAltSolid
-import compose.icons.lineawesomeicons.Telegram
+import top.yukonga.miuix.kmp.basic.Surface
+import top.yukonga.miuix.kmp.basic.Text
+import top.yukonga.miuix.kmp.basic.Icon
+import top.yukonga.miuix.kmp.icon.MiuixIcons
+import top.yukonga.miuix.kmp.icon.extended.Favorites
+import top.yukonga.miuix.kmp.icon.extended.Info
+import top.yukonga.miuix.kmp.icon.extended.Location
+import top.yukonga.miuix.kmp.icon.extended.MapAlbum
+import top.yukonga.miuix.kmp.icon.extended.Phone
+import top.yukonga.miuix.kmp.icon.extended.Settings
+import top.yukonga.miuix.kmp.theme.MiuixTheme
 
 private object DrawerDimensions {
     val SECTION_SPACING = 20.dp
@@ -62,13 +57,17 @@ private object DrawerDimensions {
     val ITEM_CORNER_RADIUS = 16.dp
 }
 
+/**
+ * Navigation content of the map screen's drawer. Rendered inside a Material 3
+ * [androidx.compose.material3.ModalDrawerSheet], which owns the modal chrome (scrim, slide-in,
+ * drag-to-close, predictive back).
+ */
 @Composable
 fun DrawerContent(
     navController: NavController,
     onCloseDrawer: () -> Unit = {},
     onNavigate: () -> Unit = {}
 ) {
-    val context = LocalContext.current
     val navBackStackEntry by navController.currentBackStackEntryAsState()
     val currentRoute = navBackStackEntry?.destination?.route
     val navigateTo: (String) -> Unit = { route ->
@@ -79,75 +78,67 @@ fun DrawerContent(
         onCloseDrawer()
     }
 
-    ModalDrawerSheet(
-        drawerContainerColor = MaterialTheme.colorScheme.surface,
-        drawerContentColor = MaterialTheme.colorScheme.onSurface,
-        drawerShape = RoundedCornerShape(topEnd = 24.dp, bottomEnd = 24.dp)
+    Column(
+        modifier = Modifier
+            .padding(DrawerDimensions.DRAWER_PADDING)
     ) {
-        Column(
-            modifier = Modifier
-                .fillMaxHeight()
-                .width(300.dp)
-                .statusBarsPadding()
-                .padding(DrawerDimensions.DRAWER_PADDING)
+        DrawerHeader()
+        Spacer(modifier = Modifier.height(DrawerDimensions.SECTION_SPACING))
+
+        DrawerSectionHeader(stringResource(R.string.drawer_navigation))
+
+        DrawerItem(
+            icon = MiuixIcons.MapAlbum,
+            label = stringResource(R.string.drawer_map),
+            onClick = { navigateTo(Screen.Map.route) },
+            isSelected = currentRoute == Screen.Map.route
+        )
+
+        DrawerItem(
+            icon = MiuixIcons.Favorites,
+            label = stringResource(R.string.screen_favorites),
+            onClick = { navigateTo(Screen.Favorites.route) },
+            isSelected = currentRoute == Screen.Favorites.route
+        )
+
+        DrawerItem(
+            icon = MiuixIcons.Phone,
+            label = stringResource(R.string.screen_target_apps),
+            onClick = { navigateTo(Screen.TargetApps.route) },
+            isSelected = currentRoute == Screen.TargetApps.route
+        )
+
+        DrawerItem(
+            icon = MiuixIcons.Settings,
+            label = stringResource(R.string.screen_settings),
+            onClick = { navigateTo(Screen.Settings.route) },
+            isSelected = currentRoute == Screen.Settings.route
+        )
+
+        Spacer(modifier = Modifier.height(DrawerDimensions.SECTION_SPACING))
+        DrawerSectionHeader(stringResource(R.string.drawer_app_info))
+
+        DrawerItem(
+            icon = MiuixIcons.Info,
+            label = stringResource(R.string.screen_about),
+            onClick = { navigateTo(Screen.About.route) },
+            isSelected = currentRoute == Screen.About.route
+        )
+
+        Spacer(modifier = Modifier.weight(1f))
+
+        Surface(
+            shape = CircleShape,
+            color = MiuixTheme.colorScheme.surfaceVariant,
+            contentColor = MiuixTheme.colorScheme.onSurfaceVariantSummary,
+            modifier = Modifier.align(Alignment.CenterHorizontally)
         ) {
-            DrawerHeader()
-            Spacer(modifier = Modifier.height(DrawerDimensions.SECTION_SPACING))
-
-            DrawerSectionHeader(stringResource(R.string.drawer_navigation))
-
-            DrawerItem(
-                icon = LineAwesomeIcons.MapSolid,
-                label = stringResource(R.string.drawer_map),
-                onClick = { navigateTo(Screen.Map.route) },
-                isSelected = currentRoute == Screen.Map.route
+            Text(
+                text = "v${BuildConfig.VERSION_NAME}",
+                fontSize = 11.sp,
+                fontWeight = FontWeight.SemiBold,
+                modifier = Modifier.padding(horizontal = 12.dp, vertical = 4.dp)
             )
-
-            DrawerItem(
-                icon = LineAwesomeIcons.HeartSolid,
-                label = stringResource(R.string.screen_favorites),
-                onClick = { navigateTo(Screen.Favorites.route) },
-                isSelected = currentRoute == Screen.Favorites.route
-            )
-
-            DrawerItem(
-                icon = LineAwesomeIcons.MobileAltSolid,
-                label = stringResource(R.string.screen_target_apps),
-                onClick = { navigateTo(Screen.TargetApps.route) },
-                isSelected = currentRoute == Screen.TargetApps.route
-            )
-
-            DrawerItem(
-                icon = Icons.Default.Settings,
-                label = stringResource(R.string.screen_settings),
-                onClick = { navigateTo(Screen.Settings.route) },
-                isSelected = currentRoute == Screen.Settings.route
-            )
-
-            Spacer(modifier = Modifier.height(DrawerDimensions.SECTION_SPACING))
-            DrawerSectionHeader(stringResource(R.string.drawer_app_info))
-
-            DrawerItem(
-                icon = LineAwesomeIcons.InfoCircleSolid,
-                label = stringResource(R.string.screen_about),
-                onClick = { navigateTo(Screen.About.route) },
-                isSelected = currentRoute == Screen.About.route
-            )
-
-            Spacer(modifier = Modifier.weight(1f))
-
-            Surface(
-                shape = CircleShape,
-                color = MaterialTheme.colorScheme.surfaceVariant.copy(alpha = 0.6f),
-                modifier = Modifier.align(Alignment.CenterHorizontally)
-            ) {
-                Text(
-                    text = "v${BuildConfig.VERSION_NAME}",
-                    style = MaterialTheme.typography.bodySmall.copy(fontSize = 11.sp, fontWeight = FontWeight.SemiBold),
-                    color = MaterialTheme.colorScheme.onSurfaceVariant,
-                    modifier = Modifier.padding(horizontal = 12.dp, vertical = 4.dp)
-                )
-            }
         }
     }
 }
@@ -164,13 +155,13 @@ private fun DrawerHeader() {
             modifier = Modifier
                 .size(44.dp)
                 .clip(RoundedCornerShape(12.dp))
-                .background(MaterialTheme.colorScheme.primary.copy(alpha = 0.12f)),
+                .background(MiuixTheme.colorScheme.primary.copy(alpha = 0.12f)),
             contentAlignment = Alignment.Center
         ) {
             Icon(
-                imageVector = LineAwesomeIcons.MapSolid,
+                imageVector = MiuixIcons.MapAlbum,
                 contentDescription = null,
-                tint = MaterialTheme.colorScheme.primary,
+                tint = MiuixTheme.colorScheme.primary,
                 modifier = Modifier.size(24.dp)
             )
         }
@@ -180,16 +171,14 @@ private fun DrawerHeader() {
         Column {
             Text(
                 text = stringResource(R.string.app_name),
-                style = MaterialTheme.typography.titleLarge.copy(
-                    fontWeight = FontWeight.Bold,
-                    fontSize = 18.sp
-                ),
-                color = MaterialTheme.colorScheme.onSurface
+                fontSize = 18.sp,
+                fontWeight = FontWeight.Bold,
+                color = MiuixTheme.colorScheme.onSurface
             )
             Text(
-                text = "现代化底层定位与模拟工具",
-                style = MaterialTheme.typography.bodySmall.copy(fontSize = 12.sp),
-                color = MaterialTheme.colorScheme.onSurfaceVariant
+                text = stringResource(R.string.drawer_header_subtitle),
+                fontSize = 12.sp,
+                color = MiuixTheme.colorScheme.onSurfaceVariantSummary
             )
         }
     }
@@ -199,11 +188,9 @@ private fun DrawerHeader() {
 private fun DrawerSectionHeader(title: String) {
     Text(
         text = title,
-        style = MaterialTheme.typography.labelSmall.copy(
-            fontWeight = FontWeight.Bold,
-            fontSize = 12.sp
-        ),
-        color = MaterialTheme.colorScheme.primary,
+        fontSize = 12.sp,
+        fontWeight = FontWeight.Bold,
+        color = MiuixTheme.colorScheme.primary,
         modifier = Modifier.padding(
             start = DrawerDimensions.SECTION_PADDING,
             bottom = 6.dp,
@@ -219,16 +206,17 @@ private fun DrawerItem(
     onClick: () -> Unit,
     isSelected: Boolean = false,
 ) {
+    val colorScheme = MiuixTheme.colorScheme
     val backgroundColor = if (isSelected) {
-        MaterialTheme.colorScheme.primary.copy(alpha = 0.12f)
+        colorScheme.primary.copy(alpha = 0.12f)
     } else {
         Color.Transparent
     }
 
     val contentColor = if (isSelected) {
-        MaterialTheme.colorScheme.primary
+        colorScheme.primary
     } else {
-        MaterialTheme.colorScheme.onSurface
+        colorScheme.onSurface
     }
 
     Surface(
@@ -237,7 +225,8 @@ private fun DrawerItem(
             .padding(vertical = DrawerDimensions.ITEM_SPACING)
             .clip(RoundedCornerShape(DrawerDimensions.ITEM_CORNER_RADIUS))
             .clickable(onClick = onClick),
-        color = backgroundColor
+        color = backgroundColor,
+        contentColor = contentColor,
     ) {
         Row(
             modifier = Modifier
@@ -255,10 +244,8 @@ private fun DrawerItem(
 
             Text(
                 text = label,
-                style = MaterialTheme.typography.bodyMedium.copy(
-                    fontWeight = if (isSelected) FontWeight.Bold else FontWeight.Medium,
-                    fontSize = 14.sp
-                ),
+                fontWeight = if (isSelected) FontWeight.Bold else FontWeight.Medium,
+                fontSize = 14.sp,
                 color = contentColor,
                 modifier = Modifier.weight(1f)
             )

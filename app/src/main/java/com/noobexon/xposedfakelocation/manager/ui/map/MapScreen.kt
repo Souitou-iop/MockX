@@ -18,7 +18,6 @@ import androidx.compose.foundation.layout.Arrangement
 import androidx.compose.foundation.layout.Box
 import androidx.compose.foundation.layout.Column
 import androidx.compose.foundation.layout.Row
-import androidx.compose.foundation.layout.RowScope
 import androidx.compose.foundation.layout.Spacer
 import androidx.compose.foundation.layout.fillMaxSize
 import androidx.compose.foundation.layout.fillMaxWidth
@@ -30,35 +29,12 @@ import androidx.compose.foundation.layout.statusBarsPadding
 import androidx.compose.foundation.layout.width
 import androidx.compose.foundation.shape.CircleShape
 import androidx.compose.foundation.shape.RoundedCornerShape
-import androidx.compose.material.icons.Icons
-import androidx.compose.material.icons.filled.Clear
-import androidx.compose.material.icons.filled.DirectionsWalk
-import androidx.compose.material.icons.filled.FavoriteBorder
-import androidx.compose.material.icons.filled.LocationSearching
-import androidx.compose.material.icons.filled.Map
-import androidx.compose.material.icons.filled.Menu
-import androidx.compose.material.icons.filled.MoreVert
-import androidx.compose.material.icons.filled.MyLocation
-import androidx.compose.material.icons.filled.Pause
-import androidx.compose.material.icons.filled.PlayArrow
-import androidx.compose.material.icons.filled.Refresh
-import androidx.compose.material.icons.filled.Stop
-import androidx.compose.material3.DrawerValue
-import androidx.compose.material3.Icon
-import androidx.compose.material3.IconButton
 import androidx.compose.material3.LinearProgressIndicator
-import androidx.compose.material3.MaterialTheme
-import androidx.compose.material3.ModalNavigationDrawer
-import androidx.compose.material3.Surface
-import androidx.compose.material3.Text
-import androidx.compose.material3.rememberDrawerState
 import androidx.compose.runtime.Composable
 import androidx.compose.runtime.LaunchedEffect
 import androidx.compose.runtime.getValue
-import androidx.compose.runtime.mutableStateOf
 import androidx.compose.runtime.remember
 import androidx.compose.runtime.rememberCoroutineScope
-import androidx.compose.runtime.setValue
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.draw.clip
@@ -71,37 +47,51 @@ import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
 import androidx.core.content.ContextCompat
 import androidx.lifecycle.compose.collectAsStateWithLifecycle
+import androidx.compose.material3.DrawerValue
+import androidx.compose.material3.ModalDrawerSheet
+import androidx.compose.material3.ModalNavigationDrawer
+import androidx.compose.material3.rememberDrawerState
 import androidx.navigation.NavController
 import com.noobexon.xposedfakelocation.R
 import com.noobexon.xposedfakelocation.manager.route.WalkingErrorCode
 import com.noobexon.xposedfakelocation.manager.route.WalkingPhase
 import com.noobexon.xposedfakelocation.manager.route.WalkingRoute
 import com.noobexon.xposedfakelocation.manager.route.WalkingSpeedPreset
+import com.noobexon.xposedfakelocation.manager.ui.components.AppDialog
+import com.noobexon.xposedfakelocation.manager.ui.components.BottomControlPanel
+import com.noobexon.xposedfakelocation.manager.ui.components.BlurBackdropBox
+import com.noobexon.xposedfakelocation.manager.ui.components.FloatingPanel
+import com.noobexon.xposedfakelocation.manager.ui.components.PillActionButton
+import com.noobexon.xposedfakelocation.manager.ui.components.StatusChip
+import com.noobexon.xposedfakelocation.manager.ui.components.rememberBlurBackdrop
 import com.noobexon.xposedfakelocation.manager.ui.navigation.Screen
-import com.noobexon.xposedfakelocation.manager.ui.theme.MiuixBottomPanel
-import com.noobexon.xposedfakelocation.manager.ui.theme.MiuixChip
-import com.noobexon.xposedfakelocation.manager.ui.theme.MiuixDialog
-import com.noobexon.xposedfakelocation.manager.ui.theme.MiuixDialogButton
-import com.noobexon.xposedfakelocation.manager.ui.theme.MiuixFloatingIsland
-import com.noobexon.xposedfakelocation.manager.ui.theme.MiuixPillButton
+import com.noobexon.xposedfakelocation.manager.ui.theme.StatusSuccess
 import top.yukonga.miuix.kmp.basic.DropdownEntry
 import top.yukonga.miuix.kmp.basic.DropdownItem
+import top.yukonga.miuix.kmp.basic.Icon
+import top.yukonga.miuix.kmp.basic.IconButton
+import top.yukonga.miuix.kmp.basic.Text
 import top.yukonga.miuix.kmp.icon.MiuixIcons
+import top.yukonga.miuix.kmp.icon.extended.Close
 import top.yukonga.miuix.kmp.icon.extended.Delete
 import top.yukonga.miuix.kmp.icon.extended.Favorites
 import top.yukonga.miuix.kmp.icon.extended.Location
+import top.yukonga.miuix.kmp.icon.extended.MapAlbum
 import top.yukonga.miuix.kmp.icon.extended.More
+import top.yukonga.miuix.kmp.icon.extended.Pause
+import top.yukonga.miuix.kmp.icon.extended.Refresh
+import top.yukonga.miuix.kmp.icon.extended.Play
+import top.yukonga.miuix.kmp.icon.extended.Sidebar
 import top.yukonga.miuix.kmp.menu.WindowIconDropdownMenu
+import top.yukonga.miuix.kmp.theme.MiuixTheme
 import kotlinx.coroutines.launch
 import java.util.Locale
 
 /**
- * HyperOS / Miuix Full-Screen Immersive Map Screen.
- *
- * Replaces the legacy Material 3 top-bar and isolated FAB with:
- * - Full-screen edge-to-edge interactive map canvas.
- * - Top floating capsule status island (Drawer trigger, live spoof status & coordinates, layer switcher, center map).
- * - Bottom floating dashboard control sheet (Direct pill action button, location info, favorites, quick clear).
+ * Full-screen immersive map with HyperOS floating chrome: a top status island (drawer trigger,
+ * live spoof status, layer switcher, center) and a bottom dashboard panel (primary action,
+ * location info, favorites, quick clear). The modal drawer is a Material 3
+ * [ModalNavigationDrawer], which handles dragging and predictive back natively.
  */
 @Composable
 fun MapScreen(
@@ -116,8 +106,11 @@ fun MapScreen(
     val showGoToPointDialog = uiState.isGoToPointDialogVisible
     val showAddToFavoritesDialog = uiState.isAddToFavoritesDialogVisible
     val showMapSourceDialog = uiState.isMapSourceDialogVisible
-    val drawerState = rememberDrawerState(initialValue = DrawerValue.Closed)
+    val drawerState = rememberDrawerState(DrawerValue.Closed)
     val scope = rememberCoroutineScope()
+    val colorScheme = MiuixTheme.colorScheme
+    val backdrop = rememberBlurBackdrop()
+    val blurEnabled = backdrop != null
     val fakeLocationSet = stringResource(R.string.toast_fake_location_set)
     val fakeLocationUnset = stringResource(R.string.toast_unset_fake_location)
 
@@ -167,20 +160,32 @@ fun MapScreen(
     }
 
     ModalNavigationDrawer(
-        drawerContent = {
-            DrawerContent(
-                onCloseDrawer = { scope.launch { drawerState.close() } },
-                onNavigate = { mapViewModel.requestReopenDrawer() },
-                navController = navController
-            )
-        },
-        scrimColor = Color.Black.copy(alpha = 0.45f),
         drawerState = drawerState,
-        gesturesEnabled = drawerState.isOpen,
-        modifier = Modifier.fillMaxSize()
+        // The M3 drawer arms its drag detector on the whole screen; while closed that hijacks
+        // every horizontal pan of the map. Enable the gestures only once the drawer is open —
+        // drag-to-close keeps working, and the map pans freely while closed.
+        gesturesEnabled = !drawerState.isClosed,
+        scrimColor = Color.Black.copy(alpha = 0.45f),
+        drawerContent = {
+            ModalDrawerSheet(
+                // The drawerState overload owns back handling: it closes on back on every
+                // Android version and animates the predictive-back preview on Android 14+.
+                drawerState = drawerState,
+                modifier = Modifier.width(300.dp),
+                drawerShape = RoundedCornerShape(topEnd = 24.dp, bottomEnd = 24.dp),
+                drawerContainerColor = colorScheme.surface,
+            ) {
+                DrawerContent(
+                    onCloseDrawer = { scope.launch { drawerState.close() } },
+                    onNavigate = { mapViewModel.requestReopenDrawer() },
+                    navController = navController
+                )
+            }
+        },
     ) {
         Box(modifier = Modifier.fillMaxSize()) {
-            // 1. Full-screen Immersive Map Canvas
+            // 1. Full-screen immersive map canvas, captured as the blur backdrop for the panels
+            BlurBackdropBox(backdrop = backdrop) {
             MapViewContainer(
                 isLoading = uiState.isLoading,
                 lastClickedLocation = uiState.lastClickedLocation,
@@ -200,8 +205,9 @@ fun MapScreen(
                 onInitialLocationResolved = mapViewModel::markInitialLocationResolved,
                 isMapInteractionEnabled = !uiState.isMapInteractionLocked,
             )
+            }
 
-            // 2. HyperOS Floating Top Status Island
+            // 2. HyperOS floating top status island
             Box(
                 modifier = Modifier
                     .align(Alignment.TopCenter)
@@ -209,40 +215,41 @@ fun MapScreen(
                     .statusBarsPadding()
                     .padding(horizontal = 16.dp, vertical = 10.dp)
             ) {
-                MiuixFloatingIsland(
+                FloatingPanel(
+                    backdrop = backdrop,
+                    blurEnabled = blurEnabled,
                     modifier = Modifier.fillMaxWidth()
                 ) {
-                    // Drawer Hamburger Button
+                    // Drawer trigger button
                     IconButton(
                         onClick = { scope.launch { drawerState.open() } },
                         modifier = Modifier.size(38.dp)
                     ) {
                         Icon(
-                            imageVector = Icons.Default.Menu,
+                            imageVector = MiuixIcons.Sidebar,
                             contentDescription = stringResource(R.string.cd_menu),
-                            tint = MaterialTheme.colorScheme.onSurface
                         )
                     }
 
-                    // Middle Status & Location summary
+                    // Middle status & location summary
                     Row(
                         verticalAlignment = Alignment.CenterVertically,
                         modifier = Modifier
                             .weight(1f)
                             .padding(horizontal = 8.dp)
                     ) {
-                        // Live Status indicator dot
+                        // Live status indicator dot
                         Box(
                             modifier = Modifier
                                 .size(8.dp)
                                 .clip(CircleShape)
                                 .background(
                                     when {
-                                        walkingPhase == WalkingPhase.WALKING -> Color(0xFF34C759)
+                                        walkingPhase == WalkingPhase.WALKING -> StatusSuccess
                                         walkingPhase == WalkingPhase.PAUSED -> Color(0xFFFF9500)
-                                        isPlaying -> Color(0xFF34C759)
-                                        isFabClickable -> MaterialTheme.colorScheme.primary
-                                        else -> Color(0xFF8E8E93)
+                                        isPlaying -> StatusSuccess
+                                        isFabClickable -> colorScheme.primary
+                                        else -> colorScheme.onSurfaceVariantSummary
                                     }
                                 )
                         )
@@ -254,7 +261,7 @@ fun MapScreen(
                                 text = walkingStatusText(walkingPhase, isPlaying, isFabClickable),
                                 fontSize = 13.sp,
                                 fontWeight = FontWeight.Bold,
-                                color = MaterialTheme.colorScheme.onSurface,
+                                color = colorScheme.onSurface,
                                 maxLines = 1,
                                 overflow = TextOverflow.Ellipsis
                             )
@@ -262,23 +269,23 @@ fun MapScreen(
                                 Text(
                                     text = String.format(Locale.US, "%.4f, %.4f", clickedLocation.latitude, clickedLocation.longitude),
                                     fontSize = 11.sp,
-                                    color = MaterialTheme.colorScheme.onSurfaceVariant,
+                                    color = colorScheme.onSurfaceVariantSummary,
                                     maxLines = 1
                                 )
                             }
                         }
                     }
 
-                    // Action Icons: Center, Switch Source, More
+                    // Action icons: center, switch source, more
                     Row(verticalAlignment = Alignment.CenterVertically) {
                         IconButton(
                             onClick = { mapViewModel.triggerCenterMapEvent() },
                             modifier = Modifier.size(36.dp)
                         ) {
                             Icon(
-                                imageVector = Icons.Default.MyLocation,
+                                imageVector = MiuixIcons.Location,
                                 contentDescription = stringResource(R.string.cd_center),
-                                tint = MaterialTheme.colorScheme.primary,
+                                tint = colorScheme.primary,
                                 modifier = Modifier.size(20.dp)
                             )
                         }
@@ -288,35 +295,35 @@ fun MapScreen(
                             modifier = Modifier.size(36.dp)
                         ) {
                             Icon(
-                                imageVector = Icons.Default.Map,
+                                imageVector = MiuixIcons.MapAlbum,
                                 contentDescription = stringResource(R.string.map_switch_source),
-                                tint = MaterialTheme.colorScheme.onSurfaceVariant,
+                                tint = colorScheme.onSurfaceVariantSummary,
                                 modifier = Modifier.size(20.dp)
                             )
                         }
 
-                        val menuItems = remember(isFabClickable) {
+                        val menuItems = remember(isFabClickable, colorScheme) {
                             listOf(
                                 DropdownItem(
                                     text = context.getString(R.string.map_go_to_point),
-                                    icon = {
+                                    icon = { modifier ->
                                         Icon(
                                             imageVector = MiuixIcons.Location,
                                             contentDescription = null,
-                                            tint = MaterialTheme.colorScheme.primary,
-                                            modifier = Modifier.size(20.dp)
+                                            tint = colorScheme.primary,
+                                            modifier = modifier.size(20.dp)
                                         )
                                     },
                                     onClick = { mapViewModel.showGoToPointDialog() }
                                 ),
                                 DropdownItem(
                                     text = context.getString(R.string.map_add_to_favorites),
-                                    icon = {
+                                    icon = { modifier ->
                                         Icon(
                                             imageVector = MiuixIcons.Favorites,
                                             contentDescription = null,
-                                            tint = MaterialTheme.colorScheme.primary,
-                                            modifier = Modifier.size(20.dp)
+                                            tint = colorScheme.primary,
+                                            modifier = modifier.size(20.dp)
                                         )
                                     },
                                     enabled = isFabClickable,
@@ -324,12 +331,12 @@ fun MapScreen(
                                 ),
                                 DropdownItem(
                                     text = context.getString(R.string.map_clear_location),
-                                    icon = {
+                                    icon = { modifier ->
                                         Icon(
                                             imageVector = MiuixIcons.Delete,
                                             contentDescription = null,
-                                            tint = MaterialTheme.colorScheme.error,
-                                            modifier = Modifier.size(20.dp)
+                                            tint = colorScheme.error,
+                                            modifier = modifier.size(20.dp)
                                         )
                                     },
                                     enabled = isFabClickable,
@@ -345,7 +352,7 @@ fun MapScreen(
                             Icon(
                                 imageVector = MiuixIcons.More,
                                 contentDescription = stringResource(R.string.cd_options),
-                                tint = MaterialTheme.colorScheme.onSurfaceVariant,
+                                tint = colorScheme.onSurfaceVariantSummary,
                                 modifier = Modifier.size(20.dp)
                             )
                         }
@@ -353,7 +360,7 @@ fun MapScreen(
                 }
             }
 
-            // 3. HyperOS Bottom Floating Dashboard Control Sheet
+            // 3. HyperOS bottom floating dashboard panel
             Box(
                 modifier = Modifier
                     .align(Alignment.BottomCenter)
@@ -361,9 +368,12 @@ fun MapScreen(
                     .navigationBarsPadding()
                     .padding(horizontal = 16.dp, vertical = 16.dp)
             ) {
-                MiuixBottomPanel {
+                BottomControlPanel(
+                    backdrop = backdrop,
+                    blurEnabled = blurEnabled
+                ) {
                     if (clickedLocation != null) {
-                        // Location Info & Actions Row
+                        // Location info & actions row
                         Row(
                             modifier = Modifier.fillMaxWidth(),
                             horizontalArrangement = Arrangement.SpaceBetween,
@@ -371,27 +381,27 @@ fun MapScreen(
                         ) {
                             Column(modifier = Modifier.weight(1f)) {
                                 Text(
-                                    text = "伪装目标位置",
+                                    text = stringResource(R.string.map_spoof_target),
                                     fontSize = 12.sp,
                                     fontWeight = FontWeight.Medium,
-                                    color = MaterialTheme.colorScheme.onSurfaceVariant
+                                    color = colorScheme.onSurfaceVariantSummary
                                 )
                                 Spacer(modifier = Modifier.height(2.dp))
                                 Text(
                                     text = String.format(Locale.US, "%.6f°, %.6f°", clickedLocation.latitude, clickedLocation.longitude),
                                     fontSize = 15.sp,
                                     fontWeight = FontWeight.Bold,
-                                    color = MaterialTheme.colorScheme.onSurface
+                                    color = colorScheme.onSurface
                                 )
                             }
 
                             Row(horizontalArrangement = Arrangement.spacedBy(8.dp)) {
-                                MiuixChip(
-                                    text = "收藏",
+                                StatusChip(
+                                    text = stringResource(R.string.map_chip_favorite),
                                     isActive = true,
                                     modifier = Modifier.clickable { mapViewModel.showAddToFavoritesDialog() }
                                 )
-                                MiuixChip(
+                                StatusChip(
                                     text = "步行",
                                     isActive = true,
                                     modifier = Modifier.clickable {
@@ -400,8 +410,8 @@ fun MapScreen(
                                         }
                                     }
                                 )
-                                MiuixChip(
-                                    text = "清除",
+                                StatusChip(
+                                    text = stringResource(R.string.map_chip_clear),
                                     isActive = false,
                                     modifier = Modifier.clickable { mapViewModel.updateClickedLocation(null) }
                                 )
@@ -410,7 +420,7 @@ fun MapScreen(
 
                         Spacer(modifier = Modifier.height(14.dp))
                     } else {
-                        // Helpful Prompt when no pin is placed
+                        // Helpful prompt when no pin is placed
                         Row(
                             modifier = Modifier
                                 .fillMaxWidth()
@@ -418,16 +428,16 @@ fun MapScreen(
                             verticalAlignment = Alignment.CenterVertically
                         ) {
                             Icon(
-                                imageVector = Icons.Default.LocationSearching,
+                                imageVector = MiuixIcons.Location,
                                 contentDescription = null,
-                                tint = MaterialTheme.colorScheme.primary,
+                                tint = colorScheme.primary,
                                 modifier = Modifier.size(18.dp)
                             )
                             Spacer(modifier = Modifier.width(8.dp))
                             Text(
-                                text = "轻触地图任意位置放置图钉以选定虚拟位置",
+                                text = stringResource(R.string.map_hint_place_pin),
                                 fontSize = 13.sp,
-                                color = MaterialTheme.colorScheme.onSurfaceVariant
+                                color = colorScheme.onSurfaceVariantSummary
                             )
                         }
 
@@ -448,19 +458,19 @@ fun MapScreen(
                         Spacer(modifier = Modifier.height(14.dp))
                     }
 
-                    // Main Action Pill Button
-                    MiuixPillButton(
+                    // Main action pill button
+                    PillActionButton(
                         text = when {
                             isWalkingActive -> stringResource(R.string.walk_active_pill)
                             walkingPhase == WalkingPhase.PLANNING -> stringResource(R.string.walk_planning_pill)
-                            isPlaying -> "停止虚拟定位"
-                            isFabClickable -> "开启虚拟定位"
-                            else -> "请先选定地图位置"
+                            isPlaying -> stringResource(R.string.map_stop_spoof)
+                            isFabClickable -> stringResource(R.string.map_start_spoof)
+                            else -> stringResource(R.string.map_select_location_first)
                         },
                         icon = when {
-                            walkingPhase == WalkingPhase.PLANNING -> Icons.Default.DirectionsWalk
-                            isPlaying -> Icons.Default.Stop
-                            else -> Icons.Default.PlayArrow
+                            walkingPhase == WalkingPhase.PLANNING -> MiuixIcons.Location
+                            isPlaying -> MiuixIcons.Close
+                            else -> MiuixIcons.Play
                         },
                         onClick = {
                             if (isFabClickable || isPlaying) {
@@ -528,27 +538,16 @@ fun MapScreen(
         }
 
         if (uiState.isReplaceSessionDialogVisible) {
-            MiuixDialog(
-                onDismissRequest = mapViewModel::dismissReplaceSessionDialog,
+            AppDialog(
                 title = stringResource(R.string.walk_replace_title),
-                confirmButton = {
-                    MiuixDialogButton(
-                        text = stringResource(R.string.walk_replace_confirm),
-                        isPrimary = true,
-                        onClick = mapViewModel::confirmStartWalking
-                    )
-                },
-                dismissButton = {
-                    MiuixDialogButton(
-                        text = stringResource(R.string.action_cancel),
-                        onClick = mapViewModel::dismissReplaceSessionDialog
-                    )
-                }
+                onDismissRequest = mapViewModel::dismissReplaceSessionDialog,
+                confirmText = stringResource(R.string.walk_replace_confirm),
+                onConfirm = mapViewModel::confirmStartWalking,
+                dismissText = stringResource(R.string.action_cancel),
             ) {
                 Text(
                     text = stringResource(R.string.walk_replace_message),
-                    style = MaterialTheme.typography.bodyMedium,
-                    color = MaterialTheme.colorScheme.onSurfaceVariant
+                    color = colorScheme.onSurfaceVariantSummary,
                 )
             }
         }
@@ -567,7 +566,11 @@ private fun walkingStatusText(walkingPhase: WalkingPhase, isPlaying: Boolean, is
     WalkingPhase.ARRIVED -> stringResource(R.string.walk_status_arrived)
     WalkingPhase.STOPPING -> stringResource(R.string.walk_status_stopping)
     WalkingPhase.FAILED -> stringResource(R.string.walk_status_failed)
-    else -> if (isPlaying) "伪装运行中" else if (isFabClickable) "位置已选定" else stringResource(R.string.app_name)
+    else -> when {
+        isPlaying -> stringResource(R.string.map_status_spoofing)
+        isFabClickable -> stringResource(R.string.map_status_selected)
+        else -> stringResource(R.string.app_name)
+    }
 }
 
 /** Localized, user-safe message for a walking failure code. */
@@ -622,9 +625,9 @@ private fun WalkingControlCard(
             verticalAlignment = Alignment.CenterVertically
         ) {
             Icon(
-                imageVector = Icons.Default.DirectionsWalk,
+                imageVector = MiuixIcons.Location,
                 contentDescription = null,
-                tint = MaterialTheme.colorScheme.primary,
+                tint = MiuixTheme.colorScheme.primary,
                 modifier = Modifier.size(18.dp)
             )
             Spacer(modifier = Modifier.width(8.dp))
@@ -632,14 +635,14 @@ private fun WalkingControlCard(
                 text = walkingStatusText(phase, isPlaying = false, isFabClickable = true),
                 fontSize = 13.sp,
                 fontWeight = FontWeight.Bold,
-                color = MaterialTheme.colorScheme.onSurface,
+                color = MiuixTheme.colorScheme.onSurface,
                 modifier = Modifier.weight(1f)
             )
             if (route != null && phase != WalkingPhase.PLANNING) {
                 Text(
                     text = walkingRouteSummary(route, uiState.walkingSpeedPreset),
                     fontSize = 12.sp,
-                    color = MaterialTheme.colorScheme.onSurfaceVariant
+                    color = MiuixTheme.colorScheme.onSurfaceVariantSummary
                 )
             }
         }
@@ -654,9 +657,9 @@ private fun WalkingControlCard(
                 Spacer(modifier = Modifier.height(10.dp))
                 WalkingSpeedChipRow(uiState.walkingSpeedPreset, onSpeedChange)
                 Spacer(modifier = Modifier.height(10.dp))
-                MiuixPillButton(
+                PillActionButton(
                     text = stringResource(R.string.walk_start),
-                    icon = Icons.Default.PlayArrow,
+                    icon = MiuixIcons.Play,
                     onClick = onStart,
                     isPrimary = true,
                     modifier = Modifier.fillMaxWidth()
@@ -678,7 +681,7 @@ private fun WalkingControlCard(
                         formatWalkingDistance(total),
                     ),
                     fontSize = 12.sp,
-                    color = MaterialTheme.colorScheme.onSurfaceVariant
+                    color = MiuixTheme.colorScheme.onSurfaceVariantSummary
                 )
                 if (phase != WalkingPhase.ARRIVED) {
                     Spacer(modifier = Modifier.height(8.dp))
@@ -690,25 +693,25 @@ private fun WalkingControlCard(
                     horizontalArrangement = Arrangement.spacedBy(8.dp)
                 ) {
                     if (phase == WalkingPhase.PAUSED) {
-                        MiuixPillButton(
+                        PillActionButton(
                             text = stringResource(R.string.walk_resume),
-                            icon = Icons.Default.PlayArrow,
+                            icon = MiuixIcons.Play,
                             onClick = onResume,
                             isPrimary = true,
                             modifier = Modifier.weight(1f)
                         )
                     } else if (phase == WalkingPhase.WALKING) {
-                        MiuixPillButton(
+                        PillActionButton(
                             text = stringResource(R.string.walk_pause),
-                            icon = Icons.Default.Pause,
+                            icon = MiuixIcons.Pause,
                             onClick = onPause,
                             isPrimary = true,
                             modifier = Modifier.weight(1f)
                         )
                     }
-                    MiuixPillButton(
+                    PillActionButton(
                         text = stringResource(R.string.walk_stop),
-                        icon = Icons.Default.Stop,
+                        icon = MiuixIcons.Close,
                         onClick = onStop,
                         isDestructive = true,
                         modifier = Modifier.weight(1f)
@@ -721,12 +724,12 @@ private fun WalkingControlCard(
                 Text(
                     text = uiState.walkingErrorCode?.let { walkingErrorText(it) } ?: stringResource(R.string.walk_status_failed),
                     fontSize = 12.sp,
-                    color = MaterialTheme.colorScheme.error
+                    color = MiuixTheme.colorScheme.error
                 )
                 Spacer(modifier = Modifier.height(8.dp))
-                MiuixPillButton(
+                PillActionButton(
                     text = stringResource(R.string.walk_replan),
-                    icon = Icons.Default.Refresh,
+                    icon = MiuixIcons.Refresh,
                     onClick = onPlanRoute,
                     isPrimary = false,
                     modifier = Modifier.fillMaxWidth()
@@ -749,7 +752,7 @@ private fun WalkingSpeedChipRow(
         horizontalArrangement = Arrangement.spacedBy(8.dp)
     ) {
         WalkingSpeedPreset.entries.forEach { preset ->
-            MiuixChip(
+            StatusChip(
                 text = stringResource(preset.labelRes),
                 isActive = preset == selected,
                 modifier = Modifier

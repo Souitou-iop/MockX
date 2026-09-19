@@ -23,7 +23,9 @@ import com.noobexon.xposedfakelocation.data.DEFAULT_MEAN_SEA_LEVEL_ACCURACY
 import com.noobexon.xposedfakelocation.data.DEFAULT_RANDOMIZE_RADIUS
 import com.noobexon.xposedfakelocation.data.DEFAULT_SPEED
 import com.noobexon.xposedfakelocation.data.DEFAULT_SPEED_ACCURACY
-import com.noobexon.xposedfakelocation.data.DEFAULT_THEME_OPTION
+import com.noobexon.xposedfakelocation.data.DEFAULT_MONET_COLOR
+import com.noobexon.xposedfakelocation.data.DEFAULT_PREDICTIVE_BACK_ENABLED
+import com.noobexon.xposedfakelocation.data.DEFAULT_THEME_MODE
 import com.noobexon.xposedfakelocation.data.DEFAULT_TIANDITU_TOKEN
 import com.noobexon.xposedfakelocation.data.DEFAULT_USE_ACCURACY
 import com.noobexon.xposedfakelocation.data.DEFAULT_USE_ALTITUDE
@@ -58,7 +60,10 @@ import com.noobexon.xposedfakelocation.data.KEY_RANDOMIZE_RADIUS
 import com.noobexon.xposedfakelocation.data.KEY_SPEED
 import com.noobexon.xposedfakelocation.data.KEY_SPEED_ACCURACY
 import com.noobexon.xposedfakelocation.data.KEY_TARGET_APPS
+import com.noobexon.xposedfakelocation.data.KEY_THEME_MODE
 import com.noobexon.xposedfakelocation.data.KEY_THEME_OPTION
+import com.noobexon.xposedfakelocation.data.KEY_MONET_COLOR
+import com.noobexon.xposedfakelocation.data.KEY_PREDICTIVE_BACK_ENABLED
 import com.noobexon.xposedfakelocation.data.KEY_TIANDITU_TOKEN
 import com.noobexon.xposedfakelocation.data.KEY_USE_ACCURACY
 import com.noobexon.xposedfakelocation.data.KEY_USE_ALTITUDE
@@ -450,8 +455,25 @@ class PreferencesRepository(context: Context) {
     // endregion
 
     // region Theme (local)
-    fun getThemeOptionFlow(): Flow<String> = localFlow(KEY_THEME_OPTION) { it.getString(KEY_THEME_OPTION, DEFAULT_THEME_OPTION) ?: DEFAULT_THEME_OPTION }
-    suspend fun saveThemeOption(themeTag: String) = editLocal { putString(KEY_THEME_OPTION, themeTag) }
+    fun getThemeModeFlow(): Flow<Int> = localFlow(KEY_THEME_MODE) { prefs ->
+        if (prefs.contains(KEY_THEME_MODE)) {
+            prefs.getInt(KEY_THEME_MODE, DEFAULT_THEME_MODE)
+        } else {
+            // Migrate the pre-miuix string tag on first read after upgrading.
+            when (prefs.getString(KEY_THEME_OPTION, null)) {
+                "light" -> 1
+                "dark" -> 2
+                else -> 0
+            }
+        }
+    }
+    suspend fun saveThemeMode(modeId: Int) = editLocal { putInt(KEY_THEME_MODE, modeId) }
+
+    fun getMonetColorFlow(): Flow<Int> = localFlow(KEY_MONET_COLOR) { it.getInt(KEY_MONET_COLOR, DEFAULT_MONET_COLOR) }
+    suspend fun saveMonetColor(colorId: Int) = editLocal { putInt(KEY_MONET_COLOR, colorId) }
+
+    fun getPredictiveBackFlow(): Flow<Boolean> = localFlow(KEY_PREDICTIVE_BACK_ENABLED) { it.getBoolean(KEY_PREDICTIVE_BACK_ENABLED, DEFAULT_PREDICTIVE_BACK_ENABLED) }
+    suspend fun savePredictiveBack(enabled: Boolean) = editLocal { putBoolean(KEY_PREDICTIVE_BACK_ENABLED, enabled) }
     // endregion
 
     // region Map Source (local)

@@ -69,6 +69,21 @@
     <string name="theme_system">跟随系统</string>
     <string name="theme_light">浅色</string>
     <string name="theme_dark">深色</string>
+        <string name="theme_system_monet">跟随系统（莫奈）</string>
+        <string name="theme_light_monet">浅色（莫奈）</string>
+        <string name="theme_dark_monet">深色（莫奈）</string>
+        <string name="setting_monet_color_title">莫奈取色</string>
+        <string name="setting_monet_color_description">动态配色的种子颜色；默认跟随壁纸取色。</string>
+        <string name="setting_predictive_back_title">预测性返回手势</string>
+        <string name="setting_predictive_back_description">返回手势期间由系统预览上一界面，重启应用后生效。</string>
+        <string name="monet_default">默认（跟随壁纸）</string>
+        <string name="monet_blue">蓝色</string>
+        <string name="monet_green">绿色</string>
+        <string name="monet_red">红色</string>
+        <string name="monet_yellow">黄色</string>
+        <string name="monet_orange">橙色</string>
+        <string name="monet_purple">紫色</string>
+        <string name="monet_pink">粉色</string>
 
     <string name="setting_language_title">应用语言</string>
     <string name="setting_language_description">更改管理器应用及其 Xposed toast 提示所使用的语言。</string>
@@ -270,4 +285,71 @@
     <string name="walk_notification_text">已走 %1$s / %2$s</string>
     <string name="walk_notification_paused_text">步行已暂停——位置保持不变</string>
     <string name="walk_notification_arrived_text">已到达终点</string>
+
+    <!-- Miuix redesign: shared -->
+    <string name="screen_settings_subtitle">自定义定位算法与系统防检测策略</string>
+    <string name="screen_favorites_subtitle">已保存的常用经纬度与位置预设</string>
+    <string name="screen_target_apps_subtitle">仅针对选中的应用启用底层定位与基站拦截</string>
+    <string name="screen_about_subtitle">应用版本与系统运行状态</string>
+    <string name="not_set">未设置</string>
+    <string name="pull_to_refresh_pulling">下拉即可刷新</string>
+    <string name="pull_to_refresh_release">松开立即刷新</string>
+    <string name="pull_to_refresh_refreshing">正在刷新…</string>
+    <string name="pull_to_refresh_refreshed">刷新成功</string>
+
+    <!-- Appearance: color mode -->
+
+    <!-- About -->
+    <string name="about_status_section">运行状态</string>
+    <string name="about_xposed_title">Xposed 框架</string>
+    <string name="about_status_active">已激活</string>
+    <string name="about_status_inactive">未激活</string>
+    <string name="about_refresh_title">高刷新率</string>
+    <string name="about_refresh_subtitle">120Hz 极速锁帧</string>
+    <string name="about_refresh_status">高刷就绪</string>
+    <string name="about_shield_title">防检测盾</string>
+    <string name="about_shield_subtitle">基站 &amp; Wi-Fi 拦截</string>
+    <string name="about_shield_status">保护中</string>
+    <string name="about_map_engine_title">地图引擎</string>
+    <string name="about_map_engine_subtitle">多图源混合瓦片</string>
+    <string name="about_map_engine_status">全协议</string>
+    <string name="about_source_section">项目源码</string>
+    <string name="about_github_repo">GitHub 源码仓库</string>
+    <string name="about_contrib_section">开源与贡献者</string>
+    <string name="about_maintainer_role">核心维护者</string>
+    <string name="about_contributor_role">热心贡献者</string>
+    <string name="about_official_release">正式版</string>
+
+    <!-- Permissions -->
+    <string name="permissions_welcome_title">欢迎使用虚拟定位</string>
+    <string name="permissions_denied_title">需要授予位置权限</string>
+    <string name="permissions_welcome_body">为准确展示初始底图位置并提供真实与伪装坐标的双向校验，我们需要访问您的精确位置。</string>
+    <string name="permissions_denied_body">您先前已永久拒绝系统定位权限，请在系统设置中手动开启以继续使用完整功能。</string>
+    <string name="permissions_feature_map_title">地图精准底图加载</string>
+    <string name="permissions_feature_map_desc">基于当前基准点快速定位并渲染天地图与 OSM 瓦片</string>
+    <string name="permissions_feature_coords_title">坐标系无缝校正</string>
+    <string name="permissions_feature_coords_desc">实现 WGS-84、GCJ-02 与百度坐标的实时平滑转换</string>
+    <string name="permissions_feature_shield_title">全方位防反作弊保护</string>
+    <string name="permissions_feature_shield_desc">拦截国内主流地图 Wi-Fi 探针与基站扫描</string>
+    <string name="permissions_grant_action">立即授予位置权限</string>
+    <string name="permissions_settings_action">前往系统设置开启权限</string>
+
+    <!-- Map overlays -->
+    <string name="map_status_spoofing">伪装运行中</string>
+    <string name="map_status_selected">位置已选定</string>
+    <string name="map_spoof_target">伪装目标位置</string>
+    <string name="map_chip_favorite">收藏</string>
+    <string name="map_chip_clear">清除</string>
+    <string name="map_hint_place_pin">轻触地图任意位置放置图钉以选定虚拟位置</string>
+    <string name="map_start_spoof">开启虚拟定位</string>
+    <string name="map_stop_spoof">停止虚拟定位</string>
+    <string name="map_select_location_first">请先选定地图位置</string>
+
+    <!-- Target apps -->
+    <string name="target_apps_filter_user_only">仅显示用户应用</string>
+    <string name="target_apps_include_system">包含系统应用</string>
+    <string name="target_apps_enabled_count">已启用 %1$d 个应用</string>
+
+    <!-- Drawer -->
+    <string name="drawer_header_subtitle">现代化底层定位与模拟工具</string>
 </resources>
