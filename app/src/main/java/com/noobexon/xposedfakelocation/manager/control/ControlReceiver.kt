@@ -5,6 +5,7 @@ import android.content.Context
 import android.content.Intent
 import android.util.Log
 import com.noobexon.xposedfakelocation.data.repository.PreferencesRepository
+import com.noobexon.xposedfakelocation.manager.notification.FixedLocationNotificationService
 import kotlinx.coroutines.CoroutineScope
 import kotlinx.coroutines.Dispatchers
 import kotlinx.coroutines.launch
@@ -39,9 +40,9 @@ class ControlReceiver : BroadcastReceiver() {
         CoroutineScope(Dispatchers.IO).launch {
             try {
                 when (action) {
-                    ACTION_START -> handleStart(intent, repository)
-                    ACTION_STOP -> repository.saveIsPlaying(false)
-                    ACTION_SET_LOCATION -> handleSetLocation(intent, repository)
+                    ACTION_START -> handleStart(appContext, intent, repository)
+                    ACTION_STOP -> { repository.saveIsPlaying(false); context.startService(Intent(context, FixedLocationNotificationService::class.java).setAction(FixedLocationNotificationService.ACTION_STOP)) }
+                    ACTION_SET_LOCATION -> handleSetLocation(appContext, intent, repository)
                     else -> Log.w(TAG, "Unknown action: $action")
                 }
             } catch (e: Exception) {
@@ -52,7 +53,7 @@ class ControlReceiver : BroadcastReceiver() {
         }
     }
 
-    private suspend fun handleStart(intent: Intent, repository: PreferencesRepository) {
+    private suspend fun handleStart(context: Context, intent: Intent, repository: PreferencesRepository) {
         if (intent.hasExtra(EXTRA_LATITUDE) && intent.hasExtra(EXTRA_LONGITUDE)) {
             val coords = parseCoordinates(intent)
             if (coords != null) {
@@ -60,9 +61,10 @@ class ControlReceiver : BroadcastReceiver() {
             }
         }
         repository.saveIsPlaying(true)
+        androidx.core.content.ContextCompat.startForegroundService(context, Intent(context, FixedLocationNotificationService::class.java).setAction(FixedLocationNotificationService.ACTION_START))
     }
 
-    private suspend fun handleSetLocation(intent: Intent, repository: PreferencesRepository) {
+    private suspend fun handleSetLocation(context: Context, intent: Intent, repository: PreferencesRepository) {
         val coords = parseCoordinates(intent) ?: return
         repository.saveLastClickedLocation(coords.first, coords.second)
 
@@ -78,6 +80,7 @@ class ControlReceiver : BroadcastReceiver() {
 
         if (intent.getBooleanExtra(EXTRA_START, false)) {
             repository.saveIsPlaying(true)
+            androidx.core.content.ContextCompat.startForegroundService(context, Intent(context, FixedLocationNotificationService::class.java).setAction(FixedLocationNotificationService.ACTION_START))
         }
     }
 

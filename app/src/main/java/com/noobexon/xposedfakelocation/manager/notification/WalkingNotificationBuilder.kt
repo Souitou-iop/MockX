@@ -41,6 +41,7 @@ class WalkingNotificationBuilder(private val context: Context) {
             .setSmallIcon(SMALL_ICON_RES)
             .setContentTitle(title)
             .setContentText(text)
+            .setSubText(formatter.routeSummary(state))
             .setOngoing(true)
             .setOnlyAlertOnce(true)
             .setCategory(NotificationCompat.CATEGORY_NAVIGATION)
@@ -89,9 +90,9 @@ class WalkingNotificationBuilder(private val context: Context) {
                 context = context,
                 state = state,
                 title = title,
-                status = formatter.statusLabel(state),
-                distanceSummary = formatter.distanceSummary(state),
-                eta = formatter.etaText(state),
+                status = formatter.compactMode(),
+                distanceSummary = formatter.routeSummary(state),
+                eta = listOfNotNull(formatter.distanceSummary(state), formatter.etaText(state)).joinToString(" · "),
             )
         }
 

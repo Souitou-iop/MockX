@@ -68,5 +68,9 @@
             android:name=".manager.walking.WalkingSimulationService"
             android:exported="false"
             android:foregroundServiceType="location" />
+        <service
+            android:name=".manager.notification.FixedLocationNotificationService"
+            android:exported="false"
+            android:foregroundServiceType="location" />
     </application>
 </manifest>

@@ -352,4 +352,10 @@
 
     <!-- Drawer -->
     <string name="drawer_header_subtitle">现代化底层定位与模拟工具</string>
+    <string name="walk_compact_mode">步行规划</string>
+    <string name="walk_origin">起点</string>
+    <string name="walk_destination">终点</string>
+    <string name="walk_arrival_format">预计 %1$s 到达</string>
+    <string name="virtual_location_mode">虚拟定位</string>
+    <string name="virtual_location_active">虚拟定位已开启</string>
 </resources>

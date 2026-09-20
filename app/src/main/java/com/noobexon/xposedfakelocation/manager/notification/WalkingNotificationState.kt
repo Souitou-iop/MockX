@@ -1,5 +1,6 @@
 package com.noobexon.xposedfakelocation.manager.notification
 
+import com.noobexon.xposedfakelocation.manager.route.Coordinate
 import com.noobexon.xposedfakelocation.manager.route.WalkingPhase
 
 /**
@@ -21,6 +22,8 @@ data class WalkingNotificationState(
     /** Estimated seconds to arrival; null when unknown or not meaningful (paused, arrived). */
     val remainingSeconds: Long?,
     val sequence: Long,
+    val origin: Coordinate? = null,
+    val destination: Coordinate? = null,
 ) {
     /** Progress on the 0..100 percent scale used by the HyperOS progress bar. */
     val progressPercent: Int get() = (progressPerMille / 10).coerceIn(0, 100)
@@ -63,6 +66,8 @@ data class WalkingNotificationState(
             totalMeters: Double,
             speedMetersPerSecond: Float,
             sequence: Long,
+            origin: Coordinate? = null,
+            destination: Coordinate? = null,
         ): WalkingNotificationState {
             val progress = if (phase == WalkingPhase.ARRIVED) {
                 PROGRESS_MAX
@@ -79,6 +84,8 @@ data class WalkingNotificationState(
                 progressPerMille = progress,
                 travelledMeters = travelledMeters,
                 totalMeters = totalMeters,
+                origin = origin,
+                destination = destination,
                 remainingSeconds = remainingSeconds,
                 sequence = sequence,
             )

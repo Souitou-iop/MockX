@@ -2,6 +2,7 @@ package com.noobexon.xposedfakelocation.manager.ui.map
 
 import android.app.Application
 import android.content.Context
+import android.content.Intent
 import android.util.Log
 import androidx.annotation.StringRes
 import androidx.core.content.ContextCompat
@@ -20,6 +21,7 @@ import com.noobexon.xposedfakelocation.manager.route.WalkingRouteClient
 import com.noobexon.xposedfakelocation.manager.route.WalkingRouteCodec
 import com.noobexon.xposedfakelocation.manager.route.WalkingSpeedPreset
 import com.noobexon.xposedfakelocation.manager.walking.WalkingSimulationService
+import com.noobexon.xposedfakelocation.manager.notification.FixedLocationNotificationService
 import kotlinx.coroutines.channels.Channel
 import kotlinx.coroutines.flow.Flow
 import kotlinx.coroutines.flow.MutableStateFlow
@@ -214,6 +216,17 @@ class MapViewModel(application: Application) : AndroidViewModel(application) {
 
         viewModelScope.launch {
             preferencesRepository.saveIsPlaying(currentIsPlaying)
+            val action = if (currentIsPlaying) FixedLocationNotificationService.ACTION_START
+            else FixedLocationNotificationService.ACTION_STOP
+            if (currentIsPlaying) {
+                ContextCompat.startForegroundService(
+                    getApplication(), Intent(getApplication(), FixedLocationNotificationService::class.java).setAction(action)
+                )
+            } else {
+                getApplication<Application>().startService(
+                    Intent(getApplication(), FixedLocationNotificationService::class.java).setAction(action)
+                )
+            }
         }
     }
 

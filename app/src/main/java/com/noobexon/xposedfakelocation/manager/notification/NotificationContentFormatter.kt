@@ -2,6 +2,7 @@ package com.noobexon.xposedfakelocation.manager.notification
 
 import android.content.Context
 import com.noobexon.xposedfakelocation.R
+import com.noobexon.xposedfakelocation.manager.route.Coordinate
 import com.noobexon.xposedfakelocation.manager.route.WalkingPhase
 import java.util.Locale
 
@@ -35,7 +36,16 @@ class NotificationContentFormatter(private val context: Context) {
     fun contentTitle(): String = context.getString(R.string.walk_notification_title)
 
     fun contentText(state: WalkingNotificationState): String =
-        NotificationTextResolver.contentText(state, texts)
+        NotificationTextResolver.contentText(state, texts) +
+            etaText(state)?.let { " · $it" }.orEmpty()
+
+    fun routeSummary(state: WalkingNotificationState): String =
+        listOfNotNull(
+            state.origin?.let { "${context.getString(R.string.walk_origin)} ${formatCoordinate(it)}" },
+            state.destination?.let { "${context.getString(R.string.walk_destination)} ${formatCoordinate(it)}" },
+        ).joinToString(" → ")
+
+    fun compactMode(): String = context.getString(R.string.walk_compact_mode)
 
     /** Short status label shared by the HyperOS ticker, AOD line and island summary. */
     fun statusLabel(state: WalkingNotificationState): String =
@@ -52,6 +62,9 @@ class NotificationContentFormatter(private val context: Context) {
         NotificationTextResolver.distanceSummary(state.travelledMeters, state.totalMeters)
 
     companion object {
+        fun formatCoordinate(coordinate: Coordinate): String =
+            String.format(Locale.US, "%.5f, %.5f", coordinate.latitude, coordinate.longitude)
+
         /** Mirrors the map screen's distance formatting: "850 m" below 1 km, "1.24 km" above. */
         fun formatDistance(meters: Double): String = when {
             !meters.isFinite() || meters < 0.0 -> String.format(Locale.US, "%.0f m", 0.0)

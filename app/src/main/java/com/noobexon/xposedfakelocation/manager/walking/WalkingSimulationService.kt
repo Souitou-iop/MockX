@@ -390,6 +390,8 @@ class WalkingSimulationService : Service() {
             totalMeters = repository.getWalkingTotalDistance(),
             speedMetersPerSecond = repository.getWalkingSpeed(),
             sequence = notificationSequence.incrementAndGet(),
+            origin = WalkingRouteCodec.decode(repository.getWalkingRouteJson())?.origin,
+            destination = WalkingRouteCodec.decode(repository.getWalkingRouteJson())?.destination,
         )
 
     private fun rememberSent(state: WalkingNotificationState) {

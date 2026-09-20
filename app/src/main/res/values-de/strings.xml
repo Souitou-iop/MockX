@@ -300,4 +300,10 @@
 
     <!-- Drawer -->
     <string name="drawer_header_subtitle">Moderne Standort-Spoofing-Toolbox</string>
+    <string name="walk_compact_mode">Gehsimulation</string>
+    <string name="walk_origin">Start</string>
+    <string name="walk_destination">Ziel</string>
+    <string name="walk_arrival_format">Voraussichtliche Ankunft %1$s</string>
+    <string name="virtual_location_mode">Virtueller Standort</string>
+    <string name="virtual_location_active">Virtueller Standort aktiv</string>
 </resources>

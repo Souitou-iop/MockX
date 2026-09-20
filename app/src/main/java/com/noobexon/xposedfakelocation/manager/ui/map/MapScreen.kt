@@ -76,6 +76,9 @@ import top.yukonga.miuix.kmp.icon.extended.Close
 import top.yukonga.miuix.kmp.icon.extended.Delete
 import top.yukonga.miuix.kmp.icon.extended.Favorites
 import top.yukonga.miuix.kmp.icon.extended.Location
+import java.text.SimpleDateFormat
+import java.util.Date
+import java.util.Locale
 import top.yukonga.miuix.kmp.icon.extended.MapAlbum
 import top.yukonga.miuix.kmp.icon.extended.More
 import top.yukonga.miuix.kmp.icon.extended.Pause
@@ -85,7 +88,6 @@ import top.yukonga.miuix.kmp.icon.extended.Sidebar
 import top.yukonga.miuix.kmp.menu.WindowIconDropdownMenu
 import top.yukonga.miuix.kmp.theme.MiuixTheme
 import kotlinx.coroutines.launch
-import java.util.Locale
 
 /**
  * Full-screen immersive map with HyperOS floating chrome: a top status island (drawer trigger,
@@ -655,6 +657,17 @@ private fun WalkingControlCard(
 
             WalkingPhase.READY -> {
                 Spacer(modifier = Modifier.height(10.dp))
+                WalkingEndpoints(route)
+                Spacer(modifier = Modifier.height(8.dp))
+                Text(
+                    text = stringResource(
+                        R.string.walk_arrival_format,
+                        formatArrivalTime((route?.expectedDurationSeconds ?: 0).toLong()),
+                    ),
+                    fontSize = 12.sp,
+                    color = MiuixTheme.colorScheme.onSurfaceVariantSummary,
+                )
+                Spacer(modifier = Modifier.height(10.dp))
                 WalkingSpeedChipRow(uiState.walkingSpeedPreset, onSpeedChange)
                 Spacer(modifier = Modifier.height(10.dp))
                 PillActionButton(
@@ -674,6 +687,7 @@ private fun WalkingControlCard(
                     modifier = Modifier.fillMaxWidth()
                 )
                 Spacer(modifier = Modifier.height(4.dp))
+                WalkingEndpoints(route)
                 Text(
                     text = stringResource(
                         R.string.walk_progress_format,
@@ -683,6 +697,15 @@ private fun WalkingControlCard(
                     fontSize = 12.sp,
                     color = MiuixTheme.colorScheme.onSurfaceVariantSummary
                 )
+                if (phase != WalkingPhase.ARRIVED && route != null && uiState.walkingSpeedPreset.metersPerSecond > 0f) {
+                    val remaining = ((total - uiState.walkingDistanceTravelled) / uiState.walkingSpeedPreset.metersPerSecond)
+                        .toLong().coerceAtLeast(0)
+                    Text(
+                        text = stringResource(R.string.walk_arrival_format, formatArrivalTime(remaining)),
+                        fontSize = 12.sp,
+                        color = MiuixTheme.colorScheme.onSurfaceVariantSummary,
+                    )
+                }
                 if (phase != WalkingPhase.ARRIVED) {
                     Spacer(modifier = Modifier.height(8.dp))
                     WalkingSpeedChipRow(uiState.walkingSpeedPreset, onSpeedChange)
@@ -762,6 +785,25 @@ private fun WalkingSpeedChipRow(
         }
     }
 }
+
+@Composable
+private fun WalkingEndpoints(route: WalkingRoute?) {
+    if (route == null) return
+    Text(
+        text = stringResource(R.string.walk_origin) + " " + formatCoordinate(route.origin) +
+            " → " + stringResource(R.string.walk_destination) + " " + formatCoordinate(route.destination),
+        fontSize = 12.sp,
+        color = MiuixTheme.colorScheme.onSurfaceVariantSummary,
+        maxLines = 2,
+        overflow = TextOverflow.Ellipsis,
+    )
+}
+
+private fun formatCoordinate(coordinate: com.noobexon.xposedfakelocation.manager.route.Coordinate): String =
+    String.format(Locale.US, "%.5f, %.5f", coordinate.latitude, coordinate.longitude)
+
+private fun formatArrivalTime(remainingSeconds: Long): String =
+    SimpleDateFormat("HH:mm", Locale.getDefault()).format(Date(System.currentTimeMillis() + remainingSeconds * 1000L))
 
 /** "1.24 km · 约 15 分钟" style summary; the ETA prefers the API-provided duration. */
 @Composable
