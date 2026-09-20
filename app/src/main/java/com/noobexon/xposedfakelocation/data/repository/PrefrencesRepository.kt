@@ -15,6 +15,7 @@ import com.noobexon.xposedfakelocation.data.DEFAULT_ENABLE_BROADCAST_CONTROL
 import com.noobexon.xposedfakelocation.data.DEFAULT_ENABLE_SYSTEM_HOOKS
 import com.noobexon.xposedfakelocation.data.DEFAULT_ENABLE_WIFI_IDENTITY
 import com.noobexon.xposedfakelocation.data.DEFAULT_HIDE_FAKE_LOCATION_TOAST
+import com.noobexon.xposedfakelocation.data.DEFAULT_ISLAND_STYLE
 import com.noobexon.xposedfakelocation.data.DEFAULT_LANGUAGE_TAG
 import com.noobexon.xposedfakelocation.data.DEFAULT_MAP_SOURCE
 import com.noobexon.xposedfakelocation.data.DEFAULT_MAP_ZOOM
@@ -50,6 +51,8 @@ import com.noobexon.xposedfakelocation.data.KEY_ENABLE_WIFI_IDENTITY
 import com.noobexon.xposedfakelocation.data.KEY_FAVORITES
 import com.noobexon.xposedfakelocation.data.KEY_HIDE_FAKE_LOCATION_TOAST
 import com.noobexon.xposedfakelocation.data.KEY_IS_PLAYING
+import com.noobexon.xposedfakelocation.data.KEY_FIXED_LOCATION_STARTED_AT
+import com.noobexon.xposedfakelocation.data.KEY_ISLAND_STYLE
 import com.noobexon.xposedfakelocation.data.KEY_LANGUAGE_TAG
 import com.noobexon.xposedfakelocation.data.KEY_LAST_CLICKED_LOCATION
 import com.noobexon.xposedfakelocation.data.KEY_MAP_SOURCE
@@ -195,6 +198,12 @@ class PreferencesRepository(context: Context) {
     fun getIsPlayingFlow(): Flow<Boolean> = remoteFlow(KEY_IS_PLAYING, false) { it.getBoolean(KEY_IS_PLAYING, false) }
     suspend fun saveIsPlaying(isPlaying: Boolean) = editRemote { putBoolean(KEY_IS_PLAYING, isPlaying) }
     fun getIsPlaying(): Boolean = remotePrefs()?.getBoolean(KEY_IS_PLAYING, false) ?: false
+    // endregion
+
+    // region Fixed Location Started At (remote)
+    fun getFixedLocationStartedAt(): Long = remotePrefs()?.getLong(KEY_FIXED_LOCATION_STARTED_AT, 0L) ?: 0L
+    suspend fun saveFixedLocationStartedAt(epochMillis: Long) =
+        editRemote { putLong(KEY_FIXED_LOCATION_STARTED_AT, epochMillis) }
     // endregion
 
     // region Last Clicked Location (remote)
@@ -494,6 +503,17 @@ class PreferencesRepository(context: Context) {
     fun getAmapWebServiceKey(): String = localPrefs.getString(KEY_AMAP_WEB_SERVICE_KEY, DEFAULT_AMAP_WEB_SERVICE_KEY) ?: DEFAULT_AMAP_WEB_SERVICE_KEY
 
     fun isAmapWebServiceKeyConfigured(): Boolean = getAmapWebServiceKey().isNotBlank()
+    // endregion
+
+    // region Island style (local; manager-only — rendering choice for active-session notifications)
+    fun getIslandStyleFlow(): Flow<String> =
+        localFlow(KEY_ISLAND_STYLE) { it.getString(KEY_ISLAND_STYLE, DEFAULT_ISLAND_STYLE) ?: DEFAULT_ISLAND_STYLE }
+
+    suspend fun saveIslandStyle(tag: String) = editLocal { putString(KEY_ISLAND_STYLE, tag) }
+
+    /** Synchronous read used by the notification builders when a session renders. */
+    fun getIslandStyle(): String =
+        localPrefs.getString(KEY_ISLAND_STYLE, DEFAULT_ISLAND_STYLE) ?: DEFAULT_ISLAND_STYLE
     // endregion
 
     // region Walking simulation (remote; hooks read the dynamic position from these keys)

@@ -8,6 +8,8 @@ const val REMOTE_PREFS_GROUP = "settings"
 
 // KEYS
 const val KEY_IS_PLAYING = "is_playing"
+/** Epoch millis when the fixed virtual-location session started; drives the "elapsed" display. */
+const val KEY_FIXED_LOCATION_STARTED_AT = "fixed_location_started_at"
 
 const val KEY_LAST_CLICKED_LOCATION = "last_clicked_location"
 
@@ -132,6 +134,11 @@ val MAC_ADDRESS_REGEX = Regex("(?i)^[0-9a-f]{2}(:[0-9a-f]{2}){5}$")
 // AMAP WEB SERVICE (local; manager-only, never shared with the hook side)
 const val KEY_AMAP_WEB_SERVICE_KEY = "amap_web_service_key"
 const val DEFAULT_AMAP_WEB_SERVICE_KEY = ""
+
+// NOTIFICATION STYLE (local; manager-only — decides whether active sessions render as the
+// Xiaomi Super Island or the Android 16 Google Live Update, or fall back to the device default)
+const val KEY_ISLAND_STYLE = "island_style"
+const val DEFAULT_ISLAND_STYLE = "auto"
 
 // WALKING SIMULATION DEFAULTS
 const val DEFAULT_WALKING_ENABLED = false

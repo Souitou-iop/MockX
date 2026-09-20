@@ -60,6 +60,7 @@ class ControlReceiver : BroadcastReceiver() {
                 repository.saveLastClickedLocation(coords.first, coords.second)
             }
         }
+        repository.saveFixedLocationStartedAt(System.currentTimeMillis())
         repository.saveIsPlaying(true)
         androidx.core.content.ContextCompat.startForegroundService(context, Intent(context, FixedLocationNotificationService::class.java).setAction(FixedLocationNotificationService.ACTION_START))
     }
@@ -79,6 +80,7 @@ class ControlReceiver : BroadcastReceiver() {
         }
 
         if (intent.getBooleanExtra(EXTRA_START, false)) {
+            repository.saveFixedLocationStartedAt(System.currentTimeMillis())
             repository.saveIsPlaying(true)
             androidx.core.content.ContextCompat.startForegroundService(context, Intent(context, FixedLocationNotificationService::class.java).setAction(FixedLocationNotificationService.ACTION_START))
         }

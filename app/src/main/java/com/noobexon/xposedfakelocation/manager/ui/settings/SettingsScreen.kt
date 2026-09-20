@@ -51,6 +51,7 @@ import com.noobexon.xposedfakelocation.R
 import com.noobexon.xposedfakelocation.manager.RefreshRateHelper
 import com.noobexon.xposedfakelocation.manager.localization.LanguageOption
 import com.noobexon.xposedfakelocation.manager.localization.LocaleController
+import com.noobexon.xposedfakelocation.manager.notification.IslandStyleOption
 import com.noobexon.xposedfakelocation.manager.ui.components.AppDialog
 import com.noobexon.xposedfakelocation.manager.ui.components.BlurredBar
 import com.noobexon.xposedfakelocation.manager.ui.components.BlurBackdropBox
@@ -162,6 +163,7 @@ fun SettingsScreen(
             SettingEntry.Numeric(NumericSetting.SPEED_ACCURACY, uiState.useSpeedAccuracy, settingsViewModel::setUseSpeedAccuracy, uiState.speedAccuracy, settingsViewModel::setSpeedAccuracy)
         ),
         SettingsCategory.NOTIFICATIONS to listOf(
+            SettingEntry.IslandStyle(uiState.islandStyle, settingsViewModel::setIslandStyle),
             SettingEntry.Switch(SettingKeys.HIDE_TOAST, R.string.setting_hide_toast_title, R.string.setting_hide_toast_description, uiState.hideFakeLocationToast, settingsViewModel::setHideFakeLocationToast)
         ),
         SettingsCategory.SYSTEM_HOOKS to listOf(
@@ -458,6 +460,11 @@ private fun SettingEntryRow(entry: SettingEntry) {
             selectedSource = entry.selected,
             onSourceSelected = entry.onSelected
         )
+
+        is SettingEntry.IslandStyle -> IslandStyleRow(
+            selected = entry.selected,
+            onSelected = entry.onSelected,
+        )
     }
 }
 
@@ -662,6 +669,23 @@ private fun ThemeRow(
 }
 
 @Composable
+private fun IslandStyleRow(
+    selected: IslandStyleOption,
+    onSelected: (IslandStyleOption) -> Unit,
+) {
+    val styleOptions = IslandStyleOption.entries.map { stringResource(it.labelRes) }
+    WindowDropdownPreference(
+        title = stringResource(R.string.setting_island_style_title),
+        summary = stringResource(R.string.setting_island_style_description),
+        items = styleOptions,
+        selectedIndex = IslandStyleOption.entries.indexOf(selected),
+        onSelectedIndexChange = { index ->
+            IslandStyleOption.entries.getOrNull(index)?.let(onSelected)
+        },
+    )
+}
+
+@Composable
 private fun MonetColorRow(
     selectedColorId: Int,
     onSelected: (Int) -> Unit,
@@ -739,4 +763,5 @@ private fun searchTextOf(entry: SettingEntry, context: Context): String = when (
     is SettingEntry.MonetColor -> "${context.getString(R.string.setting_monet_color_title)} ${context.getString(R.string.setting_monet_color_description)}"
     is SettingEntry.Language -> "${context.getString(R.string.setting_language_title)} ${context.getString(R.string.setting_language_description)}"
     is SettingEntry.MapSource -> "${context.getString(R.string.setting_map_source_title)} ${context.getString(R.string.setting_map_source_description)}"
+    is SettingEntry.IslandStyle -> "${context.getString(R.string.setting_island_style_title)} ${context.getString(R.string.setting_island_style_description)}"
 }

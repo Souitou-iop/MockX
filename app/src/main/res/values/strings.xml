@@ -91,6 +91,11 @@
     <string name="setting_language_description">Changes the language used by the manager app and its Xposed toast messages.</string>
     <string name="setting_hide_toast_title">Hide \'Fake location active\' toast</string>
     <string name="setting_hide_toast_description">Suppresses the toast shown when the module activates in a target app</string>
+    <string name="setting_island_style_title">Notification style</string>
+    <string name="setting_island_style_description">How walking and virtual-location sessions render while active: Xiaomi Super Island, Google Live Update (Android 16+), or the device-appropriate default. Applies to the next session.</string>
+    <string name="island_style_auto">Auto</string>
+    <string name="island_style_super_island">Super Island (Xiaomi)</string>
+    <string name="island_style_google_live_update">Google Live Update (Android 16+)</string>
     <string name="setting_external_broadcast_title">Allow external broadcast control</string>
     <string name="setting_external_broadcast_description">Off (default): blocks the BroadcastReceiver — no app or ADB shell can start/stop spoofing or set coordinates via intents. On: any installed app and \'adb shell am broadcast\' can drive the module (no permission check; coordinates are clamped to valid lat/lon ranges). Only enable this if you trust every app on the device or are running on a controlled (e.g., automation) device. See docs/EXTERNAL_CONTROL.md for actions and lock-down options.</string>
     <string name="setting_system_hooks_title">Enable system-level hooks</string>
@@ -360,4 +365,6 @@
     <string name="walk_arrival_format">Estimated arrival %1$s</string>
     <string name="virtual_location_mode">Virtual location</string>
     <string name="virtual_location_active">Virtual location active</string>
+    <string name="virtual_location_elapsed">Elapsed %1$s</string>
+    <string name="virtual_location_stop">Stop</string>
 </resources>

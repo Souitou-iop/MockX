@@ -45,6 +45,20 @@ class NotificationContentFormatter(private val context: Context) {
             state.destination?.let { "${context.getString(R.string.walk_destination)} ${formatCoordinate(it)}" },
         ).joinToString(" → ")
 
+    /** One line per endpoint (起点 / 终点), so the expanded island can stack them instead of
+     * truncating a single long "起点 … → 终点 …" line. */
+    fun routeLines(state: WalkingNotificationState): List<String> = listOfNotNull(
+        state.origin?.let { "${context.getString(R.string.walk_origin)} ${formatCoordinate(it)}" },
+        state.destination?.let { "${context.getString(R.string.walk_destination)} ${formatCoordinate(it)}" },
+    )
+
+    /** [routeLines] shortened to 3-decimal coordinates so both endpoints fit on one island
+     * content line without truncation; full 5-decimal precision stays in the notification centre. */
+    fun routeLinesShort(state: WalkingNotificationState): List<String> = listOfNotNull(
+        state.origin?.let { "${context.getString(R.string.walk_origin)} ${formatCoordinateShort(it)}" },
+        state.destination?.let { "${context.getString(R.string.walk_destination)} ${formatCoordinateShort(it)}" },
+    )
+
     fun compactMode(): String = context.getString(R.string.walk_compact_mode)
 
     /** Short status label shared by the HyperOS ticker, AOD line and island summary. */
@@ -64,6 +78,10 @@ class NotificationContentFormatter(private val context: Context) {
     companion object {
         fun formatCoordinate(coordinate: Coordinate): String =
             String.format(Locale.US, "%.5f, %.5f", coordinate.latitude, coordinate.longitude)
+
+        /** 3-decimal compact form for space-constrained island lines. */
+        fun formatCoordinateShort(coordinate: Coordinate): String =
+            String.format(Locale.US, "%.3f, %.3f", coordinate.latitude, coordinate.longitude)
 
         /** Mirrors the map screen's distance formatting: "850 m" below 1 km, "1.24 km" above. */
         fun formatDistance(meters: Double): String = when {

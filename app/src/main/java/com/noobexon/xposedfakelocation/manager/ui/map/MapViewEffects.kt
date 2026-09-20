@@ -543,12 +543,43 @@ internal fun HandleWalkingRouteOverlay(
             // Index 0 keeps the route beneath every marker and the location overlay.
             mapView.overlays.add(0, polyline)
         }
-        mapView.zoomToBoundingBox(
-            org.osmdroid.util.BoundingBox.fromGeoPoints(displayPoints),
-            false,
-            ROUTE_FIT_PADDING_PX,
-        )
+        fitCameraToRoute(mapView, displayPoints)
         mapView.invalidate()
+    }
+}
+
+/**
+ * Fits the camera to the route's bounding box without ever spinning the main thread.
+ *
+ * osmdroid's `zoomToBoundingBox` can busy-loop (100% CPU → ANR) when the [MapView] has no
+ * layout yet — exactly what happens when the app is revived from the Super Island notification
+ * while a walking session is live. We therefore only fit once the view reports real dimensions,
+ * and even then guard it with [runCatching]; if the view is still unlaid-out we centre on the
+ * route midpoint now and re-fit on the next frame via [android.view.View.post].
+ */
+private fun fitCameraToRoute(
+    mapView: MapView,
+    displayPoints: List<GeoPoint>,
+) {
+    if (displayPoints.isEmpty()) return
+    val bbox = runCatching { org.osmdroid.util.BoundingBox.fromGeoPoints(displayPoints) }.getOrNull()
+        ?: return
+    val fitAction = {
+        val fit = runCatching {
+            mapView.zoomToBoundingBox(bbox, false, ROUTE_FIT_PADDING_PX)
+        }
+        if (fit.isFailure) {
+            // Fall back to a manual centre at the previous zoom to keep the route visible.
+            mapView.controller.setCenter(displayPoints[displayPoints.size / 2])
+            mapView.invalidate()
+        }
+    }
+    if (mapView.width > 0 && mapView.height > 0) {
+        fitAction()
+    } else {
+        // Defer until the AndroidView has laid the map out; retry once next frame.
+        mapView.controller.setCenter(bbox.centerWithDateLine)
+        mapView.post { fitAction() }
     }
 }
 

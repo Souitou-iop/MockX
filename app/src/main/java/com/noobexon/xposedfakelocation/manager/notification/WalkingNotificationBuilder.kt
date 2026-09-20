@@ -10,6 +10,7 @@ import android.os.Build
 import androidx.core.app.NotificationCompat
 import androidx.core.graphics.drawable.IconCompat
 import com.noobexon.xposedfakelocation.R
+import com.noobexon.xposedfakelocation.data.repository.PreferencesRepository
 import com.noobexon.xposedfakelocation.manager.MainActivity
 import com.noobexon.xposedfakelocation.manager.route.WalkingPhase
 import com.noobexon.xposedfakelocation.manager.walking.WalkingSimulationService
@@ -23,6 +24,7 @@ import com.noobexon.xposedfakelocation.manager.walking.WalkingSimulationService
 class WalkingNotificationBuilder(private val context: Context) {
 
     private val formatter = NotificationContentFormatter(context)
+    private val repository = PreferencesRepository(context)
 
     fun createChannel() {
         val channel = NotificationChannel(
@@ -78,13 +80,25 @@ class WalkingNotificationBuilder(private val context: Context) {
             }
         }
 
-        if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.BAKLAVA) {
-            AndroidLiveUpdateAdapter.styleSpec(state)?.let { spec ->
-                AndroidLiveUpdateAdapter.apply(builder, spec, trackerIcon())
-            }
+        // One styled surface per device: Xiaomi hardware renders the HyperOS Super Island from
+        // the miui.focus extras; elsewhere the Android 16 Live Update progress style is used.
+        // The two must be mutually exclusive — on OS3 the Google style would win the render and
+        // the island extras would be ignored (通知体验升级规划.md §9). The user can force either
+        // side with the "Notification style" setting; AUTO keeps this device-appropriate default.
+        val islandStyle = IslandStyleOption.fromTag(repository.getIslandStyle())
+        val isXiaomi = XiaomiIslandAdapter.isEligible(context)
+        val useIsland = when (islandStyle) {
+            IslandStyleOption.AUTO -> isXiaomi
+            IslandStyleOption.SUPER_ISLAND -> isXiaomi
+            IslandStyleOption.GOOGLE_LIVE_UPDATE -> false
         }
+        val useLiveUpdate = when (islandStyle) {
+            IslandStyleOption.AUTO -> !isXiaomi
+            IslandStyleOption.SUPER_ISLAND -> false
+            IslandStyleOption.GOOGLE_LIVE_UPDATE -> true
+        } && Build.VERSION.SDK_INT >= Build.VERSION_CODES.BAKLAVA
 
-        if (XiaomiIslandAdapter.isEligible(context)) {
+        if (useIsland) {
             XiaomiIslandAdapter.apply(
                 builder = builder,
                 context = context,
@@ -93,7 +107,19 @@ class WalkingNotificationBuilder(private val context: Context) {
                 status = formatter.compactMode(),
                 distanceSummary = formatter.routeSummary(state),
                 eta = listOfNotNull(formatter.distanceSummary(state), formatter.etaText(state)).joinToString(" · "),
+                // Third line: travelled distance · ETA, only when there is useful content.
+                expandedLines = formatter.routeLinesShort(state).ifEmpty {
+                    listOfNotNull(
+                        listOfNotNull(formatter.distanceSummary(state), formatter.etaText(state))
+                            .joinToString(" · ")
+                            .takeIf { it.isNotBlank() },
+                    )
+                },
             )
+        } else if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.BAKLAVA) {
+            AndroidLiveUpdateAdapter.styleSpec(state)?.let { spec ->
+                AndroidLiveUpdateAdapter.apply(builder, spec, trackerIcon())
+            }
         }
 
         return builder.build()

@@ -13,6 +13,7 @@ import com.noobexon.xposedfakelocation.data.DEFAULT_ENABLE_BROADCAST_CONTROL
 import com.noobexon.xposedfakelocation.data.DEFAULT_ENABLE_SYSTEM_HOOKS
 import com.noobexon.xposedfakelocation.data.DEFAULT_ENABLE_WIFI_IDENTITY
 import com.noobexon.xposedfakelocation.data.DEFAULT_HIDE_FAKE_LOCATION_TOAST
+import com.noobexon.xposedfakelocation.data.DEFAULT_ISLAND_STYLE
 import com.noobexon.xposedfakelocation.data.DEFAULT_LANGUAGE_TAG
 import com.noobexon.xposedfakelocation.data.DEFAULT_MAP_SOURCE
 import com.noobexon.xposedfakelocation.data.DEFAULT_MEAN_SEA_LEVEL
@@ -43,6 +44,7 @@ import com.noobexon.xposedfakelocation.data.repository.PreferencesRepository
 import com.noobexon.xposedfakelocation.manager.App
 import com.noobexon.xposedfakelocation.manager.control.ControlReceiver
 import com.noobexon.xposedfakelocation.manager.localization.LocaleController
+import com.noobexon.xposedfakelocation.manager.notification.IslandStyleOption
 import com.noobexon.xposedfakelocation.manager.ui.map.MapSourceOption
 import io.github.libxposed.service.XposedService
 import kotlinx.coroutines.CancellationException
@@ -248,6 +250,12 @@ class SettingsViewModel(application: Application) : AndroidViewModel(application
         preferencesRepository::saveHideFakeLocationToast
     )
 
+    private val _islandStyle = Preference(
+        DEFAULT_ISLAND_STYLE,
+        preferencesRepository.getIslandStyleFlow(),
+        preferencesRepository::saveIslandStyle
+    )
+
     // ---- Wi-Fi identity ----------------------------------------------------------------------
 
     private val _enableWifiIdentity = Preference(
@@ -380,6 +388,7 @@ class SettingsViewModel(application: Application) : AndroidViewModel(application
         .combine(_useSpeedAccuracy.state)        { s, v -> s.copy(useSpeedAccuracy = v) }
         .combine(_speedAccuracy.state)           { s, v -> s.copy(speedAccuracy = v) }
         .combine(_hideFakeLocationToast.state)   { s, v -> s.copy(hideFakeLocationToast = v) }
+        .combine(_islandStyle.state)             { s, v -> s.copy(islandStyle = IslandStyleOption.fromTag(v)) }
         .combine(_enableBroadcastControl.state)  { s, v -> s.copy(enableBroadcastControl = v) }
         .combine(enableSystemHooks)              { s, v -> s.copy(systemHooksEnabled = v) }
         .combine(_enableWifiIdentity.state)      { s, v -> s.copy(wifiIdentityEnabled = v) }
@@ -498,6 +507,12 @@ class SettingsViewModel(application: Application) : AndroidViewModel(application
      * @param value `true` to hide the toast; `false` to show it.
      */
     fun setHideFakeLocationToast(value: Boolean) = _hideFakeLocationToast.set(value)
+
+    /**
+     * Applies the active-session notification style (see [IslandStyleOption]). Applies to the
+     * next rendered session — no restart required.
+     */
+    fun setIslandStyle(option: IslandStyleOption) = _islandStyle.set(option.tag)
 
     fun setEnableWifiIdentity(value: Boolean) = _enableWifiIdentity.set(value)
 

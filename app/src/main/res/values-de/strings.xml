@@ -91,6 +91,11 @@
     <string name="setting_language_description">Ändert die von der Manager-App und ihren Xposed-Toast-Meldungen verwendete Sprache.</string>
     <string name="setting_hide_toast_title">Toast-Meldung \'Gefälschter Standort aktiv\' ausblenden</string>
     <string name="setting_hide_toast_description">Unterdrückt die Toast-Meldung, die angezeigt wird, wenn das Modul in einer Ziel-App aktiviert wird</string>
+    <string name="setting_island_style_title">Benachrichtigungsstil</string>
+    <string name="setting_island_style_description">Wählt die Darstellung aktiver Geh-/Standort-Sitzungen: Xiaomi Super Island, Google Live Update (Android 16+) oder die gerätegeeignete Standardeinstellung. Gilt ab der nächsten Sitzung.</string>
+    <string name="island_style_auto">Automatisch</string>
+    <string name="island_style_super_island">Super Island (Xiaomi)</string>
+    <string name="island_style_google_live_update">Google Live Update (Android 16+)</string>
     <string name="setting_external_broadcast_title">Externe Broadcast-Steuerung erlauben</string>
     <string name="setting_external_broadcast_description">Aus (Standard): Blockiert den BroadcastReceiver — keine App oder ADB-Shell kann das Spoofing starten/stoppen oder Koordinaten über Intents setzen. Ein: Jede installierte App und \'adb shell am broadcast\' können das Modul steuern (keine Berechtigungsprüfung; Koordinaten werden auf gültige Breitengrad-/Längengradbereiche begrenzt). Aktiviere dies nur, wenn du jeder App auf dem Gerät vertraust oder die App auf einem kontrollierten Gerät (z. B. zur Automatisierung) läuft. Siehe docs/EXTERNAL_CONTROL.md für Aktionen und Sperroptionen.</string>
     <string name="setting_system_hooks_title">Systemweite Hooks aktivieren</string>
@@ -306,4 +311,6 @@
     <string name="walk_arrival_format">Voraussichtliche Ankunft %1$s</string>
     <string name="virtual_location_mode">Virtueller Standort</string>
     <string name="virtual_location_active">Virtueller Standort aktiv</string>
+    <string name="virtual_location_elapsed">Verstrichen %1$s</string>
+    <string name="virtual_location_stop">Stoppen</string>
 </resources>

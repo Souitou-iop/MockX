@@ -8,6 +8,7 @@ import com.noobexon.xposedfakelocation.data.DEFAULT_ENABLE_BROADCAST_CONTROL
 import com.noobexon.xposedfakelocation.data.DEFAULT_ENABLE_SYSTEM_HOOKS
 import com.noobexon.xposedfakelocation.data.DEFAULT_ENABLE_WIFI_IDENTITY
 import com.noobexon.xposedfakelocation.data.DEFAULT_HIDE_FAKE_LOCATION_TOAST
+import com.noobexon.xposedfakelocation.data.DEFAULT_ISLAND_STYLE
 import com.noobexon.xposedfakelocation.data.DEFAULT_LANGUAGE_TAG
 import com.noobexon.xposedfakelocation.data.DEFAULT_MAP_SOURCE
 import com.noobexon.xposedfakelocation.data.DEFAULT_MEAN_SEA_LEVEL
@@ -32,6 +33,7 @@ import com.noobexon.xposedfakelocation.data.DEFAULT_WIFI_BSSID
 import com.noobexon.xposedfakelocation.data.DEFAULT_WIFI_RSSI
 import com.noobexon.xposedfakelocation.data.DEFAULT_WIFI_SSID
 import com.noobexon.xposedfakelocation.manager.localization.LanguageOption
+import com.noobexon.xposedfakelocation.manager.notification.IslandStyleOption
 import com.noobexon.xposedfakelocation.manager.ui.map.MapSourceOption
 import kotlin.math.round
 
@@ -176,6 +178,7 @@ object SettingKeys {
     const val MAP_SOURCE = "map_source"
     const val TIANDITU_TOKEN = "tianditu_token"
     const val AMAP_KEY = "amap_key"
+    const val ISLAND_STYLE = "island_style"
 }
 
 enum class TextInputKind {
@@ -330,6 +333,23 @@ sealed interface SettingEntry {
         override val titleRes: Int get() = R.string.setting_map_source_title
         override val descriptionRes: Int get() = R.string.setting_map_source_description
     }
+
+    /**
+     * The active-session notification style picker (Xiaomi Super Island vs. Google Live Update),
+     * rendered as an inline dropdown; selecting an option applies it to the next session
+     * immediately — no activity recreation required.
+     *
+     * @property selected The currently active [IslandStyleOption], shown collapsed in the row.
+     * @property onSelected Callback invoked with the chosen [IslandStyleOption].
+     */
+    data class IslandStyle(
+        val selected: IslandStyleOption,
+        val onSelected: (IslandStyleOption) -> Unit
+    ) : SettingEntry {
+        override val key: String get() = SettingKeys.ISLAND_STYLE
+        override val titleRes: Int get() = R.string.setting_island_style_title
+        override val descriptionRes: Int get() = R.string.setting_island_style_description
+    }
 }
 
 /**
@@ -368,6 +388,7 @@ data class SettingsUiState(
     val speedAccuracy: Float = DEFAULT_SPEED_ACCURACY,
     // Behaviour
     val hideFakeLocationToast: Boolean = DEFAULT_HIDE_FAKE_LOCATION_TOAST,
+    val islandStyle: IslandStyleOption = IslandStyleOption.fromTag(DEFAULT_ISLAND_STYLE),
     val enableBroadcastControl: Boolean = DEFAULT_ENABLE_BROADCAST_CONTROL,
     val systemHooksEnabled: Boolean = DEFAULT_ENABLE_SYSTEM_HOOKS,
     // Wi-Fi identity

@@ -60,6 +60,18 @@
         </receiver>
 
         <!--
+            Island stop button entry (模板13 按钮组件1). The Super Island system resolves the
+            actionIntent URI against this receiver, so it must stay exported and always enabled.
+        -->
+        <receiver
+            android:name=".manager.control.IslandStopReceiver"
+            android:exported="true">
+            <intent-filter>
+                <action android:name="io.github.souitou.mockx.action.ISLAND_STOP_FIXED" />
+            </intent-filter>
+        </receiver>
+
+        <!--
             Walk-simulation foreground service. Not exported: it is only commanded by the
             manager app's own UI via explicit intents. The `location` type keeps the per-second
             position tick alive while the user is in other apps or the screen is off.
