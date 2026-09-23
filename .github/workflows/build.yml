@@ -84,6 +84,13 @@ jobs:
               -dname "CN=Android Debug,O=Android,C=US"
           fi
 
+          # Pin the signing key for Gradle. AGP resolves its default debug keystore from a
+          # location that does not match $HOME on GitHub runners, which silently produced a
+          # fresh random key on every build and broke in-place updates.
+          echo "MOCKX_KEYSTORE_PATH=$HOME/.android/debug.keystore" >> "$GITHUB_ENV"
+          echo "HOME=$HOME"
+          keytool -list -v -keystore "$HOME/.android/debug.keystore" -storepass android -alias androiddebugkey 2>/dev/null | grep -i "SHA256:" || true
+
       - name: Make Gradlew Executable
         run: chmod +x ./gradlew
 
@@ -119,6 +126,21 @@ jobs:
           fi
 
           ls -lh output_apks/
+
+      - name: Verify pinned signing key
+        run: |
+          APKSIGNER=$(find "$ANDROID_HOME/build-tools" -name apksigner | sort -V | tail -1)
+          EXPECTED=$(keytool -list -v -keystore "$MOCKX_KEYSTORE_PATH" -storepass android -alias androiddebugkey 2>/dev/null \
+            | sed -n 's/.*SHA256: *//p' | tr -d ': ' | tr 'A-F' 'a-f')
+          echo "Expected cert SHA-256: ${EXPECTED}"
+          for apk in output_apks/*.apk; do
+            ACTUAL=$("$APKSIGNER" verify --print-certs "$apk" | grep -i "SHA-256 digest" | head -n 1 | awk '{print $NF}' | tr 'A-F' 'a-f')
+            echo "$(basename "$apk") -> ${ACTUAL}"
+            if [ -z "$ACTUAL" ] || [ "$ACTUAL" != "$EXPECTED" ]; then
+              echo "::error::signature mismatch for $apk"
+              exit 1
+            fi
+          done
 
       - name: Upload APKs to Artifacts
         uses: actions/upload-artifact@v4

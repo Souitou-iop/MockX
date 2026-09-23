@@ -25,11 +25,25 @@ fun resolveVersionCode(versionName: String): Int {
     return if (base > 0) base else 10000
 }
 
+// Signing: CI restores a fixed keystore and exports MOCKX_KEYSTORE_PATH, so every published
+// APK shares one signature and users can update in place. Local builds keep AGP's default
+// ~/.android/debug.keystore.
+val pinnedKeystorePath = System.getenv("MOCKX_KEYSTORE_PATH")?.takeIf { it.isNotBlank() }
+
 val appVersionName = resolveVersionName()
 val appVersionCode = resolveVersionCode(appVersionName)
 
 android {
     namespace = "com.noobexon.xposedfakelocation"
+
+    if (pinnedKeystorePath != null) {
+        signingConfigs.getByName("debug") {
+            storeFile = file(pinnedKeystorePath)
+            storePassword = "android"
+            keyAlias = "androiddebugkey"
+            keyPassword = "android"
+        }
+    }
     compileSdk = 36
 
     defaultConfig {

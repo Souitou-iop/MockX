@@ -39,6 +39,13 @@ jobs:
               -dname "CN=Android Debug,O=Android,C=US"
           fi
 
+          # Pin the signing key for Gradle. AGP resolves its default debug keystore from a
+          # location that does not match $HOME on GitHub runners, which silently produced a
+          # fresh random key on every build and broke in-place updates.
+          echo "MOCKX_KEYSTORE_PATH=$HOME/.android/debug.keystore" >> "$GITHUB_ENV"
+          echo "HOME=$HOME"
+          keytool -list -v -keystore "$HOME/.android/debug.keystore" -storepass android -alias androiddebugkey 2>/dev/null | grep -i "SHA256:" || true
+
       - name: Make gradlew executable
         run: chmod +x ./gradlew
 
