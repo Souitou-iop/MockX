@@ -27,7 +27,7 @@
 # 指定 ABI 列表
 ./gradlew assembleRelease -PtargetAbi=x86_64,arm64-v8a
 
-# 指定版本号（CI 发布用；本地缺省 0.0.1）
+# 指定版本号（CI 发布用；本地缺省 1.1beta）
 ./gradlew assembleRelease -PappVersionName=v1.2.3
 ```
 
@@ -36,7 +36,7 @@
 - Debug：`app/build/outputs/apk/debug/app-debug.apk`
 - Release：`app/build/outputs/apk/release/app-release.apk`
 
-**版本号机制**（`app/build.gradle.kts`）：`resolveVersionName()` 依次取 `-PappVersionName` → 环境变量 `APP_VERSION_NAME` → 兜底 `0.0.1`（去 `v` 前缀）；`resolveVersionCode()` 把 semver 映射为单调整数（`1.2.3 → 10203`）。
+**版本号机制**（`app/build.gradle.kts`）：`resolveVersionName()` 依次取 `-PappVersionName` → 环境变量 `APP_VERSION_NAME` → 兜底 `1.1beta`（去 `v` 前缀）；`resolveVersionCode()` 把 semver 映射为单调整数（`1.2.3 → 10203`）。
 
 ## 3. CI（`.github/workflows/release.yml`）
 
